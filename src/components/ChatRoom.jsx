@@ -123,10 +123,14 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         userText: text.trim()
       });
 
-      // Update user message with translation and phrasing suggestions
+      // Update user message with translation, clarity feedback, and phrasing suggestions
       setMessages(prev => prev.map(m => m.id === userMessage.id ? {
         ...m,
         userTextTranslation: aiResponse.userTextTranslation,
+        clarityStatus: aiResponse.clarityStatus,
+        clarityBadgeJa: aiResponse.clarityBadgeJa,
+        clarityFeedbackJa: aiResponse.clarityFeedbackJa,
+        simpleAlternative: aiResponse.simpleAlternative,
         betterPhrasing: aiResponse.betterPhrasing,
         phrasingTip: aiResponse.phrasingTip
       } : m));

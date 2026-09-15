@@ -57,17 +57,25 @@ export async function sendChatMessage({ apiKey, model, situation, history, userT
   }
 
   const systemPrompt = `
-You are acting as an English conversation tutor in a roleplay scenario.
+You are acting as an English conversation tutor helping the user master practical, real-world English for living abroad.
 Scenario Title: ${situation.title}
 Your Persona / Role: ${situation.systemRole}
 User Role: ${situation.userRole}
 Scenario Context: ${situation.description}
 
+EVALUATION PHILOSOPHY:
+Prioritize COMMUNICATIVE INTENT and MEANING CLARITY over perfect grammar or sophisticated vocabulary.
+Even if the user makes grammatical errors, if their core message would be clearly understood by a local native speaker in real life, judge it as "FULL" (100% 意図が伝わった!).
+Always provide reassuring, positive feedback in Japanese so the user gains confidence in speaking!
+
 YOUR MISSION:
-1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English to the user's latest statement. Keep your response conversational, concise (1-3 sentences), and encouraging.
-2. Analyze the user's latest statement ("${userText}") for grammar, naturalness, and vocabulary.
-   - If the user made grammatical mistakes or expressed it unnaturally, provide a "betterPhrasing" suggestion in natural native English.
-   - If the user's expression was already natural, you can set "betterPhrasing" to null.
+1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English (concise 1-3 sentences).
+2. Analyze the user's statement ("${userText}") for communicative intent:
+   - clarityStatus: "FULL" (100%意図が伝わった), "PARTIAL" (おおむね伝わった), or "UNCLEAR" (伝わりづらい)
+   - clarityBadgeJa: e.g. "🟢 100% 意図が伝わった！", "🟡 おおむね伝わった", "🔴 伝わりづらい"
+   - clarityFeedbackJa: Encouraging Japanese feedback explaining how their intent reached the listener (e.g. "多少の文法ミスはありますが、『お湯が出なくて困っている』という核心の意思は100%相手に伝わっています！").
+   - simpleAlternative: A super simple, easy English phrase (using basic middle-school words) to convey the same intent effortlessly.
+   - betterPhrasing: A natural native expression suggestion (or null if already natural).
 3. Provide Japanese translations for BOTH the user's input and your AI response.
 
 Return your response strictly as JSON with this structure:
@@ -75,8 +83,12 @@ Return your response strictly as JSON with this structure:
   "aiResponseText": "Your in-character English response here",
   "aiResponseTranslation": "AIレスポンスの自然な日本語訳",
   "userTextTranslation": "ユーザーの発言の日本語訳",
-  "betterPhrasing": "より自然な英語表現の提案（すでに自然な場合はnull）",
-  "phrasingTip": "表現の工夫やアドバイスの簡単な説明（日本語、必要に応じて）"
+  "clarityStatus": "FULL",
+  "clarityBadgeJa": "🟢 100% 意図が伝わった！",
+  "clarityFeedbackJa": "日本語での評価・励ましフィードバック",
+  "simpleAlternative": "もっと簡単に伝えるサバイバル英語フレーズ",
+  "betterPhrasing": "より自然な英語表現（任意、またはnull）",
+  "phrasingTip": "ワンポイント解説（日本語、任意）"
 }
 `;
 
@@ -110,10 +122,14 @@ Return your response strictly as JSON with this structure:
       aiResponseText: { type: "STRING" },
       aiResponseTranslation: { type: "STRING" },
       userTextTranslation: { type: "STRING" },
+      clarityStatus: { type: "STRING" },
+      clarityBadgeJa: { type: "STRING" },
+      clarityFeedbackJa: { type: "STRING" },
+      simpleAlternative: { type: "STRING", nullable: true },
       betterPhrasing: { type: "STRING", nullable: true },
       phrasingTip: { type: "STRING", nullable: true }
     },
-    required: ["aiResponseText", "aiResponseTranslation", "userTextTranslation"]
+    required: ["aiResponseText", "aiResponseTranslation", "userTextTranslation", "clarityStatus", "clarityBadgeJa", "clarityFeedbackJa"]
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
@@ -189,30 +205,34 @@ export async function generateSessionReport({ apiKey, model, situation, history 
   if (!apiKey) throw new Error("API Key required");
 
   const systemPrompt = `
-You are an expert English Language Assessor. Evaluate the user's performance in this conversation roleplay.
+You are an expert English Language Coach focused on REAL-WORLD SURVIVAL ENGLISH FOR LIVING ABROAD.
+Evaluate the user's performance in this conversation roleplay based on COMMUNICATIVE SUCCESS and MEANING CLARITY.
 Scenario: ${situation.title}
 Target Goals: ${situation.goals.join(', ')}
 
+EVALUATION PHILOSOPHY:
+The most important metric is whether the user managed to communicate their intent and solve problems in real-life, regardless of minor grammatical errors or simple vocabulary.
+
 Analyze all user inputs in the conversation history for:
-1. Grammar Accuracy (0-100 score)
-2. Vocabulary Richness (0-100 score)
-3. Communication & Goal Achievement (0-100 score)
+1. Communication & Intent Score (0-100 score) - How effectively did their message reach the listener?
+2. Practical Vocabulary Score (0-100 score) - How well did they use simple, clear words?
+3. Conversation Flow Score (0-100 score) - How well did they keep the conversation going?
 
 Provide:
 - Overall Score (0-100)
-- Detailed Feedback in Japanese (Strengths, Areas for Improvement)
-- Key Phrases Learned (3-5 phrases with English & Japanese)
+- Detailed Feedback in Japanese (Reassuring feedback on how well their intent was delivered, plus practical tips for living abroad)
+- Key Survival Phrases Learned (3-5 practical phrases with English & Japanese)
 - Scenario Goals Achievement status (which goals were completed)
 
 Return strictly JSON matching this structure:
 {
   "overallScore": 85,
-  "grammarScore": 80,
+  "grammarScore": 85,
   "vocabScore": 88,
   "fluencyScore": 85,
-  "summaryJa": "全体の講評テキスト（日本語で優しく具体的にアドバイス）",
-  "strengthsJa": ["良かった点1", "良かった点2"],
-  "improvementsJa": ["改善点1", "改善点2"],
+  "summaryJa": "全体の講評テキスト（『文法ミスがあっても意思疎通はバッチリできています！』など、海外で生き抜く自信を届ける温かいアドバイス）",
+  "strengthsJa": ["伝わり方の良かった点1", "意思疎通の良かった点2"],
+  "improvementsJa": ["さらに簡単に伝えるコツ1", "海外生活でのワンポイント2"],
   "keyPhrases": [
     { "phrase": "Could I get...", "meaning": "〜をいただけますか" }
   ],

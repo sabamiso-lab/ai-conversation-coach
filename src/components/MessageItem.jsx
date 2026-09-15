@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, Languages, Sparkles, User, Bot } from 'lucide-react';
+import { Volume2, Languages, Sparkles, User, Bot, Zap } from 'lucide-react';
 import { speakText } from '../services/speech';
 
 export default function MessageItem({ message }) {
@@ -10,11 +10,25 @@ export default function MessageItem({ message }) {
     speakText(message.text, { lang: 'en-US' });
   };
 
+  // Determine badge style
+  const getBadgeClass = (status) => {
+    if (status === 'FULL') return 'clarity-badge full';
+    if (status === 'PARTIAL') return 'clarity-badge partial';
+    return 'clarity-badge unclear';
+  };
+
   return (
     <div className={`message-row ${isUser ? 'user' : 'ai'}`}>
       <div className="message-sender">
         {isUser ? <User size={14} /> : <Bot size={14} />}
         {isUser ? 'You' : 'AI Coach'}
+        
+        {/* Clarity Badge for User Messages */}
+        {isUser && message.clarityBadgeJa && (
+          <span className={getBadgeClass(message.clarityStatus)}>
+            {message.clarityBadgeJa}
+          </span>
+        )}
       </div>
 
       <div className="message-bubble">
@@ -71,18 +85,31 @@ export default function MessageItem({ message }) {
         )}
       </div>
 
-      {/* Better Phrasing Suggestion for User Messages */}
-      {isUser && message.betterPhrasing && (
-        <div className="better-phrasing-card">
-          <div className="better-phrasing-title">
-            <Sparkles size={14} /> より自然なネイティブ表現:
-          </div>
-          <div style={{ fontWeight: 700, margin: '2px 0' }}>
-            "{message.betterPhrasing}"
-          </div>
-          {message.phrasingTip && (
-            <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>
-              💡 {message.phrasingTip}
+      {/* Meaning Clarity & Communicative Intent Feedback Card */}
+      {isUser && (message.clarityFeedbackJa || message.simpleAlternative || message.betterPhrasing) && (
+        <div className="clarity-feedback-card">
+          {/* Main Feedback text */}
+          {message.clarityFeedbackJa && (
+            <div className="clarity-feedback-text">
+              💬 {message.clarityFeedbackJa}
+            </div>
+          )}
+
+          {/* Simple Alternative / Survival English */}
+          {message.simpleAlternative && (
+            <div className="simple-alt-box">
+              <span className="simple-alt-label">
+                <Zap size={13} /> もっと簡単・確実な伝え方:
+              </span>
+              <span className="simple-alt-text">"{message.simpleAlternative}"</span>
+            </div>
+          )}
+
+          {/* Better Phrasing (Optional) */}
+          {message.betterPhrasing && message.betterPhrasing !== message.simpleAlternative && (
+            <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#475569' }}>
+              <Sparkles size={13} style={{ display: 'inline', marginRight: '4px', color: '#6366F1' }} />
+              ネイティブ風に言うなら: <strong>"{message.betterPhrasing}"</strong>
             </div>
           )}
         </div>
