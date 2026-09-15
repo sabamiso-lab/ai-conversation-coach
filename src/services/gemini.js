@@ -2,7 +2,7 @@
  * Service module for interacting with Google Gemini API (gemini-3.5-flash-lite)
  */
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 /**
  * Call Gemini API endpoint
