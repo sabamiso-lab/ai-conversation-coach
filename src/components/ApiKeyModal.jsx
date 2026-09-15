@@ -3,7 +3,7 @@ import { Key, X, Check, ExternalLink } from 'lucide-react';
 
 export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, currentModel, onSaveModel }) {
   const [keyInput, setKeyInput] = useState(apiKey || '');
-  const [modelInput, setModelInput] = useState(currentModel || 'gemini-3.5-flash-lite');
+  const [modelInput, setModelInput] = useState(currentModel || 'gemini-1.5-flash');
   const [saved, setSaved] = useState(false);
 
   if (!isOpen) return null;
@@ -55,9 +55,9 @@ export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, curren
               value={modelInput}
               onChange={(e) => setModelInput(e.target.value)}
             >
-              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (推薦・超高速)</option>
-              <option value="gemini-2.5-flash">gemini-2.5-flash (標準)</option>
-              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash (推奨・高速)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash (最新・高速)</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro (高精度)</option>
             </select>
           </div>
 

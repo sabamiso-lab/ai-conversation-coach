@@ -22,6 +22,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [isReportLoading, setIsReportLoading] = useState(false);
+  const [reportError, setReportError] = useState('');
 
   const messagesEndRef = useRef(null);
   const recognizerRef = useRef(null);
@@ -175,6 +176,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const handleFinishSession = async () => {
     setIsReportOpen(true);
     setIsReportLoading(true);
+    setReportError('');
     try {
       const report = await generateSessionReport({
         apiKey,
@@ -185,7 +187,9 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
       setReportData(report);
     } catch (err) {
       console.error("Report error:", err);
-      setErrorMsg("評価レポートの作成に失敗しました。");
+      const msg = err.message || "評価レポートの作成に失敗しました。";
+      setReportError(msg);
+      setErrorMsg(msg);
     } finally {
       setIsReportLoading(false);
     }
@@ -352,7 +356,9 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         onClose={() => setIsReportOpen(false)}
         report={reportData}
         loading={isReportLoading}
+        error={reportError}
         onRestart={onBack}
+        onRetry={handleFinishSession}
       />
     </div>
   );

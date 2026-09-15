@@ -2,7 +2,7 @@
  * Service module for interacting with Google Gemini API (gemini-3.5-flash-lite)
  */
 
-const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+const DEFAULT_MODEL = 'gemini-1.5-flash';
 
 /**
  * Call Gemini API endpoint
@@ -152,17 +152,18 @@ Return strictly a JSON array of 3 hint objects:
 ]
 `;
 
-  const contents = history.map(item => ({
-    role: item.role === 'user' ? 'user' : 'model',
-    parts: [{ text: item.text }]
-  }));
+  const formattedHistory = history.length > 0 
+    ? history.map(item => `${item.role === 'user' ? 'User' : 'AI Coach'}: ${item.text}`).join('\n')
+    : `AI Coach: ${situation.initialMessage}`;
 
-  if (contents.length === 0) {
-    contents.push({
-      role: 'model',
-      parts: [{ text: situation.initialMessage }]
-    });
-  }
+  const contents = [
+    {
+      role: 'user',
+      parts: [{
+        text: `Here is the conversation log so far:\n\n${formattedHistory}\n\nPlease generate 3 hint suggestions for what the user could say next.`
+      }]
+    }
+  ];
 
   const schema = {
     type: "ARRAY",
@@ -221,10 +222,18 @@ Return strictly JSON matching this structure:
 }
 `;
 
-  const contents = history.map(item => ({
-    role: item.role === 'user' ? 'user' : 'model',
-    parts: [{ text: item.text }]
-  }));
+  const formattedHistory = history.length > 0
+    ? history.map(item => `${item.role === 'user' ? 'User' : 'AI Coach'}: ${item.text}`).join('\n')
+    : `AI Coach: ${situation.initialMessage}`;
+
+  const contents = [
+    {
+      role: 'user',
+      parts: [{
+        text: `Here is the full conversation log for this session:\n\n${formattedHistory}\n\nPlease evaluate the user's performance based on the conversation log above and return the evaluation report JSON.`
+      }]
+    }
+  ];
 
   const schema = {
     type: "OBJECT",

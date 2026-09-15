@@ -9,7 +9,7 @@ const STORAGE_MODEL_KEY = 'gemini_model_speakflow';
 
 export default function App() {
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gemini-3.5-flash-lite');
+  const [model, setModel] = useState('gemini-1.5-flash');
   const [selectedSituation, setSelectedSituation] = useState(null);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
