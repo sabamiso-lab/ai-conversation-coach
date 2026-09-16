@@ -1,14 +1,14 @@
 import { SITUATIONS } from '../data/situations';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_KEY = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
-
 /**
  * Fetch list of roleplay situations from AWS DynamoDB API.
  * Automatically falls back to local SITUATIONS array if offline, API not set, or error occurs.
  */
 export async function fetchSituations() {
-  if (!API_BASE_URL) {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const apiKey = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
+
+  if (!apiBaseUrl) {
     console.info('ℹ️ VITE_API_BASE_URL not configured. Using local fallback situations.');
     return { data: SITUATIONS, isFallback: true };
   }
@@ -17,11 +17,11 @@ export async function fetchSituations() {
   const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 sec timeout
 
   try {
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch(apiBaseUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'x-speakflow-api-key': API_KEY,
+        'x-speakflow-api-key': apiKey,
       },
       signal: controller.signal,
     });
@@ -77,7 +77,10 @@ export async function fetchSituations() {
  * @param {Object} situationData
  */
 export async function createSituation(situationData) {
-  if (!API_BASE_URL) {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const apiKey = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
+
+  if (!apiBaseUrl) {
     console.info('ℹ️ VITE_API_BASE_URL not configured. Returning local mock success.');
     const mockCreated = {
       ...situationData,
@@ -95,11 +98,11 @@ export async function createSituation(situationData) {
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch(apiBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-speakflow-api-key': API_KEY,
+        'x-speakflow-api-key': apiKey,
       },
       body: JSON.stringify(situationData),
       signal: controller.signal,
