@@ -50,6 +50,9 @@ export default function App() {
         {!selectedSituation ? (
           <SituationSelector
             onSelectSituation={(sit) => setSelectedSituation(sit)}
+            apiKey={apiKey}
+            model={model}
+            onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
           />
         ) : (
           <ChatRoom

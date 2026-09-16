@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Send, Lightbulb, Flag, Volume2, Sparkles, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, Send, Lightbulb, Flag, Volume2, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe } from 'lucide-react';
 import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
@@ -311,6 +311,33 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
 
         {/* Right Sidebar Info Panel */}
         <div className="sidebar-panel">
+          {situation.newsSource && (
+            <div className="info-card" style={{ background: '#F5F3FF', borderColor: '#DDD6FE' }}>
+              <div className="info-title" style={{ color: '#5B21B6', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Globe size={16} /> 関連ニュース記事 (Grounding)
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#4C1D95', marginBottom: '8px', fontWeight: 600 }}>
+                {situation.newsSource.title}
+              </div>
+              <a
+                href={situation.newsSource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.78rem',
+                  color: '#4F46E5',
+                  fontWeight: 700,
+                  textDecoration: 'underline'
+                }}
+              >
+                <ExternalLink size={12} /> 元ニュース記事を開く
+              </a>
+            </div>
+          )}
+
           <div className="info-card">
             <div className="info-title">
               会話シナリオ目標

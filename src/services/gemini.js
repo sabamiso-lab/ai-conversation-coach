@@ -5,6 +5,26 @@
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 /**
+ * Clean raw text response from API and safely parse JSON
+ */
+function cleanAndParseJson(rawJson) {
+  if (!rawJson) throw new Error("Empty response from API");
+  
+  // Remove markdown code blocks if present
+  let cleaned = rawJson.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (err) {
+    console.error("JSON Parse Error. Raw string length:", rawJson.length, "Raw string snippet:", rawJson.slice(0, 300));
+    throw new Error(`JSON parsing failed: ${err.message}. The response may have been cut off or formatted incorrectly.`);
+  }
+}
+
+/**
  * Call Gemini API endpoint
  */
 async function callGeminiApi(apiKey, model, systemInstruction, contents, responseSchema = null) {
@@ -18,7 +38,7 @@ async function callGeminiApi(apiKey, model, systemInstruction, contents, respons
     },
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 1024
+      maxOutputTokens: 4096
     }
   };
 
@@ -133,7 +153,7 @@ Return your response strictly as JSON with this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return JSON.parse(rawJson);
+  return cleanAndParseJson(rawJson);
 }
 
 /**
@@ -195,7 +215,7 @@ Return strictly a JSON array of 3 hint objects:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return JSON.parse(rawJson);
+  return cleanAndParseJson(rawJson);
 }
 
 /**
@@ -292,5 +312,160 @@ Return strictly JSON matching this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return JSON.parse(rawJson);
+  return cleanAndParseJson(rawJson);
 }
+
+/**
+ * Call Gemini API with Google Search Grounding enabled
+ */
+async function callGeminiApiWithGrounding(apiKey, model, prompt) {
+  const modelName = model || DEFAULT_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const payload = {
+    contents: [
+      {
+        parts: [{ text: prompt }]
+      }
+    ],
+    tools: [
+      { googleSearch: {} }
+    ],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 4096
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  const data = await response.json();
+  const candidate = data.candidates?.[0];
+  const textResponse = candidate?.content?.parts?.[0]?.text;
+
+  if (!textResponse) {
+    throw new Error("No response received from Gemini API with Grounding.");
+  }
+
+  return {
+    text: textResponse,
+    groundingMetadata: candidate?.groundingMetadata || null
+  };
+}
+
+/**
+ * Generate a dynamic English conversation scenario based on real-time news using Google Search Grounding
+ */
+export async function generateNewsSituation({ apiKey, model, category = 'Technology', onProgressStatus = () => {} }) {
+  if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
+
+  // Step 1: Grounding Search
+  onProgressStatus('Google検索で最新ニュースを検索・収集しています...');
+
+  const groundingPrompt = `
+Search for 1 recent, compelling news story published today or in the last few days in the category: "${category}".
+Topics can include technology, business, international relations, climate, entertainment, or science.
+
+Requirements:
+1. Provide a clear summary in English (3-4 sentences).
+2. Provide a clear Japanese summary (3-4 sentences).
+3. State the main headline and key details accurately based on real Google search results.
+`;
+
+  const groundingResult = await callGeminiApiWithGrounding(apiKey, model, groundingPrompt);
+  const newsText = groundingResult.text;
+  const metadata = groundingResult.groundingMetadata;
+
+  // Extract top news article title and URL from groundingMetadata
+  let sourceTitle = null;
+  let sourceUrl = null;
+
+  if (metadata && Array.isArray(metadata.groundingChunks)) {
+    for (const chunk of metadata.groundingChunks) {
+      if (chunk.web && chunk.web.uri) {
+        sourceUrl = chunk.web.uri;
+        sourceTitle = chunk.web.title || `${category} News Article`;
+        break;
+      }
+    }
+  }
+
+  // Step 2: Structuring Scenario
+  onProgressStatus('最新ニュースを英会話ロールプレイのシチュエーションに変換中...');
+
+  const structPrompt = `
+You are an expert English Language Coach.
+Convert the following real news story into an engaging, interactive English conversation roleplay scenario for learning English:
+
+NEWS CONTENT (Retrieved via Google Search):
+${newsText}
+
+Category: ${category}
+
+Create a scenario where the user and the AI partner discuss or react to this news story.
+Adhere strictly to this JSON schema:
+{
+  "title": "Short punchy English title summarizing the scenario",
+  "titleJa": "日本語タイトルの和訳（例：最新AIモデル発表について同僚と議論）",
+  "category": "News & Trends",
+  "icon": "Globe",
+  "difficulty": "Intermediate",
+  "systemRole": "In-character role (e.g. 'Tech colleague (Sam) who just read this news headline')",
+  "userRole": "In-character user role (e.g. 'Software engineer sharing thoughts on the news')",
+  "description": "Clear English summary of what the conversation will cover",
+  "descriptionJa": "どのようなニュースについての会話か日本語での分かりやすい解説",
+  "initialMessage": "Enthusiastic opening question/statement in English from AI partner starting the discussion on this news",
+  "goals": [
+    "Goal 1: Share your initial opinion on the news story",
+    "Goal 2: Ask a follow-up question about the potential impact",
+    "Goal 3: Discuss pros or cons of this development"
+  ]
+}
+`;
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      title: { type: "STRING" },
+      titleJa: { type: "STRING" },
+      category: { type: "STRING" },
+      icon: { type: "STRING" },
+      difficulty: { type: "STRING" },
+      systemRole: { type: "STRING" },
+      userRole: { type: "STRING" },
+      description: { type: "STRING" },
+      descriptionJa: { type: "STRING" },
+      initialMessage: { type: "STRING" },
+      goals: { type: "ARRAY", items: { type: "STRING" } }
+    },
+    required: ["title", "titleJa", "category", "icon", "difficulty", "systemRole", "userRole", "description", "descriptionJa", "initialMessage", "goals"]
+  };
+
+  const rawJson = await callGeminiApi(apiKey, model, structPrompt, [
+    { role: 'user', parts: [{ text: structPrompt }] }
+  ], schema);
+
+  const scenarioData = cleanAndParseJson(rawJson);
+
+  return {
+    ...scenarioData,
+    id: `news-${Date.now()}`,
+    isNews: true,
+    newsCategory: category,
+    newsSource: sourceUrl ? {
+      title: sourceTitle || `${category} News Article`,
+      url: sourceUrl
+    } : null
+  };
+}
+
