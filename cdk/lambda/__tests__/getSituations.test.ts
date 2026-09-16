@@ -60,4 +60,47 @@ describe('getSituations Lambda Handler', () => {
     expect(body.situations).toEqual(mockItems);
     expect(body.count).toBe(1);
   });
+
+  it('filters out expired situations based on expiresAt timestamp', async () => {
+    const defaultApiKey = 'sf_secret_key_default';
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+
+    const mockItems = [
+      {
+        id: 'valid-permanent',
+        title: 'Permanent Cafe Scenario',
+        goals: ['Order coffee'],
+      },
+      {
+        id: 'valid-future-news',
+        title: 'Future News Scenario',
+        expiresAt: nowInSeconds + 3600, // 1 hour in future
+        goals: ['Discuss tech'],
+      },
+      {
+        id: 'expired-news',
+        title: 'Yesterday News Scenario',
+        expiresAt: nowInSeconds - 3600, // 1 hour in past
+        goals: ['Discuss old news'],
+      },
+    ];
+
+    vi.spyOn(DynamoDBDocumentClient.prototype, 'send').mockResolvedValueOnce({
+      Items: mockItems,
+      Count: 3,
+    } as never);
+
+    const event = {
+      httpMethod: 'GET',
+      headers: {
+        'x-speakflow-api-key': defaultApiKey,
+      },
+    };
+
+    const response = await handler(event);
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.count).toBe(2);
+    expect(body.situations.map((s: any) => s.id)).toEqual(['valid-permanent', 'valid-future-news']);
+  });
 });
