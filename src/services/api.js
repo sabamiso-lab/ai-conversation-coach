@@ -71,3 +71,53 @@ export async function fetchSituations() {
     return { data: SITUATIONS, isFallback: true, error: error.message };
   }
 }
+
+/**
+ * Register a new situation via AWS DynamoDB API (POST /situations).
+ * @param {Object} situationData
+ */
+export async function createSituation(situationData) {
+  if (!API_BASE_URL) {
+    console.info('ℹ️ VITE_API_BASE_URL not configured. Returning local mock success.');
+    const mockCreated = {
+      ...situationData,
+      id: situationData.id || `custom-${Date.now()}`,
+      goals: Array.isArray(situationData.goals)
+        ? situationData.goals
+        : typeof situationData.goals === 'string'
+        ? situationData.goals.split('\n').map(g => g.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+        : [],
+    };
+    return { success: true, situation: mockCreated, isFallback: true };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-speakflow-api-key': API_KEY,
+      },
+      body: JSON.stringify(situationData),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson.error || `HTTP ${response.status}`);
+    }
+
+    const json = await response.json();
+    return { success: true, situation: json.situation, isFallback: false };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('❌ Failed to register situation:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+

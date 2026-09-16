@@ -49,8 +49,25 @@ export class SpeakFlowBackendStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
     });
 
-    // Grant DynamoDB Read permission to Lambda
+    // Grant DynamoDB Read permission to GetSituations Lambda
     situationsTable.grantReadData(getSituationsFunction);
+
+    // 2b. Lambda Function to Create a Situation
+    const createSituationFunction = new nodejsLambda.NodejsFunction(this, 'CreateSituationFunction', {
+      functionName: 'SpeakFlowCreateSituation',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, '../lambda/createSituation.ts'),
+      handler: 'handler',
+      environment: {
+        TABLE_NAME: situationsTable.tableName,
+        API_KEY_VALUE: this.apiKeyValue,
+        ALLOWED_ORIGINS: allowedOrigins.join(','),
+      },
+      timeout: cdk.Duration.seconds(10),
+    });
+
+    // Grant DynamoDB Read/Write permission to CreateSituation Lambda
+    situationsTable.grantReadWriteData(createSituationFunction);
 
     // 3. API Gateway (HTTP API)
     const httpApi = new apigw2.HttpApi(this, 'SpeakFlowHttpApi', {
@@ -61,22 +78,35 @@ export class SpeakFlowBackendStack extends cdk.Stack {
         allowHeaders: ['Content-Type', 'x-speakflow-api-key'],
         allowMethods: [
           apigw2.CorsHttpMethod.GET,
+          apigw2.CorsHttpMethod.POST,
           apigw2.CorsHttpMethod.OPTIONS,
         ],
       },
     });
 
-    // Integration
-    const lambdaIntegration = new apigw2Integrations.HttpLambdaIntegration(
+    // Integrations
+    const getLambdaIntegration = new apigw2Integrations.HttpLambdaIntegration(
       'GetSituationsIntegration',
       getSituationsFunction
+    );
+
+    const createLambdaIntegration = new apigw2Integrations.HttpLambdaIntegration(
+      'CreateSituationIntegration',
+      createSituationFunction
     );
 
     // Add Route GET /situations
     httpApi.addRoutes({
       path: '/situations',
       methods: [apigw2.HttpMethod.GET],
-      integration: lambdaIntegration,
+      integration: getLambdaIntegration,
+    });
+
+    // Add Route POST /situations
+    httpApi.addRoutes({
+      path: '/situations',
+      methods: [apigw2.HttpMethod.POST],
+      integration: createLambdaIntegration,
     });
 
     this.apiUrl = httpApi.apiEndpoint;
