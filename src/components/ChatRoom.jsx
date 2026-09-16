@@ -56,7 +56,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         id: 'msg-0',
         role: 'ai',
         text: situation.initialMessage,
-        translation: 'こんにちは！お話しできて嬉しいです。本日はいかがなさいますか？'
+        translation: situation.initialMessageJa || situation.initialMessageTranslation || ''
       };
       setMessages([initialAiMsg]);
       speakText(situation.initialMessage);

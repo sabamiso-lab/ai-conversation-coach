@@ -11,6 +11,7 @@ export const SITUATIONS = [
     description: 'Order your favorite drink, specify size/milk preference, and pay.',
     descriptionJa: 'お気に入りのドリンクの注文、ミルクやサイズの指定、会計を行います。',
     initialMessage: "Hi there! Welcome to Green Mountain Coffee. What can I get started for you today?",
+    initialMessageJa: "いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？",
     goals: [
       'Order a drink with specific modifications (e.g. oat milk, extra shot)',
       'Order something to eat',
@@ -29,6 +30,7 @@ export const SITUATIONS = [
     description: 'Show your passport, check your luggage, and request a window seat.',
     descriptionJa: 'パスポートの提示、受託手荷物の預け入れ、座席（窓側など）のリクエストを行います。',
     initialMessage: "Good morning! Welcome to SkyWay Airlines. May I see your passport and booking reference, please?",
+    initialMessageJa: "おはようございます！スカイウェイ航空へようこそ。パスポートと予約番号を拝見できますか？",
     goals: [
       'Present passport and booking details',
       'Check in luggage',
@@ -47,6 +49,7 @@ export const SITUATIONS = [
     description: 'Complete check-in process, ask about breakfast time, and make special requests.',
     descriptionJa: 'チェックイン手続き、朝食時間・Wi-Fiパスワードの確認、高層階のリクエストを行います。',
     initialMessage: "Welcome to the Grand Horizon Hotel. How may I assist you this afternoon?",
+    initialMessageJa: "グランドホライゾンホテルへようこそ。本日はどのようなご用件でしょうか？",
     goals: [
       'Give reservation name & check-in',
       'Inquire about breakfast hours and Wi-Fi',
@@ -65,6 +68,7 @@ export const SITUATIONS = [
     description: 'Give a brief update on your tasks, discuss roadblocks, and negotiate timeline.',
     descriptionJa: '担当タスクの進捗報告、課題・ボトルネックの共有、スケジュール交渉を行います。',
     initialMessage: "Thanks for joining, everyone. Let's start with our tech status. Could you give us a quick update on your team's milestone?",
+    initialMessageJa: "皆さん参加ありがとうございます。それでは技術チームの進捗から始めましょう。あなたのチームのマイルストーンについて簡単な進捗報告をお願いできますか？",
     goals: [
       'Summarize recent accomplishments clearly',
       'Explain a current technical issue or delay',
@@ -83,6 +87,7 @@ export const SITUATIONS = [
     description: 'Answer background questions, explain a past challenge, and ask smart questions.',
     descriptionJa: '自己紹介、過去の困難の克服経験（STAR法）、逆質問に応答します。',
     initialMessage: "Thank you for coming in today. To kick things off, could you tell me a little bit about yourself and why you're interested in this position?",
+    initialMessageJa: "本日はお越しいただきありがとうございます。まずは自己紹介と、この職種に応募した理由を教えていただけますか？",
     goals: [
       'Give a concise 1-minute self-introduction',
       'Describe a past challenge and how you solved it',
@@ -101,6 +106,7 @@ export const SITUATIONS = [
     description: 'Enjoy open-ended conversation about your hobbies, weekend plans, or any topic.',
     descriptionJa: '趣味や旅行、映画、日常の出来事について自由にディスカッションします。',
     initialMessage: "Hey there! Great to chat with you today. How has your week been going so far?",
+    initialMessageJa: "こんにちは！今日はお話しできて嬉しいです。今週はどのように過ごされていますか？",
     goals: [
       'Share what you did recently or your weekend plans',
       'Ask the AI a question about a favorite topic',

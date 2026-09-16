@@ -35,6 +35,7 @@ export interface SituationInput {
   description: string;
   descriptionJa: string;
   initialMessage: string;
+  initialMessageJa?: string;
   goals: string[] | string;
 }
 
@@ -172,6 +173,7 @@ export const handler = async (event: APIGatewayEvent) => {
     description: data.description.trim(),
     descriptionJa: data.descriptionJa.trim(),
     initialMessage: data.initialMessage.trim(),
+    initialMessageJa: data.initialMessageJa ? data.initialMessageJa.trim() : undefined,
     goals: goalsArray,
     createdAt: new Date().toISOString(),
   };

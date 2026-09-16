@@ -53,6 +53,7 @@ export async function fetchSituations() {
       description: item.description,
       descriptionJa: item.descriptionJa,
       initialMessage: item.initialMessage,
+      initialMessageJa: item.initialMessageJa || item.initialMessageTranslation,
       goals: Array.isArray(item.goals)
         ? item.goals
         : item.goals instanceof Set

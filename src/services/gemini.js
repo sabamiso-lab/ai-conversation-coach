@@ -79,9 +79,15 @@ export async function sendChatMessage({ apiKey, model, situation, history, userT
   const systemPrompt = `
 You are acting as an English conversation tutor helping the user master practical, real-world English for living abroad.
 Scenario Title: ${situation.title}
+Target Difficulty Level: ${situation.difficulty || 'Intermediate'}
 Your Persona / Role: ${situation.systemRole}
 User Role: ${situation.userRole}
 Scenario Context: ${situation.description}
+
+DIFFICULTY LEVEL RESPONSE GUIDELINE:
+- Beginner Level: Use clear, simple, short English sentences (1-2 sentences). Use basic everyday words (A1-A2). Avoid complex grammar or idiom overload.
+- Intermediate Level: Use natural, standard practical English (2-3 sentences) suitable for everyday and business communication.
+- Advanced Level: Use native-level, rich vocabulary, nuanced expressions, and thought-provoking questions (2-3 sentences).
 
 EVALUATION PHILOSOPHY:
 Prioritize COMMUNICATIVE INTENT and MEANING CLARITY over perfect grammar or sophisticated vocabulary.
@@ -89,7 +95,7 @@ Even if the user makes grammatical errors, if their core message would be clearl
 Always provide reassuring, positive feedback in Japanese so the user gains confidence in speaking!
 
 YOUR MISSION:
-1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English (concise 1-3 sentences).
+1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English according to the Target Difficulty Level.
 2. Analyze the user's statement ("${userText}") for communicative intent:
    - clarityStatus: "FULL" (100%意図が伝わった), "PARTIAL" (おおむね伝わった), or "UNCLEAR" (伝わりづらい)
    - clarityBadgeJa: e.g. "🟢 100% 意図が伝わった！", "🟡 おおむね伝わった", "🔴 伝わりづらい"
@@ -366,18 +372,22 @@ async function callGeminiApiWithGrounding(apiKey, model, prompt) {
 /**
  * Generate a dynamic English conversation scenario based on real-time news using Google Search Grounding
  */
-export async function generateNewsSituation({ apiKey, model, category = 'Technology', onProgressStatus = () => {} }) {
+export async function generateNewsSituation({ apiKey, model, category = 'Technology', difficulty = 'Intermediate', onProgressStatus = () => {} }) {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
   // Step 1: Grounding Search
-  onProgressStatus('Google検索で最新ニュースを検索・収集しています...');
+  onProgressStatus(`Google検索で${difficulty === 'Beginner' ? '初級者向け' : difficulty === 'Advanced' ? '上級者向け' : '最新'}のニュースを検索・収集しています...`);
 
   const groundingPrompt = `
 Search for 1 recent, compelling news story published today or in the last few days in the category: "${category}".
 Topics can include technology, business, international relations, climate, entertainment, or science.
 
+Target English Difficulty Level for English Learners: ${difficulty}
+
 Requirements:
 1. Provide a clear summary in English (3-4 sentences).
+${difficulty === 'Beginner' ? '   - Use simple, straightforward words suitable for basic English learners.' : ''}
+${difficulty === 'Advanced' ? '   - Highlight detailed facts, key statistics, and deeper background context.' : ''}
 2. Provide a clear Japanese summary (3-4 sentences).
 3. State the main headline and key details accurately based on real Google search results.
 `;
@@ -404,31 +414,49 @@ Requirements:
   onProgressStatus('最新ニュースを英会話ロールプレイのシチュエーションに変換中...');
 
   const structPrompt = `
-You are an expert English Language Coach.
-Convert the following real news story into an engaging, interactive English conversation roleplay scenario for learning English:
+You are an expert English Language Coach creating a scenario tailored for a **${difficulty}** level English learner.
+Convert the following real news story into an engaging, interactive English conversation roleplay scenario:
 
 NEWS CONTENT (Retrieved via Google Search):
 ${newsText}
 
 Category: ${category}
+Target Difficulty Level: ${difficulty}
 
-Create a scenario where the user and the AI partner discuss or react to this news story.
+DIFFICULTY LEVEL GUIDELINES:
+- **Beginner**:
+  * English Title & Description: Use basic, everyday vocabulary and short simple sentences.
+  * System Role & User Role: Friendly, accessible conversation setting (e.g. sharing news with a friend).
+  * Initial Message: Very friendly, short (1-2 sentences), using basic English (e.g. "Did you hear about...? It sounds cool!").
+  * Goals: Simple, easy-to-achieve goals (e.g., "Goal 1: Say if you like this news", "Goal 2: Mention one reason why").
+- **Intermediate**:
+  * English Title & Description: Standard news English (B1-B2 vocabulary).
+  * System Role & User Role: Practical colleague or friend discussing current affairs.
+  * Initial Message: Engaging 2-3 sentence overview and question.
+  * Goals: Share opinions, explain impact, ask follow-up questions.
+- **Advanced**:
+  * English Title & Description: Sophisticated, business/professional level English (C1-C2 vocabulary, complex sentence structures).
+  * System Role & User Role: Expert colleague, analyst, or journalist debating implications.
+  * Initial Message: Thought-provoking 2-3 sentence statement introducing strategic or societal nuances.
+  * Goals: Debate pros/cons, evaluate long-term market/societal impacts, discuss trade-offs.
+
 Adhere strictly to this JSON schema:
 {
   "title": "Short punchy English title summarizing the scenario",
-  "titleJa": "日本語タイトルの和訳（例：最新AIモデル発表について同僚と議論）",
+  "titleJa": "日本語タイトルの和訳",
   "category": "News & Trends",
   "icon": "Globe",
-  "difficulty": "Intermediate",
-  "systemRole": "In-character role (e.g. 'Tech colleague (Sam) who just read this news headline')",
-  "userRole": "In-character user role (e.g. 'Software engineer sharing thoughts on the news')",
-  "description": "Clear English summary of what the conversation will cover",
+  "difficulty": "${difficulty}",
+  "systemRole": "In-character role suited for ${difficulty} level",
+  "userRole": "In-character user role suited for ${difficulty} level",
+  "description": "Clear English summary suited for ${difficulty} level",
   "descriptionJa": "どのようなニュースについての会話か日本語での分かりやすい解説",
-  "initialMessage": "Enthusiastic opening question/statement in English from AI partner starting the discussion on this news",
+  "initialMessage": "Opening question/statement in English from AI partner matching ${difficulty} level",
+  "initialMessageJa": "AIパートナーの初期メッセージ（initialMessage）に対する自然な日本語訳",
   "goals": [
-    "Goal 1: Share your initial opinion on the news story",
-    "Goal 2: Ask a follow-up question about the potential impact",
-    "Goal 3: Discuss pros or cons of this development"
+    "Goal 1 matching ${difficulty} level",
+    "Goal 2 matching ${difficulty} level",
+    "Goal 3 matching ${difficulty} level"
   ]
 }
 `;
@@ -446,9 +474,10 @@ Adhere strictly to this JSON schema:
       description: { type: "STRING" },
       descriptionJa: { type: "STRING" },
       initialMessage: { type: "STRING" },
+      initialMessageJa: { type: "STRING" },
       goals: { type: "ARRAY", items: { type: "STRING" } }
     },
-    required: ["title", "titleJa", "category", "icon", "difficulty", "systemRole", "userRole", "description", "descriptionJa", "initialMessage", "goals"]
+    required: ["title", "titleJa", "category", "icon", "difficulty", "systemRole", "userRole", "description", "descriptionJa", "initialMessage", "initialMessageJa", "goals"]
   };
 
   const rawJson = await callGeminiApi(apiKey, model, structPrompt, [
@@ -459,6 +488,7 @@ Adhere strictly to this JSON schema:
 
   return {
     ...scenarioData,
+    difficulty: difficulty, // Ensure difficulty is explicitly set
     id: `news-${Date.now()}`,
     isNews: true,
     newsCategory: category,

@@ -27,6 +27,12 @@ const NEWS_CATEGORIES = [
   { id: 'science', label: '🎬 Culture & Science', category: 'Entertainment and Science' }
 ];
 
+const NEWS_DIFFICULTIES = [
+  { id: 'Beginner', label: '🌱 初級 (Beginner)', desc: '平易な語彙・短文で要約', badgeBg: '#10B981' },
+  { id: 'Intermediate', label: '⚡ 中級 (Intermediate)', desc: '標準ニュースレベル', badgeBg: '#F59E0B' },
+  { id: 'Advanced', label: '🔥 上級 (Advanced)', desc: '高度語彙・深掘り議論', badgeBg: '#8B5CF6' }
+];
+
 export default function SituationSelector({ onSelectSituation, apiKey, model, onOpenApiKeyModal }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [situations, setSituations] = useState([]);
@@ -34,6 +40,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
   const [isFallback, setIsFallback] = useState(false);
 
   // News Grounding Generator States
+  const [newsDifficulty, setNewsDifficulty] = useState('Intermediate');
   const [isGeneratingNews, setIsGeneratingNews] = useState(false);
   const [generatingCategory, setGeneratingCategory] = useState(null);
   const [newsProgressMsg, setNewsProgressMsg] = useState('');
@@ -68,7 +75,8 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
 
     setIsGeneratingNews(true);
     setGeneratingCategory(catItem.id);
-    setNewsProgressMsg('Google検索で最新ニュースを調査中...');
+    const selectedDiffObj = NEWS_DIFFICULTIES.find(d => d.id === newsDifficulty);
+    setNewsProgressMsg(`Google検索で${selectedDiffObj ? selectedDiffObj.label : newsDifficulty}向けのニュースを調査中...`);
     setNewsError('');
 
     try {
@@ -76,6 +84,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         apiKey,
         model,
         category: catItem.category,
+        difficulty: newsDifficulty,
         onProgressStatus: (msg) => setNewsProgressMsg(msg)
       });
 
@@ -142,44 +151,90 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
           Google検索で今リアルタイムに話題になっているニュース記事を取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
         </p>
 
+        {/* Difficulty Selection */}
+        <div style={{ marginTop: '18px', marginBottom: '14px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E0E7FF', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>① 英語難易度を選択:</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {NEWS_DIFFICULTIES.map((diff) => {
+              const isSelected = newsDifficulty === diff.id;
+              return (
+                <button
+                  key={diff.id}
+                  onClick={() => setNewsDifficulty(diff.id)}
+                  disabled={isGeneratingNews}
+                  style={{
+                    background: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)',
+                    color: isSelected ? '#1E1B4B' : '#FFFFFF',
+                    border: isSelected ? '2px solid #FFFFFF' : '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '10px',
+                    padding: '8px 14px',
+                    fontSize: '0.84rem',
+                    fontWeight: isSelected ? 800 : 600,
+                    cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+                  }}
+                >
+                  {diff.label}
+                  {isSelected && (
+                    <span style={{ fontSize: '0.74rem', opacity: 0.8, fontWeight: 600, marginLeft: '2px' }}>
+                      ({diff.desc})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* News Category Buttons */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '18px', flexWrap: 'wrap' }}>
-          {NEWS_CATEGORIES.map((cat) => {
-            const isThisGenerating = isGeneratingNews && generatingCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleGenerateNews(cat)}
-                disabled={isGeneratingNews}
-                style={{
-                  background: isThisGenerating ? '#312E81' : 'rgba(255, 255, 255, 0.95)',
-                  color: isThisGenerating ? '#FFF' : '#334155',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '10px 18px',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-              >
-                {isThisGenerating ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    {cat.label}
-                  </>
-                )}
-              </button>
-            );
-          })}
+        <div style={{ marginTop: '14px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E0E7FF', marginBottom: '8px' }}>
+            ② ニュースカテゴリーを選んで生成:
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {NEWS_CATEGORIES.map((cat) => {
+              const isThisGenerating = isGeneratingNews && generatingCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleGenerateNews(cat)}
+                  disabled={isGeneratingNews}
+                  style={{
+                    background: isThisGenerating ? '#312E81' : 'rgba(255, 255, 255, 0.95)',
+                    color: isThisGenerating ? '#FFF' : '#334155',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '10px 18px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {isThisGenerating ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      {cat.label}
+                    </>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Loading Progress Feedback */}

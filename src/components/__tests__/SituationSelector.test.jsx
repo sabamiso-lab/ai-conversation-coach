@@ -92,4 +92,23 @@ describe('SituationSelector component', () => {
 
     expect(handleOpenModal).toHaveBeenCalledTimes(1);
   });
+
+  it('renders difficulty selection buttons and allows selecting Beginner / Advanced', async () => {
+    render(<SituationSelector onSelectSituation={vi.fn()} apiKey="test-key" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/① 英語難易度を選択:/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /🌱 初級/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /⚡ 中級/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /🔥 上級/i })).toBeInTheDocument();
+
+    // Click Beginner difficulty button
+    const beginnerBtn = screen.getByRole('button', { name: /🌱 初級/i });
+    fireEvent.click(beginnerBtn);
+
+    // Beginner button should now display its description
+    expect(screen.getByText(/平易な語彙・短文で要約/i)).toBeInTheDocument();
+  });
 });
