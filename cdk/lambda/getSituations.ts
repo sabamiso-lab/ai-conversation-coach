@@ -1,8 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+export function getDocClient() {
+  const client = new DynamoDBClient({});
+  return DynamoDBDocumentClient.from(client);
+}
 
 function parseGoals(goals: any): string[] {
   if (Array.isArray(goals)) return goals;
@@ -89,6 +91,7 @@ export const handler = async (event: APIGatewayEvent) => {
   }
 
   try {
+    const docClient = getDocClient();
     const command = new ScanCommand({ TableName: TABLE_NAME });
     const result = await docClient.send(command);
 
