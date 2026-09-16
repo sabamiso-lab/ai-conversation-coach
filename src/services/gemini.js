@@ -720,9 +720,14 @@ Adhere strictly to this JSON schema:
 export async function generateShadowingScript({ apiKey, model, topic, difficulty = 'Intermediate' }) {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
+  const isRandomRequest = !topic || !topic.trim() || topic.trim() === 'おまかせ' || topic.trim() === 'ランダム';
+  const topicInstruction = isRandomRequest
+    ? 'Select a practical, interesting, real-world English conversation scenario randomly by yourself (e.g. daily life, travel hassle, workplace presentation, or social chat).'
+    : topic.trim();
+
   const systemPrompt = `
 You are an expert English Speech Coach creating an optimal Shadowing Practice Script for English learners.
-Topic/Interest: ${topic || 'General Everyday Life'}
+Topic/Interest: ${topicInstruction}
 Target Difficulty: ${difficulty}
 
 DIFFICULTY LEVEL GUIDELINES:
@@ -748,8 +753,12 @@ Return strictly JSON matching this structure:
 }
 `;
 
+  const userPromptText = isRandomRequest
+    ? `Please generate an engaging shadowing script on a randomly selected practical topic for a ${difficulty} level learner.`
+    : `Please generate a shadowing script about "${topicInstruction}" for a ${difficulty} level learner.`;
+
   const contents = [
-    { role: 'user', parts: [{ text: `Please generate a shadowing script about "${topic}" for a ${difficulty} level learner.` }] }
+    { role: 'user', parts: [{ text: userPromptText }] }
   ];
 
   const schema = {

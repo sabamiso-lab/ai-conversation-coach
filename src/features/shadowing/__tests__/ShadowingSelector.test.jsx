@@ -32,4 +32,25 @@ describe('ShadowingSelector component', () => {
     expect(handleSelect).toHaveBeenCalledTimes(1);
     expect(handleSelect.mock.calls[0][0].id).toBe('script-1');
   });
+
+  it('populates topic input when random button or topic chips are clicked', () => {
+    render(<ShadowingSelector onSelectScript={vi.fn()} />);
+
+    // Open custom AI form
+    const createBtn = screen.getByRole('button', { name: /AIで作成する/i });
+    fireEvent.click(createBtn);
+
+    const input = screen.getByPlaceholderText(/例: レストランの予約、病院受診.../i);
+    expect(input.value).toBe('');
+
+    // Click popular topic chip
+    const chipBtn = screen.getByRole('button', { name: '☕ カフェ注文' });
+    fireEvent.click(chipBtn);
+    expect(input.value).toBe('カフェでの注文とカスタマイズ');
+
+    // Click random button
+    const randomBtn = screen.getByRole('button', { name: /🎲 ランダムに選ぶ/i });
+    fireEvent.click(randomBtn);
+    expect(input.value).not.toBe('');
+  });
 });

@@ -198,6 +198,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                       key={diff.id}
                       onClick={() => setNewsDifficulty(diff.id)}
                       disabled={isGeneratingNews}
+                      title={diff.desc}
                       style={{
                         background: isSelected ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'rgba(255, 255, 255, 0.08)',
                         color: '#FFFFFF',
@@ -215,6 +216,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                       }}
                     >
                       {diff.label}
+                      <span className="sr-only" style={{ display: 'none' }}>{diff.desc}</span>
                     </button>
                   );
                 })}

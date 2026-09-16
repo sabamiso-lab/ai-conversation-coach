@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { SHADOWING_SCRIPTS } from '../../data/shadowingScripts';
 import { generateShadowingScript } from '../../services/gemini';
+import { getRandomShadowingTopic, POPULAR_TOPIC_CHIPS } from '../../data/shadowingTopics';
 import { 
   Headphones, Sparkles, BookOpen, Play, Loader2, 
-  Zap, Layers, PlusCircle, CheckCircle2 
+  Zap, Layers, PlusCircle, CheckCircle2, Dices, RefreshCw 
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Daily', 'Travel', 'Business', 'Tech & Trends', 'Custom AI'];
@@ -25,9 +26,13 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const handleRandomizeTopic = () => {
+    const randomTopic = getRandomShadowingTopic();
+    setTopicInput(randomTopic);
+  };
+
   const handleGenerateCustomScript = async (e) => {
     e.preventDefault();
-    if (!topicInput.trim()) return;
 
     if (!apiKey) {
       if (onOpenApiKeyModal) onOpenApiKeyModal();
@@ -41,7 +46,7 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
       const newScript = await generateShadowingScript({
         apiKey,
         model,
-        topic: topicInput.trim(),
+        topic: topicInput.trim() || 'おまかせ',
         difficulty: customDifficulty
       });
 
@@ -98,7 +103,7 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
               好きなトピックで自分だけのシャドーイング文章を生成
             </h2>
             <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
-              「海外での家探し」「IT業界のプレゼン」「空港でのトラブル」など、興味のあるテーマから即座に作成できます。
+              「海外での家探し」「IT業界のプレゼン」「空港でのトラブル」など、自由入力または🎲ランダム設定で作成できます。
             </p>
           </div>
 
@@ -114,20 +119,66 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
         {/* Custom AI Form Collapse */}
         {isFormOpen && (
           <form onSubmit={handleGenerateCustomScript} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  学んでみたいトピック・シチュエーション
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1' }}>
+                    学んでみたいトピック・シチュエーション
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleRandomizeTopic}
+                    style={{
+                      background: 'rgba(99, 102, 241, 0.3)',
+                      color: '#E0E7FF',
+                      border: '1px solid rgba(165, 180, 252, 0.4)',
+                      borderRadius: '8px',
+                      padding: '3px 9px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="おすすめトピックをランダムにセット"
+                  >
+                    <Dices size={14} /> 🎲 ランダムに選ぶ
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="例: レストランの予約、病院受診..."
+                  placeholder="例: レストランの予約、病院受診... (空欄でおまかせ)"
                   value={topicInput}
                   onChange={(e) => setTopicInput(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)' }}
-                  required
+                  style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', width: '100%' }}
                 />
+
+                {/* Popular Topic Chips */}
+                <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.74rem', color: '#94A3B8', fontWeight: 600 }}>話題例:</span>
+                  {POPULAR_TOPIC_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setTopicInput(chip.topic)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.07)',
+                        color: '#CBD5E1',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        fontSize: '0.74rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -153,16 +204,20 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={isGenerating || !topicInput.trim()}
-                style={{ padding: '9px 20px', borderRadius: '10px' }}
+                disabled={isGenerating}
+                style={{ padding: '9px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
               >
                 {isGenerating ? (
                   <>
                     <Loader2 size={16} className="animate-spin" /> スクリプト作成中...
+                  </>
+                ) : !topicInput.trim() ? (
+                  <>
+                    <Dices size={16} /> 🎲 おまかせでスクリプト生成
                   </>
                 ) : (
                   <>
