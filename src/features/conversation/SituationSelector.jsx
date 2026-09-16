@@ -109,30 +109,34 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
 
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
+      {/* Title Banner */}
       <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px' }}>
+          <MessageSquare size={16} /> Conversation Studio
+        </div>
         <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
           英会話の訓練シチュエーションを選択
         </h1>
-        <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          AIが指定した役柄になりきって対話します。あなたの英語力に合わせて会話を進めましょう。
+        <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto' }}>
+          AIが指定した役柄になりきってリアルな対話を行います。実生活や仕事ですぐに使える表現力を身につけましょう。
         </p>
       </div>
 
       {/* --- Dynamic News Grounding Generator Section --- */}
       <div 
         style={{
-          background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
           borderRadius: '16px',
           padding: '24px',
           color: '#FFFFFF',
           marginBottom: '32px',
-          boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.3)',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
           position: 'relative',
           overflow: 'hidden'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
             <Sparkles size={13} /> Google Search Grounding
           </span>
           {!apiKey && (
@@ -145,13 +149,13 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.01em' }}>
           📰 本日のトレンドニュースからシチュエーションをワンタップ生成
         </h2>
-        <p style={{ fontSize: '0.9rem', color: '#E0E7FF', margin: 0, maxWidth: '680px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '0.9rem', color: '#94A3B8', margin: 0, maxWidth: '680px', lineHeight: 1.5 }}>
           Google検索で今リアルタイムに話題になっているニュース記事を取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
         </p>
 
         {/* Difficulty Selection */}
         <div style={{ marginTop: '18px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E0E7FF', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>① 英語難易度を選択:</span>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -163,9 +167,9 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                   onClick={() => setNewsDifficulty(diff.id)}
                   disabled={isGeneratingNews}
                   style={{
-                    background: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)',
-                    color: isSelected ? '#1E1B4B' : '#FFFFFF',
-                    border: isSelected ? '2px solid #FFFFFF' : '1px solid rgba(255, 255, 255, 0.3)',
+                    background: isSelected ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'rgba(255, 255, 255, 0.08)',
+                    color: '#FFFFFF',
+                    border: isSelected ? '1px solid #818CF8' : '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '10px',
                     padding: '8px 14px',
                     fontSize: '0.84rem',
@@ -175,12 +179,12 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+                    boxShadow: isSelected ? '0 4px 14px rgba(99, 102, 241, 0.35)' : 'none'
                   }}
                 >
                   {diff.label}
                   {isSelected && (
-                    <span style={{ fontSize: '0.74rem', opacity: 0.8, fontWeight: 600, marginLeft: '2px' }}>
+                    <span style={{ fontSize: '0.74rem', opacity: 0.85, fontWeight: 600, marginLeft: '2px' }}>
                       ({diff.desc})
                     </span>
                   )}
@@ -192,7 +196,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
 
         {/* News Category Buttons */}
         <div style={{ marginTop: '14px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E0E7FF', marginBottom: '8px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px' }}>
             ② ニュースカテゴリーを選んで生成:
           </div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -204,9 +208,9 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                   onClick={() => handleGenerateNews(cat)}
                   disabled={isGeneratingNews}
                   style={{
-                    background: isThisGenerating ? '#312E81' : 'rgba(255, 255, 255, 0.95)',
-                    color: isThisGenerating ? '#FFF' : '#334155',
-                    border: 'none',
+                    background: isThisGenerating ? '#4338CA' : 'rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '12px',
                     padding: '10px 18px',
                     fontWeight: 700,
@@ -216,12 +220,12 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                     alignItems: 'center',
                     gap: '6px',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                 >
                   {isThisGenerating ? (
                     <>
-                      <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
+                      <Loader2 size={16} className="animate-spin" style={{ color: '#A5B4FC' }} />
                       生成中...
                     </>
                   ) : (
@@ -237,8 +241,8 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
 
         {/* Loading Progress Feedback */}
         {isGeneratingNews && (
-          <div style={{ marginTop: '16px', background: 'rgba(0,0,0,0.2)', padding: '10px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem' }}>
-            <Loader2 size={16} className="animate-spin" />
+          <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.08)', padding: '10px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: '#CBD5E1' }}>
+            <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
             <span>{newsProgressMsg || 'Geminiがニュースを読み込んでいます...'}</span>
           </div>
         )}
@@ -276,7 +280,11 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         <div className="situation-grid">
           {filteredSituations.map(sit => {
             const IconComponent = ICON_MAP[sit.icon] || MessageSquare;
-            const badgeClass = DIFFICULTY_COLORS[sit.difficulty] || 'badge-blue';
+            const badgeStyle = sit.difficulty === 'Beginner'
+              ? { bg: '#ECFDF5', color: '#047857' }
+              : sit.difficulty === 'Advanced'
+              ? { bg: '#F3E8FF', color: '#6B21A8' }
+              : { bg: '#FEF3C7', color: '#B45309' };
 
             return (
               <div 
@@ -284,22 +292,25 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                 className="situation-card"
                 onClick={() => onSelectSituation(sit)}
                 style={{
-                  border: sit.isNews ? '2px solid #818CF8' : '1px solid #E2E8F0',
-                  background: sit.isNews ? 'linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 100%)' : '#FFFFFF'
+                  border: sit.isNews ? '2px solid #6366F1' : '1px solid #E2E8F0',
+                  background: sit.isNews ? 'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)' : '#FFFFFF'
                 }}
               >
                 <div>
                   <div className="card-top">
                     <div className="icon-box" style={{ background: sit.isNews ? '#EEF2FF' : '#F1F5F9', color: sit.isNews ? '#4F46E5' : '#475569' }}>
-                      <IconComponent size={26} />
+                      <IconComponent size={24} />
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       {sit.isNews && (
-                        <span className="badge" style={{ background: '#4F46E5', color: '#FFF' }}>
+                        <span className="badge" style={{ background: '#EEF2FF', color: '#4F46E5', fontWeight: 700 }}>
                           📰 News
                         </span>
                       )}
-                      <span className={`badge ${badgeClass}`}>
+                      <span 
+                        className="badge" 
+                        style={{ background: badgeStyle.bg, color: badgeStyle.color, fontWeight: 700 }}
+                      >
                         {sit.difficulty}
                       </span>
                     </div>

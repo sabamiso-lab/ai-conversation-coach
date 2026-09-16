@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/common/Header';
 import ApiKeyModal from './components/common/ApiKeyModal';
 import ConversationPage from './pages/ConversationPage';
@@ -25,7 +25,7 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="app-layout">
         <Header
           onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
@@ -79,6 +79,6 @@ export default function App() {
           onSaveModel={handleSaveModel}
         />
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

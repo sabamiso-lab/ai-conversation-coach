@@ -35,40 +35,44 @@ export default function MessageItem({ message }) {
         <div>{message.text}</div>
 
         {/* Translation Toggle & Audio Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
           <button
             onClick={handleSpeak}
             style={{
-              background: 'none',
+              background: isUser ? 'rgba(255, 255, 255, 0.2)' : '#F1F5F9',
               border: 'none',
+              borderRadius: '6px',
               cursor: 'pointer',
-              color: isUser ? '#E0E7FF' : '#64748B',
-              padding: '2px 4px',
+              color: isUser ? '#FFFFFF' : '#475569',
+              padding: '4px 8px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
               fontSize: '0.78rem',
-              fontWeight: 600
+              fontWeight: 700,
+              transition: 'all 0.2s ease'
             }}
             title="音声を聞く"
           >
-            <Volume2 size={15} /> 聴く
+            <Volume2 size={14} /> 聴く
           </button>
 
           {(message.translation || message.userTextTranslation) && (
             <button
               onClick={() => setShowTranslation(!showTranslation)}
               style={{
-                background: 'none',
+                background: isUser ? 'rgba(255, 255, 255, 0.2)' : '#F1F5F9',
                 border: 'none',
+                borderRadius: '6px',
                 cursor: 'pointer',
-                color: isUser ? '#E0E7FF' : '#64748B',
-                padding: '2px 4px',
+                color: isUser ? '#FFFFFF' : '#475569',
+                padding: '4px 8px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
                 fontSize: '0.78rem',
-                fontWeight: 600
+                fontWeight: 700,
+                transition: 'all 0.2s ease'
               }}
             >
               <Languages size={14} /> 
@@ -107,9 +111,9 @@ export default function MessageItem({ message }) {
 
           {/* Better Phrasing (Optional) */}
           {message.betterPhrasing && message.betterPhrasing !== message.simpleAlternative && (
-            <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#475569' }}>
-              <Sparkles size={13} style={{ display: 'inline', marginRight: '4px', color: '#6366F1' }} />
-              ネイティブ風に言うなら: <strong>"{message.betterPhrasing}"</strong>
+            <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Sparkles size={14} color="#6366F1" style={{ flexShrink: 0 }} />
+              <span>ネイティブ風表現: <strong style={{ color: '#4F46E5' }}>"{message.betterPhrasing}"</strong></span>
             </div>
           )}
         </div>

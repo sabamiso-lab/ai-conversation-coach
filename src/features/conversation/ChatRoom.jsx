@@ -213,7 +213,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, animation: 'fadeIn 0.3s ease-out' }}>
       {/* Top Bar inside Chat */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <button className="btn btn-ghost" onClick={onBack} style={{ paddingLeft: 0 }}>
@@ -221,8 +221,8 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="badge badge-purple">{situation.titleJa}</span>
-          <button className="btn btn-accent" onClick={handleFinishSession}>
+          <span className="badge badge-indigo" style={{ fontSize: '0.85rem' }}>{situation.titleJa}</span>
+          <button className="btn btn-accent" onClick={handleFinishSession} style={{ borderRadius: '10px' }}>
             <Flag size={16} /> セッションを終了して診断
           </button>
         </div>
