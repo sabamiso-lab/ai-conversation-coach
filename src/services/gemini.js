@@ -105,6 +105,62 @@ function autoCloseJson(str) {
 }
 
 /**
+ * Truncate repetitive phrase loops in AI-generated text (e.g. "素晴らしい！グッジョブ！..." repeated endlessly)
+ */
+export function truncateRepetitiveLoops(text) {
+  if (!text || typeof text !== 'string') return text;
+
+  // 1. Detect exact phrase pattern repeating 2+ times (e.g. ABCABCABC)
+  const patternRegex = /(.{3,80}?)\1{2,}/su;
+  const match = text.match(patternRegex);
+  if (match) {
+    const repeatPattern = match[1];
+    const firstIdx = text.indexOf(repeatPattern);
+    const secondIdx = text.indexOf(repeatPattern, firstIdx + repeatPattern.length);
+    if (secondIdx !== -1) {
+      return text.slice(0, secondIdx + repeatPattern.length).trim();
+    }
+  }
+
+  // 2. Detect excessive consecutive praise words (e.g. "素晴らしい！グッジョブ！お見事！バッチリ！最高！")
+  const praiseWordsRegex = /(?:素晴らしい|グッジョブ|お見事|バッチリ|最高|ナイス|ハッピー|イエス|素敵|すてき|すごい|ファイト|よくできました|おめでとう|やったね)[！!]/g;
+  const praiseMatches = text.match(praiseWordsRegex);
+  if (praiseMatches && praiseMatches.length >= 4) {
+    let count = 0;
+    let cutIndex = -1;
+    let m;
+    const searchRegex = /(?:素晴らしい|グッジョブ|お見事|バッチリ|最高|ナイス|ハッピー|イエス|素敵|すてき|すごい|ファイト|よくできました|おめでとう|やったね)[！!]/g;
+    while ((m = searchRegex.exec(text)) !== null) {
+      count++;
+      if (count === 3) {
+        cutIndex = m.index + m[0].length;
+        break;
+      }
+    }
+    if (cutIndex !== -1 && cutIndex < text.length) {
+      return text.slice(0, cutIndex).trim();
+    }
+  }
+
+  // 3. Cap text at 250 chars as fallback protection if unusually long
+  if (text.length > 250) {
+    const truncated = text.slice(0, 250);
+    const lastPunct = Math.max(
+      truncated.lastIndexOf('！'),
+      truncated.lastIndexOf('。'),
+      truncated.lastIndexOf('!'),
+      truncated.lastIndexOf('?')
+    );
+    if (lastPunct > 50) {
+      return truncated.slice(0, lastPunct + 1);
+    }
+    return truncated + '...';
+  }
+
+  return text;
+}
+
+/**
  * Clean raw text response from API and safely parse JSON with repair fallback
  */
 export function repairJson(rawJson) {
@@ -222,12 +278,16 @@ Prioritize COMMUNICATIVE INTENT and MEANING CLARITY over perfect grammar or soph
 Even if the user makes grammatical errors, if their core message would be clearly understood by a local native speaker in real life, judge it as "FULL" (100% 意図が伝わった!).
 Always provide reassuring, positive feedback in Japanese so the user gains confidence in speaking!
 
+CRITICAL FEEDBACK STYLE RULES:
+- Keep 'clarityFeedbackJa' helpful, natural, encouraging, and concise (up to 200 Japanese characters, around 1-3 sentences max).
+- DO NOT repeat identical or similar praise words (e.g. "素晴らしい！最高！グッジョブ！") in a loop. Provide genuine, specific feedback instead of repetitive exclamation spam.
+
 YOUR MISSION:
 1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English according to the Target Difficulty Level.
 2. Analyze the user's statement ("${userText}") for communicative intent:
    - clarityStatus: "FULL" (100%意図が伝わった), "PARTIAL" (おおむね伝わった), or "UNCLEAR" (伝わりづらい)
    - clarityBadgeJa: e.g. "🟢 100% 意図が伝わった！", "🟡 おおむね伝わった", "🔴 伝わりづらい"
-   - clarityFeedbackJa: Encouraging Japanese feedback explaining how their intent reached the listener (e.g. "多少の文法ミスはありますが、『お湯が出なくて困っている』という核心の意思は100%相手に伝わっています！").
+   - clarityFeedbackJa: Encouraging Japanese feedback explaining how their intent reached the listener (up to 200 characters max, e.g. "多少の文法ミスはありますが、『お湯が出なくて困っている』という核心の意思は100%相手に伝わっています！").
    - simpleAlternative: A super simple, easy English phrase (using basic middle-school words) to convey the same intent effortlessly.
    - betterPhrasing: A natural native expression suggestion (or null if already natural).
 3. Provide Japanese translations for BOTH the user's input and your AI response.
@@ -287,7 +347,11 @@ Return your response strictly as JSON with this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return cleanAndParseJson(rawJson);
+  const parsed = cleanAndParseJson(rawJson);
+  if (parsed && parsed.clarityFeedbackJa) {
+    parsed.clarityFeedbackJa = truncateRepetitiveLoops(parsed.clarityFeedbackJa);
+  }
+  return parsed;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { repairJson } from '../gemini';
+import { repairJson, truncateRepetitiveLoops } from '../gemini';
 
 describe('gemini service (repairJson)', () => {
   it('parses standard valid JSON cleanly', () => {
@@ -50,5 +50,19 @@ describe('gemini service (repairJson)', () => {
   it('re-throws syntax error if JSON cannot be repaired at all', () => {
     const unrepairable = `Random non-json text that cannot be parsed {{{`;
     expect(() => repairJson(unrepairable)).toThrow();
+  });
+});
+
+describe('gemini service (truncateRepetitiveLoops)', () => {
+  it('passes normal short feedback unchanged', () => {
+    const normalText = '多少の文法ミスはありますが、意思は100%相手に伝わっています！自信を持って話し続けましょう！';
+    expect(truncateRepetitiveLoops(normalText)).toBe(normalText);
+  });
+
+  it('detects and truncates repetitive praise loop', () => {
+    const loopText = "素晴らしい！グッジョブ！お見事！バッチリ！最高！ナイス！ハッピー！素晴らしい！イエス！グッジョブ！素晴らしい！お見事！バッチリ！最高！ナイス！ハッピー！素晴らしい！イエス！グッジョブ！素晴らしい！お見事！バッチリ！最高！ナイス！ハッピー！";
+    const cleaned = truncateRepetitiveLoops(loopText);
+    expect(cleaned.length).toBeLessThan(loopText.length);
+    expect(cleaned.includes('素晴らしい！')).toBe(true);
   });
 });
