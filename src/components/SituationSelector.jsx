@@ -4,7 +4,7 @@ import { fetchSituations, createSituation } from '../services/api';
 import { generateNewsSituation } from '../services/gemini';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
-  ArrowRight, Target, Loader2, Database, Globe, Sparkles, 
+  ArrowRight, Target, Loader2, Globe, Sparkles, 
   ExternalLink, Zap, Newspaper 
 } from 'lucide-react';
 
@@ -108,11 +108,6 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         </h1>
         <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
           AIが指定した役柄になりきって対話します。あなたの英語力に合わせて会話を進めましょう。
-          {!isLoading && !isFallback && (
-            <span style={{ fontSize: '0.75rem', background: '#EEF2FF', color: '#4F46E5', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Database size={12} /> DynamoDB 連動
-            </span>
-          )}
         </p>
       </div>
 
