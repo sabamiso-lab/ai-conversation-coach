@@ -55,7 +55,13 @@ export async function fetchSituations() {
       initialMessage: item.initialMessage,
       goals: Array.isArray(item.goals)
         ? item.goals
-        : (item.goals && typeof item.goals === 'object' ? Object.values(item.goals) : []),
+        : item.goals instanceof Set
+        ? Array.from(item.goals)
+        : item.goals?.SS && Array.isArray(item.goals.SS)
+        ? item.goals.SS
+        : item.goals && typeof item.goals === 'object'
+        ? Object.values(item.goals).flat()
+        : [],
     }));
 
     return { data: formattedSituations, isFallback: false };

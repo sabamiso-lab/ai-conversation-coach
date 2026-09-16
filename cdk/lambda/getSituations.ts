@@ -4,6 +4,17 @@ import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
+function parseGoals(goals: any): string[] {
+  if (Array.isArray(goals)) return goals;
+  if (goals instanceof Set) return Array.from(goals);
+  if (goals && typeof goals === 'object') {
+    if (Array.isArray(goals.SS)) return goals.SS;
+    if (Array.isArray(goals.values)) return goals.values;
+    return Object.values(goals).flat() as string[];
+  }
+  return [];
+}
+
 const TABLE_NAME = process.env.TABLE_NAME || 'SpeakFlowSituations';
 const API_KEY_VALUE = process.env.API_KEY_VALUE || 'sf_secret_key_default';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://sabamiso-lab.github.io,http://localhost:5173')
@@ -81,11 +92,16 @@ export const handler = async (event: APIGatewayEvent) => {
     const command = new ScanCommand({ TableName: TABLE_NAME });
     const result = await docClient.send(command);
 
+    const items = (result.Items || []).map((item) => ({
+      ...item,
+      goals: parseGoals(item.goals),
+    }));
+
     return {
       statusCode: 200,
       headers: defaultResponseHeaders,
       body: JSON.stringify({
-        situations: result.Items || [],
+        situations: items,
         count: result.Count || 0,
       }),
     };
