@@ -5,7 +5,7 @@ import { generateNewsSituation } from '../../services/gemini';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
   ArrowRight, Target, Loader2, Globe, Sparkles, 
-  ExternalLink, Zap, Newspaper 
+  ExternalLink, Zap, Newspaper, PlusCircle
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -38,6 +38,10 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
   const [situations, setSituations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Accordion & Custom Form State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [customNewsTopic, setCustomNewsTopic] = useState('');
+
   // News Grounding Generator States
   const [newsDifficulty, setNewsDifficulty] = useState('Intermediate');
   const [isGeneratingNews, setIsGeneratingNews] = useState(false);
@@ -64,30 +68,37 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
     };
   }, []);
 
-  // Handle News Scenario One-Tap Generation
-  const handleGenerateNews = async (catItem) => {
+  // Handle News Scenario Generation (One-Tap or Custom Topic Search)
+  const handleGenerateNews = async (catItem, customTopic = '') => {
     if (!apiKey) {
       if (onOpenApiKeyModal) onOpenApiKeyModal();
       return;
     }
 
     setIsGeneratingNews(true);
-    setGeneratingCategory(catItem.id);
+    const catId = typeof catItem === 'object' ? catItem.id : 'custom';
+    const catName = typeof catItem === 'object' ? catItem.category : 'General News';
+    setGeneratingCategory(catId);
+
+    const targetLabel = customTopic.trim() || (typeof catItem === 'object' ? catItem.label : 'ニュース');
     const selectedDiffObj = NEWS_DIFFICULTIES.find(d => d.id === newsDifficulty);
-    setNewsProgressMsg(`Google検索で${selectedDiffObj ? selectedDiffObj.label : newsDifficulty}向けのニュースを調査中...`);
+    setNewsProgressMsg(`Google検索で${targetLabel}のニュース（${selectedDiffObj ? selectedDiffObj.label : newsDifficulty}向け）を調査中...`);
     setNewsError('');
 
     try {
       const newSituation = await generateNewsSituation({
         apiKey,
         model,
-        category: catItem.category,
+        category: catName,
+        topic: customTopic.trim(),
         difficulty: newsDifficulty,
         onProgressStatus: (msg) => setNewsProgressMsg(msg)
       });
 
       // Insert new news scenario at top of list
       setSituations((prev) => [newSituation, ...prev]);
+      setCustomNewsTopic('');
+      setIsFormOpen(false);
 
       // Optionally attempt storing in DynamoDB API
       createSituation(newSituation).catch((err) => console.warn('Background save note:', err.message));
@@ -135,123 +146,181 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
           overflow: 'hidden'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
-            <Sparkles size={13} /> Google Search Grounding
-          </span>
-          {!apiKey && (
-            <span style={{ background: '#F59E0B', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-              ⚠️ API Key未設定
-            </span>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px' }}>
+              <Sparkles size={13} /> Google Search Grounding
+              {!apiKey && (
+                <span style={{ background: '#F59E0B', color: '#FFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', marginLeft: '4px' }}>
+                  ⚠️ API Key未設定
+                </span>
+              )}
+            </div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
+              📰 本日のトレンドニュースからシチュエーションをAI生成
+            </h2>
+            <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: 0, maxWidth: '680px' }}>
+              Google検索で最新ニュースを取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
+            </p>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={() => setIsFormOpen(!isFormOpen)}
+            style={{ borderRadius: '12px', padding: '10px 18px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
+          >
+            <PlusCircle size={18} /> {isFormOpen ? 'フォームを閉じる' : 'AIで作成する'}
+          </button>
         </div>
 
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.01em' }}>
-          📰 本日のトレンドニュースからシチュエーションをワンタップ生成
-        </h2>
-        <p style={{ fontSize: '0.9rem', color: '#94A3B8', margin: 0, maxWidth: '680px', lineHeight: 1.5 }}>
-          Google検索で今リアルタイムに話題になっているニュース記事を取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
-        </p>
+        {/* Custom AI Form Collapse */}
+        {isFormOpen && (
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (customNewsTopic.trim()) {
+                handleGenerateNews('custom', customNewsTopic);
+              }
+            }} 
+            style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            {/* Difficulty Selection */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px' }}>
+                ① 英語難易度を選択
+              </label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {NEWS_DIFFICULTIES.map((diff) => {
+                  const isSelected = newsDifficulty === diff.id;
+                  return (
+                    <button
+                      type="button"
+                      key={diff.id}
+                      onClick={() => setNewsDifficulty(diff.id)}
+                      disabled={isGeneratingNews}
+                      style={{
+                        background: isSelected ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'rgba(255, 255, 255, 0.08)',
+                        color: '#FFFFFF',
+                        border: isSelected ? '1px solid #818CF8' : '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '10px',
+                        padding: '8px 14px',
+                        fontSize: '0.84rem',
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: isSelected ? '0 4px 14px rgba(99, 102, 241, 0.35)' : 'none'
+                      }}
+                    >
+                      {diff.label}
+                      {isSelected && (
+                        <span style={{ fontSize: '0.74rem', opacity: 0.85, fontWeight: 600, marginLeft: '2px' }}>
+                          ({diff.desc})
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Difficulty Selection */}
-        <div style={{ marginTop: '18px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>① 英語難易度を選択:</span>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {NEWS_DIFFICULTIES.map((diff) => {
-              const isSelected = newsDifficulty === diff.id;
-              return (
-                <button
-                  key={diff.id}
-                  onClick={() => setNewsDifficulty(diff.id)}
-                  disabled={isGeneratingNews}
-                  style={{
-                    background: isSelected ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'rgba(255, 255, 255, 0.08)',
-                    color: '#FFFFFF',
-                    border: isSelected ? '1px solid #818CF8' : '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '10px',
-                    padding: '8px 14px',
-                    fontSize: '0.84rem',
-                    fontWeight: isSelected ? 800 : 600,
-                    cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: isSelected ? '0 4px 14px rgba(99, 102, 241, 0.35)' : 'none'
-                  }}
-                >
-                  {diff.label}
-                  {isSelected && (
-                    <span style={{ fontSize: '0.74rem', opacity: 0.85, fontWeight: 600, marginLeft: '2px' }}>
-                      ({diff.desc})
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+            {/* Topic Input or One-Tap Category */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  ② 語り合ってみたいニュースキーワード・話題 (自由入力)
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="例: 大谷翔平の試合、Apple新製品発表、AIの最新動向..."
+                    value={customNewsTopic}
+                    onChange={(e) => setCustomNewsTopic(e.target.value)}
+                    style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', flex: 1 }}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isGeneratingNews || !customNewsTopic.trim()}
+                    style={{ padding: '10px 20px', borderRadius: '10px', whiteSpace: 'nowrap' }}
+                  >
+                    {isGeneratingNews && generatingCategory === 'custom' ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" /> 検索生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={16} /> ニュースから生成
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
 
-        {/* News Category Buttons */}
-        <div style={{ marginTop: '14px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px' }}>
-            ② ニュースカテゴリーを選んで生成:
-          </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            {NEWS_CATEGORIES.map((cat) => {
-              const isThisGenerating = isGeneratingNews && generatingCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => handleGenerateNews(cat)}
-                  disabled={isGeneratingNews}
-                  style={{
-                    background: isThisGenerating ? '#4338CA' : 'rgba(255, 255, 255, 0.12)',
-                    color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '10px 18px',
-                    fontWeight: 700,
-                    fontSize: '0.88rem',
-                    cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  {isThisGenerating ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" style={{ color: '#A5B4FC' }} />
-                      生成中...
-                    </>
-                  ) : (
-                    <>
-                      {cat.label}
-                    </>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px' }}>
+                  または 定番カテゴリーからワンタップ生成:
+                </label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {NEWS_CATEGORIES.map((cat) => {
+                    const isThisGenerating = isGeneratingNews && generatingCategory === cat.id;
+                    return (
+                      <button
+                        type="button"
+                        key={cat.id}
+                        onClick={() => handleGenerateNews(cat)}
+                        disabled={isGeneratingNews}
+                        style={{
+                          background: isThisGenerating ? '#4338CA' : 'rgba(255, 255, 255, 0.12)',
+                          color: '#FFFFFF',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '12px',
+                          padding: '8px 16px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        {isThisGenerating ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" style={{ color: '#A5B4FC' }} />
+                            生成中...
+                          </>
+                        ) : (
+                          <>
+                            {cat.label}
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
 
-        {/* Loading Progress Feedback */}
-        {isGeneratingNews && (
-          <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.08)', padding: '10px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: '#CBD5E1' }}>
-            <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
-            <span>{newsProgressMsg || 'Geminiがニュースを読み込んでいます...'}</span>
-          </div>
-        )}
+            {/* Loading Progress Feedback */}
+            {isGeneratingNews && (
+              <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.08)', padding: '10px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: '#CBD5E1' }}>
+                <Loader2 size={16} className="animate-spin" style={{ color: '#818CF8' }} />
+                <span>{newsProgressMsg || 'Geminiがニュースを読み込んでいます...'}</span>
+              </div>
+            )}
 
-        {/* Error message */}
-        {newsError && (
-          <div style={{ marginTop: '16px', background: '#FFE4E6', color: '#E11D48', padding: '10px 16px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600 }}>
-            {newsError}
-          </div>
+            {/* Error message */}
+            {newsError && (
+              <div style={{ marginTop: '16px', background: '#FFE4E6', color: '#E11D48', padding: '10px 16px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600 }}>
+                {newsError}
+              </div>
+            )}
+          </form>
         )}
       </div>
 

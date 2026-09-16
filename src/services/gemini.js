@@ -500,15 +500,17 @@ async function callGeminiApiWithGrounding(apiKey, model, prompt) {
 /**
  * Generate a dynamic English conversation scenario based on real-time news using Google Search Grounding
  */
-export async function generateNewsSituation({ apiKey, model, category = 'Technology', difficulty = 'Intermediate', onProgressStatus = () => {} }) {
+export async function generateNewsSituation({ apiKey, model, category = 'Technology', topic = '', difficulty = 'Intermediate', onProgressStatus = () => {} }) {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
+  const searchTarget = topic.trim() ? `topic: "${topic.trim()}" (Category: ${category})` : `category: "${category}"`;
+
   // Step 1: Grounding Search
-  onProgressStatus(`Google検索で${difficulty === 'Beginner' ? '初級者向け' : difficulty === 'Advanced' ? '上級者向け' : '最新'}のニュースを検索・収集しています...`);
+  onProgressStatus(`Google検索で${difficulty === 'Beginner' ? '初級者向け' : difficulty === 'Advanced' ? '上級者向け' : '最新'}のニュース（${topic.trim() || category}）を検索・収集しています...`);
 
   const groundingPrompt = `
-Search for 1 recent, compelling news story published today or in the last few days in the category: "${category}".
-Topics can include technology, business, international relations, climate, entertainment, or science.
+Search for 1 recent, compelling news story published today or in the last few days for ${searchTarget}.
+Topics can include technology, business, international relations, climate, sports, entertainment, or science.
 
 Target English Difficulty Level for English Learners: ${difficulty}
 

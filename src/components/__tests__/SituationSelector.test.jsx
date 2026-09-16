@@ -83,6 +83,10 @@ describe('SituationSelector component', () => {
     const handleOpenModal = vi.fn();
     render(<SituationSelector onSelectSituation={vi.fn()} apiKey="" onOpenApiKeyModal={handleOpenModal} />);
 
+    // Open news generation form accordion first
+    const openFormBtn = screen.getByRole('button', { name: /AIで作成する/i });
+    fireEvent.click(openFormBtn);
+
     await waitFor(() => {
       expect(screen.getByText(/🚀 Tech & AI/i)).toBeInTheDocument();
     });
@@ -96,8 +100,12 @@ describe('SituationSelector component', () => {
   it('renders difficulty selection buttons and allows selecting Beginner / Advanced', async () => {
     render(<SituationSelector onSelectSituation={vi.fn()} apiKey="test-key" />);
 
+    // Open news generation form accordion first
+    const openFormBtn = screen.getByRole('button', { name: /AIで作成する/i });
+    fireEvent.click(openFormBtn);
+
     await waitFor(() => {
-      expect(screen.getByText(/① 英語難易度を選択:/i)).toBeInTheDocument();
+      expect(screen.getByText(/① 英語難易度を選択/i)).toBeInTheDocument();
     });
 
     expect(screen.getByRole('button', { name: /🌱 初級/i })).toBeInTheDocument();
