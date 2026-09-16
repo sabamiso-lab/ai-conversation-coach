@@ -5,19 +5,147 @@
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 /**
- * Clean raw text response from API and safely parse JSON
+ * Fix unescaped control characters (like raw linebreaks) inside JSON strings
  */
-function cleanAndParseJson(rawJson) {
+function sanitizeControlChars(str) {
+  let result = '';
+  let inString = false;
+  let isEscaped = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (inString) {
+      if (isEscaped) {
+        result += ch;
+        isEscaped = false;
+      } else if (ch === '\\') {
+        result += ch;
+        isEscaped = true;
+      } else if (ch === '"') {
+        result += ch;
+        inString = false;
+      } else if (ch === '\n') {
+        result += '\\n';
+      } else if (ch === '\r') {
+        result += '\\r';
+      } else if (ch === '\t') {
+        result += '\\t';
+      } else {
+        result += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inString = true;
+      }
+      result += ch;
+    }
+  }
+  return result;
+}
+
+/**
+ * Auto-close unclosed string literals, array brackets `]`, and object braces `}`
+ */
+function autoCloseJson(str) {
+  let inString = false;
+  let isEscaped = false;
+  const stack = [];
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (ch === '\\') {
+        isEscaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+    } else {
+      if (ch === '"') {
+        inString = true;
+      } else if (ch === '{' || ch === '[') {
+        stack.push(ch);
+      } else if (ch === '}') {
+        if (stack.length > 0 && stack[stack.length - 1] === '{') {
+          stack.pop();
+        }
+      } else if (ch === ']') {
+        if (stack.length > 0 && stack[stack.length - 1] === '[') {
+          stack.pop();
+        }
+      }
+    }
+  }
+
+  let repaired = str;
+
+  // 1. If inside an unclosed string, close the string quote
+  if (inString) {
+    if (isEscaped) {
+      repaired = repaired.slice(0, -1);
+    }
+    repaired += '"';
+  }
+
+  // 2. Remove trailing commas before closing brackets/braces
+  repaired = repaired.replace(/,\s*$/, '');
+
+  // 3. Close open brackets/braces in reverse order
+  while (stack.length > 0) {
+    const opening = stack.pop();
+    if (opening === '{') {
+      repaired += '}';
+    } else if (opening === '[') {
+      repaired += ']';
+    }
+  }
+
+  return repaired;
+}
+
+/**
+ * Clean raw text response from API and safely parse JSON with repair fallback
+ */
+export function repairJson(rawJson) {
   if (!rawJson) throw new Error("Empty response from API");
-  
-  // Remove markdown code blocks if present
+
   let cleaned = rawJson.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   }
 
+  // Attempt 1: Direct parse
   try {
     return JSON.parse(cleaned);
+  } catch (e1) {
+    // Attempt 2: Sanitize control characters (raw newlines in strings)
+    try {
+      const sanitized = sanitizeControlChars(cleaned);
+      return JSON.parse(sanitized);
+    } catch (e2) {
+      // Attempt 3: Auto-close truncated JSON
+      try {
+        const autoClosed = autoCloseJson(cleaned);
+        return JSON.parse(autoClosed);
+      } catch (e3) {
+        // Attempt 4: Combination of sanitize + auto-close
+        try {
+          const combined = autoCloseJson(sanitizeControlChars(cleaned));
+          return JSON.parse(combined);
+        } catch (e4) {
+          throw e1;
+        }
+      }
+    }
+  }
+}
+
+function cleanAndParseJson(rawJson) {
+  if (!rawJson) throw new Error("Empty response from API");
+
+  try {
+    return repairJson(rawJson);
   } catch (err) {
     console.error("JSON Parse Error. Raw string length:", rawJson.length, "Raw string snippet:", rawJson.slice(0, 300));
     throw new Error(`JSON parsing failed: ${err.message}. The response may have been cut off or formatted incorrectly.`);
@@ -413,32 +541,38 @@ ${difficulty === 'Advanced' ? '   - Highlight detailed facts, key statistics, an
   // Step 2: Structuring Scenario
   onProgressStatus('最新ニュースを英会話ロールプレイのシチュエーションに変換中...');
 
+  // Truncate newsText to avoid prompt overload and token exhaustion
+  const truncatedNewsText = newsText && newsText.length > 1500 ? newsText.slice(0, 1500) + '...' : newsText;
+
   const structPrompt = `
 You are an expert English Language Coach creating a scenario tailored for a **${difficulty}** level English learner.
 Convert the following real news story into an engaging, interactive English conversation roleplay scenario:
 
 NEWS CONTENT (Retrieved via Google Search):
-${newsText}
+${truncatedNewsText}
 
 Category: ${category}
 Target Difficulty Level: ${difficulty}
 
 DIFFICULTY LEVEL GUIDELINES:
 - **Beginner**:
-  * English Title & Description: Use basic, everyday vocabulary and short simple sentences.
+  * English Title & Description: Use basic, everyday vocabulary and short simple sentences (2-3 sentences max).
   * System Role & User Role: Friendly, accessible conversation setting (e.g. sharing news with a friend).
   * Initial Message: Very friendly, short (1-2 sentences), using basic English (e.g. "Did you hear about...? It sounds cool!").
   * Goals: Simple, easy-to-achieve goals (e.g., "Goal 1: Say if you like this news", "Goal 2: Mention one reason why").
 - **Intermediate**:
-  * English Title & Description: Standard news English (B1-B2 vocabulary).
+  * English Title & Description: Standard news English (B1-B2 vocabulary, 2-3 sentences max).
   * System Role & User Role: Practical colleague or friend discussing current affairs.
   * Initial Message: Engaging 2-3 sentence overview and question.
   * Goals: Share opinions, explain impact, ask follow-up questions.
 - **Advanced**:
-  * English Title & Description: Sophisticated, business/professional level English (C1-C2 vocabulary, complex sentence structures).
+  * English Title & Description: Sophisticated, business/professional level English (C1-C2 vocabulary, 2-3 sentences max).
   * System Role & User Role: Expert colleague, analyst, or journalist debating implications.
   * Initial Message: Thought-provoking 2-3 sentence statement introducing strategic or societal nuances.
   * Goals: Debate pros/cons, evaluate long-term market/societal impacts, discuss trade-offs.
+
+IMPORTANT: Keep description and descriptionJa concise (2-3 sentences max).
+
 
 Adhere strictly to this JSON schema:
 {

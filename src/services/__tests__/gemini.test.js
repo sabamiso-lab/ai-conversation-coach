@@ -1,0 +1,54 @@
+import { describe, expect, it } from 'vitest';
+import { repairJson } from '../gemini';
+
+describe('gemini service (repairJson)', () => {
+  it('parses standard valid JSON cleanly', () => {
+    const jsonStr = '{"title": "Hello", "count": 42}';
+    const result = repairJson(jsonStr);
+    expect(result).toEqual({ title: 'Hello', count: 42 });
+  });
+
+  it('strips markdown code blocks before parsing', () => {
+    const jsonStr = '```json\n{\n  "title": "Markdown JSON",\n  "active": true\n}\n```';
+    const result = repairJson(jsonStr);
+    expect(result).toEqual({ title: 'Markdown JSON', active: true });
+  });
+
+  it('sanitizes unescaped newlines inside JSON string literals', () => {
+    const rawWithNewlines = `{\n  "title": "First Line\nSecond Line",\n  "status": "ok"\n}`;
+    const result = repairJson(rawWithNewlines);
+    expect(result).toEqual({ title: 'First Line\nSecond Line', status: 'ok' });
+  });
+
+  it('auto-closes truncated string literals and unclosed JSON objects', () => {
+    // Truncated string at end of JSON object (simulating Unterminated string error)
+    const truncatedStr = `{\n  "title": "News Scenario",\n  "descriptionJa": "本日のトレンドニュースに関する議論で、最新のAI`;
+    const result = repairJson(truncatedStr);
+    expect(result.title).toBe('News Scenario');
+    expect(result.descriptionJa).toBe('本日のトレンドニュースに関する議論で、最新のAI');
+  });
+
+  it('auto-closes truncated JSON inside array items', () => {
+    const truncatedArray = `{\n  "title": "Test",\n  "goals": ["Goal 1", "Goal 2`;
+    const result = repairJson(truncatedArray);
+    expect(result.title).toBe('Test');
+    expect(result.goals).toEqual(['Goal 1', 'Goal 2']);
+  });
+
+  it('auto-closes JSON with trailing comma after truncation', () => {
+    const truncatedWithComma = `{\n  "title": "Test",\n  "goals": ["Goal 1"],\n`;
+    const result = repairJson(truncatedWithComma);
+    expect(result.title).toBe('Test');
+    expect(result.goals).toEqual(['Goal 1']);
+  });
+
+  it('throws error for empty input', () => {
+    expect(() => repairJson('')).toThrow('Empty response from API');
+    expect(() => repairJson(null)).toThrow('Empty response from API');
+  });
+
+  it('re-throws syntax error if JSON cannot be repaired at all', () => {
+    const unrepairable = `Random non-json text that cannot be parsed {{{`;
+    expect(() => repairJson(unrepairable)).toThrow();
+  });
+});
