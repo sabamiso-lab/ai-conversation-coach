@@ -1,25 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-const mockSend = vi.fn();
-
-vi.mock('@aws-sdk/lib-dynamodb', async () => {
-  const actual = await vi.importActual('@aws-sdk/lib-dynamodb');
-  return {
-    ...actual,
-    DynamoDBDocumentClient: {
-      from: vi.fn().mockReturnValue({
-        send: (...args: any[]) => mockSend(...args),
-      }),
-    },
-  };
-});
-
 import { handler } from '../getSituations';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 describe('getSituations Lambda Handler', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockSend.mockReset();
   });
 
   it('handles OPTIONS request for CORS preflight', async () => {
@@ -57,10 +42,10 @@ describe('getSituations Lambda Handler', () => {
       },
     ];
 
-    mockSend.mockResolvedValueOnce({
+    vi.spyOn(DynamoDBDocumentClient.prototype, 'send').mockResolvedValueOnce({
       Items: mockItems,
       Count: 1,
-    });
+    } as never);
 
     const event = {
       httpMethod: 'GET',

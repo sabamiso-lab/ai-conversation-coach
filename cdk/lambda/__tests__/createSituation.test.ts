@@ -1,20 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-const mockSend = vi.fn();
-
-vi.mock('@aws-sdk/lib-dynamodb', async () => {
-  const actual = await vi.importActual('@aws-sdk/lib-dynamodb');
-  return {
-    ...actual,
-    DynamoDBDocumentClient: {
-      from: vi.fn().mockReturnValue({
-        send: (...args: any[]) => mockSend(...args),
-      }),
-    },
-  };
-});
-
 import { handler } from '../createSituation';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 describe('createSituation Lambda Handler', () => {
   const defaultApiKey = 'sf_secret_key_default';
@@ -34,7 +20,6 @@ describe('createSituation Lambda Handler', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockSend.mockReset();
   });
 
   it('rejects request with 403 when API key is missing or invalid', async () => {
@@ -74,7 +59,7 @@ describe('createSituation Lambda Handler', () => {
   });
 
   it('creates situation successfully and returns 201 Created', async () => {
-    mockSend.mockResolvedValueOnce({});
+    vi.spyOn(DynamoDBDocumentClient.prototype, 'send').mockResolvedValueOnce({} as never);
 
     const event = {
       httpMethod: 'POST',
