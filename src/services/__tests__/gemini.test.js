@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { repairJson, truncateRepetitiveLoops } from '../gemini';
+import { repairJson, truncateRepetitiveLoops, cleanPhrase } from '../gemini';
 
 describe('gemini service (repairJson)', () => {
   it('parses standard valid JSON cleanly', () => {
@@ -66,3 +66,14 @@ describe('gemini service (truncateRepetitiveLoops)', () => {
     expect(cleaned.includes('素晴らしい！')).toBe(true);
   });
 });
+
+describe('gemini service (cleanPhrase)', () => {
+  it('cleans quotes, prefixes, and extra whitespace from simpleAlternative and betterPhrasing', () => {
+    expect(cleanPhrase('"Could I get a water, please?"')).toBe('Could I get a water, please?');
+    expect(cleanPhrase('1. "I want water."')).toBe('I want water.');
+    expect(cleanPhrase('You can say: "Can I have some water?"')).toBe('Can I have some water?');
+    expect(cleanPhrase(null)).toBe(null);
+    expect(cleanPhrase('')).toBe(null);
+  });
+});
+

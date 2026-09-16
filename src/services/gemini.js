@@ -161,6 +161,34 @@ export function truncateRepetitiveLoops(text) {
 }
 
 /**
+ * Clean and format individual English phrase suggestions (simpleAlternative, betterPhrasing)
+ */
+export function cleanPhrase(text) {
+  if (!text || typeof text !== 'string') return null;
+
+  let cleaned = text.trim();
+  // Strip outer quotes if enclosed in double or single quotes
+  cleaned = cleaned.replace(/^["'“`]+|["'”`]+$/g, '').trim();
+
+  // Strip prefixes like "1. ", "You can say: ", "Option: ", "Phrase: "
+  cleaned = cleaned.replace(/^(?:\d+\.\s*|you can say:\s*|option:\s*|phrase:\s*)/i, '').trim();
+  // Strip inner quotes wrapping the entire phrase again if present
+  cleaned = cleaned.replace(/^["'“`]+|["'”`]+$/g, '').trim();
+
+  if (!cleaned) return null;
+
+  // Apply repetitive loop truncation just in case
+  cleaned = truncateRepetitiveLoops(cleaned);
+
+  // Cap max length at 150 chars to avoid prompt degradation output
+  if (cleaned.length > 150) {
+    cleaned = cleaned.slice(0, 150).trim();
+  }
+
+  return cleaned;
+}
+
+/**
  * Clean raw text response from API and safely parse JSON with repair fallback
  */
 export function repairJson(rawJson) {
@@ -289,6 +317,8 @@ Always provide reassuring, positive feedback in Japanese so the user gains confi
 CRITICAL FEEDBACK STYLE RULES:
 - Keep 'clarityFeedbackJa' helpful, natural, encouraging, and concise (up to 200 Japanese characters, around 1-3 sentences max).
 - DO NOT repeat identical or similar praise words (e.g. "素晴らしい！最高！グッジョブ！") in a loop. Provide genuine, specific feedback instead of repetitive exclamation spam.
+- 'simpleAlternative' MUST be EXACTLY ONE short, clear, easy English phrase (15 words max). DO NOT include Japanese, extra commentary, numbered lists, or quotes inside.
+- 'betterPhrasing' MUST be EXACTLY ONE natural native English expression (or null if user text is already native). DO NOT include Japanese or extra commentary.
 
 YOUR MISSION:
 1. Stay strictly in character as "${situation.systemRole}" and respond naturally in English according to the Target Difficulty Level and CONVERSATION PROGRESSION GUIDELINES.
@@ -308,8 +338,8 @@ Return your response strictly as JSON with this structure:
   "clarityStatus": "FULL",
   "clarityBadgeJa": "🟢 100% 意図が伝わった！",
   "clarityFeedbackJa": "日本語での評価・励ましフィードバック",
-  "simpleAlternative": "もっと簡単に伝えるサバイバル英語フレーズ",
-  "betterPhrasing": "より自然な英語表現（任意、またはnull）",
+  "simpleAlternative": "Could I get a coffee, please?",
+  "betterPhrasing": "May I have a cup of coffee?",
   "phrasingTip": "ワンポイント解説（日本語、任意）"
 }
 `;
@@ -356,8 +386,16 @@ Return your response strictly as JSON with this structure:
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
   const parsed = cleanAndParseJson(rawJson);
-  if (parsed && parsed.clarityFeedbackJa) {
-    parsed.clarityFeedbackJa = truncateRepetitiveLoops(parsed.clarityFeedbackJa);
+  if (parsed) {
+    if (parsed.clarityFeedbackJa) {
+      parsed.clarityFeedbackJa = truncateRepetitiveLoops(parsed.clarityFeedbackJa);
+    }
+    if (parsed.simpleAlternative) {
+      parsed.simpleAlternative = cleanPhrase(parsed.simpleAlternative);
+    }
+    if (parsed.betterPhrasing) {
+      parsed.betterPhrasing = cleanPhrase(parsed.betterPhrasing);
+    }
   }
   return parsed;
 }
