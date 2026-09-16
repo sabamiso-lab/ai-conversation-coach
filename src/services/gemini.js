@@ -620,11 +620,18 @@ Adhere strictly to this JSON schema:
 
   const scenarioData = cleanAndParseJson(rawJson);
 
+  // Calculate Unix timestamp for tomorrow 00:00:00 in seconds (midnight of next day)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const expiresAt = Math.floor(tomorrow.getTime() / 1000);
+
   return {
     ...scenarioData,
     difficulty: difficulty, // Ensure difficulty is explicitly set
     id: `news-${Date.now()}`,
     isNews: true,
+    expiresAt: expiresAt,
     newsCategory: category,
     newsSource: sourceUrl ? {
       title: sourceTitle || `${category} News Article`,

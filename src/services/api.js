@@ -41,29 +41,36 @@ export async function fetchSituations() {
     }
 
     // Format DynamoDB data if needed and return
-    const formattedSituations = fetchedSituations.map((item) => ({
-      id: item.id,
-      title: item.title,
-      titleJa: item.titleJa,
-      category: item.category,
-      icon: item.icon,
-      difficulty: item.difficulty,
-      systemRole: item.systemRole,
-      userRole: item.userRole,
-      description: item.description,
-      descriptionJa: item.descriptionJa,
-      initialMessage: item.initialMessage,
-      initialMessageJa: item.initialMessageJa || item.initialMessageTranslation,
-      goals: Array.isArray(item.goals)
-        ? item.goals
-        : item.goals instanceof Set
-        ? Array.from(item.goals)
-        : item.goals?.SS && Array.isArray(item.goals.SS)
-        ? item.goals.SS
-        : item.goals && typeof item.goals === 'object'
-        ? Object.values(item.goals).flat()
-        : [],
-    }));
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const formattedSituations = fetchedSituations
+      .filter((item) => !item.expiresAt || item.expiresAt > nowInSeconds)
+      .map((item) => ({
+        id: item.id,
+        title: item.title,
+        titleJa: item.titleJa,
+        category: item.category,
+        icon: item.icon,
+        difficulty: item.difficulty,
+        systemRole: item.systemRole,
+        userRole: item.userRole,
+        description: item.description,
+        descriptionJa: item.descriptionJa,
+        initialMessage: item.initialMessage,
+        initialMessageJa: item.initialMessageJa,
+        isNews: Boolean(item.isNews),
+        expiresAt: item.expiresAt,
+        newsSource: item.newsSource || null,
+        newsCategory: item.newsCategory || null,
+        goals: Array.isArray(item.goals)
+          ? item.goals
+          : item.goals instanceof Set
+          ? Array.from(item.goals)
+          : item.goals?.SS && Array.isArray(item.goals.SS)
+          ? item.goals.SS
+          : item.goals && typeof item.goals === 'object'
+          ? Object.values(item.goals).flat()
+          : [],
+      }));
 
     return { data: formattedSituations, isFallback: false };
   } catch (error) {

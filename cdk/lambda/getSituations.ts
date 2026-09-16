@@ -95,17 +95,20 @@ export const handler = async (event: APIGatewayEvent) => {
     const command = new ScanCommand({ TableName: TABLE_NAME });
     const result = await docClient.send(command);
 
-    const items = (result.Items || []).map((item) => ({
-      ...item,
-      goals: parseGoals(item.goals),
-    }));
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const validItems = (result.Items || [])
+      .filter((item) => !item.expiresAt || item.expiresAt > nowInSeconds)
+      .map((item) => ({
+        ...item,
+        goals: parseGoals(item.goals),
+      }));
 
     return {
       statusCode: 200,
       headers: defaultResponseHeaders,
       body: JSON.stringify({
-        situations: items,
-        count: result.Count || 0,
+        situations: validItems,
+        count: validItems.length,
       }),
     };
   } catch (error) {

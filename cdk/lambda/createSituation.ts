@@ -37,6 +37,10 @@ export interface SituationInput {
   initialMessage: string;
   initialMessageJa?: string;
   goals: string[] | string;
+  expiresAt?: number;
+  isNews?: boolean;
+  newsSource?: { title: string; url: string } | null;
+  newsCategory?: string;
 }
 
 export const handler = async (event: APIGatewayEvent) => {
@@ -176,6 +180,10 @@ export const handler = async (event: APIGatewayEvent) => {
     initialMessageJa: data.initialMessageJa ? data.initialMessageJa.trim() : undefined,
     goals: goalsArray,
     createdAt: new Date().toISOString(),
+    expiresAt: typeof data.expiresAt === 'number' ? data.expiresAt : undefined,
+    isNews: Boolean(data.isNews),
+    newsSource: data.newsSource || undefined,
+    newsCategory: data.newsCategory || undefined,
   };
 
   try {

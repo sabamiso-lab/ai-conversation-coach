@@ -31,6 +31,7 @@ export class SpeakFlowBackendStack extends cdk.Stack {
     const situationsTable = new dynamodb.Table(this, 'SituationsTable', {
       tableName: 'SpeakFlowSituations',
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: 'expiresAt',
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // Change to RETAIN for production if needed
     });
