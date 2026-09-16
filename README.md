@@ -78,8 +78,8 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 - **x-speakflow-api-key カスタムヘッダー**: API Key 照合を行い、不正な呼び出しを防止。
 - **POST API (シナリオ登録)**: クライアントやAIから動的シナリオを安全にDynamoDBへ追加保存。
 
-### ⚡ 9. Gemini モデル選択 ＆ JSON Self-Healing Parser
-- `gemini-3.5-flash-lite`（デフォルト・超高速・軽量モデル）のほか、`gemini-2.0-flash` / `gemini-1.5-flash` / `gemini-1.5-pro` に対応。
+### ⚡ 9. 高速 AI エンジン (Gemini 3.5 Flash-Lite) ＆ JSON Self-Healing Parser
+- 超高速応答の `gemini-3.5-flash-lite` を標準採用。API Key はブラウザの `LocalStorage` に安全に保管されます。
 - 不完全な JSON レスポンスやトークン上限切れが発生しても、安全に修復・パースする Self-Healing ロジックを標準搭載。
 
 ---
@@ -138,7 +138,7 @@ npm run test:ui
 
 1. [Google AI Studio](https://aistudio.google.com/app/apikey) にアクセスし、無料の API Key を作成します。
 2. アプリ画面右上の **「API Key を設定」** ボタンをクリックします。
-3. 取得した API Key を入力し、使用したいモデル（推奨: `gemini-3.5-flash-lite`）を選択して保存します。
+3. 取得した API Key を入力して保存します。（使用モデル: `gemini-3.5-flash-lite`）
 4. ※ APIキーはブラウザの `LocalStorage` にローカル保存され、外部サーバーに送信されることは一切ありません。
 
 ---
@@ -165,16 +165,13 @@ npx cdk deploy
 
 ---
 
-## 🤖 利用可能な Gemini モデル
+## 🤖 AI エンジン (Gemini Model)
 
-SpeakFlow は以下の Google Gemini モデルに対応しています：
+SpeakFlow は **Google Gemini 3.5 Flash-Lite** を標準 AI エンジンとして採用しています。
 
 | モデル名 | 特徴 | 用途 |
 |:---|:---|:---|
-| **`gemini-3.5-flash-lite`** *(デフォルト)* | 超高速応答・会話に最適 | リアルタイムロールプレイ |
-| **`gemini-2.0-flash`** | 高精度かつスピーディ | 高度なニュース生成・レッスン |
-| **`gemini-1.5-flash`** | バランスの取れた標準モデル | 汎用会話 |
-| **`gemini-1.5-pro`** | 高度な論理的分析 | 深い文法診断 |
+| **`gemini-3.5-flash-lite`** *(標準)* | 超高速応答・リアルタイム対話・優れたコンテキスト理解 | リアルタイムロールプレイ、ニュース生成、ネイティブアドバイス、診断レポート |
 
 ---
 

@@ -54,30 +54,6 @@ describe('ApiKeyModal component', () => {
     expect(handleSaveModel).toHaveBeenCalledWith('gemini-3.5-flash-lite');
   });
 
-  it('allows selecting gemini-2.0-flash model', () => {
-    const handleSaveKey = vi.fn();
-    const handleSaveModel = vi.fn();
-
-    render(
-      <ApiKeyModal
-        isOpen={true}
-        apiKey="test-key"
-        currentModel="gemini-3.5-flash-lite"
-        onClose={vi.fn()}
-        onSaveKey={handleSaveKey}
-        onSaveModel={handleSaveModel}
-      />
-    );
-
-    const selectModel = screen.getByRole('combobox');
-    fireEvent.change(selectModel, { target: { value: 'gemini-2.0-flash' } });
-
-    const submitBtn = screen.getByRole('button', { name: /保存して適用/i });
-    fireEvent.click(submitBtn);
-
-    expect(handleSaveModel).toHaveBeenCalledWith('gemini-2.0-flash');
-  });
-
   it('calls onClose when cancel button is clicked', () => {
     const handleClose = vi.fn();
     render(<ApiKeyModal isOpen={true} onClose={handleClose} />);
