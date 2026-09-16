@@ -37,7 +37,6 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [situations, setSituations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFallback, setIsFallback] = useState(false);
 
   // News Grounding Generator States
   const [newsDifficulty, setNewsDifficulty] = useState('Intermediate');
@@ -51,10 +50,9 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
     
     async function loadSituations() {
       setIsLoading(true);
-      const { data, isFallback: fallbackFlag } = await fetchSituations();
+      const { data } = await fetchSituations();
       if (isMounted) {
         setSituations(data);
-        setIsFallback(fallbackFlag);
         setIsLoading(false);
       }
     }

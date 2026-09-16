@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightbulb, X, Sparkles, Send } from 'lucide-react';
+import { Lightbulb, X, Sparkles } from 'lucide-react';
 
 export default function HintPanel({ isOpen, onClose, hints, loading, onSelectHint }) {
   if (!isOpen) return null;

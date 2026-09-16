@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, CheckCircle2, XCircle, BookOpen, RotateCcw, X, Sparkles, AlertCircle } from 'lucide-react';
+import { Award, BookOpen, RotateCcw, X, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function ReportModal({ isOpen, onClose, report, loading, error, onRestart, onRetry }) {
   if (!isOpen) return null;

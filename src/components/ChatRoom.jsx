@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Send, Lightbulb, Flag, Volume2, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Mic, MicOff, Send, Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe } from 'lucide-react';
 import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
@@ -7,7 +7,17 @@ import { sendChatMessage, getHintSuggestions, generateSessionReport } from '../s
 import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported } from '../services/speech';
 
 export default function ChatRoom({ situation, apiKey, model, onBack }) {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    if (situation?.initialMessage) {
+      return [{
+        id: 'msg-0',
+        role: 'ai',
+        text: situation.initialMessage,
+        translation: situation.initialMessageJa || situation.initialMessageTranslation || ''
+      }];
+    }
+    return [];
+  });
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -27,73 +37,8 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const messagesEndRef = useRef(null);
   const recognizerRef = useRef(null);
 
-  // Initialize Speech Recognizer
-  useEffect(() => {
-    if (isSpeechRecognitionSupported()) {
-      recognizerRef.current = new SpeechRecognizer({
-        onResult: ({ final, interim }) => {
-          if (final) {
-            setInputText(final);
-            handleSendMessage(final);
-          } else if (interim) {
-            setInputText(interim);
-          }
-        },
-        onError: (userFriendlyError) => {
-          console.warn("Speech Rec Error:", userFriendlyError);
-          setErrorMsg(userFriendlyError);
-          setIsRecording(false);
-        },
-        onEnd: () => {
-          setIsRecording(false);
-        }
-      });
-    }
-
-    // Load initial AI greeting
-    if (situation.initialMessage) {
-      const initialAiMsg = {
-        id: 'msg-0',
-        role: 'ai',
-        text: situation.initialMessage,
-        translation: situation.initialMessageJa || situation.initialMessageTranslation || ''
-      };
-      setMessages([initialAiMsg]);
-      speakText(situation.initialMessage);
-    }
-
-    return () => {
-      stopSpeaking();
-      if (recognizerRef.current) {
-        recognizerRef.current.stop();
-      }
-    };
-  }, [situation]);
-
-  // Auto scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiThinking]);
-
-  // Handle Mic Toggle
-  const toggleRecording = () => {
-    if (!recognizerRef.current) {
-      setErrorMsg("お使いのブラウザは音声認識(Web Speech API)に対応していません。テキスト入力をご利用ください。");
-      return;
-    }
-
-    if (isRecording) {
-      recognizerRef.current.stop();
-      setIsRecording(false);
-    } else {
-      setErrorMsg('');
-      setIsRecording(true);
-      recognizerRef.current.start();
-    }
-  };
-
   // Handle Send Message
-  const handleSendMessage = async (textToSend) => {
+  const handleSendMessage = useCallback(async (textToSend) => {
     const text = textToSend || inputText;
     if (!text.trim() || isAiThinking) return;
 
@@ -108,8 +53,12 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
       text: text.trim()
     };
 
-    // Add user message to UI immediately
-    setMessages(prev => [...prev, userMessage]);
+    let updatedMessages = [];
+    setMessages(prev => {
+      updatedMessages = [...prev, userMessage];
+      return updatedMessages;
+    });
+
     setInputText('');
     setIsAiThinking(true);
     setErrorMsg('');
@@ -119,7 +68,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         apiKey,
         model,
         situation,
-        history: messages,
+        history: updatedMessages.slice(0, -1),
         userText: text.trim()
       });
 
@@ -154,7 +103,73 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     } finally {
       setIsAiThinking(false);
     }
+  }, [inputText, isAiThinking, apiKey, model, situation]);
+
+  const handleSendMessageRef = useRef(handleSendMessage);
+  useEffect(() => {
+    handleSendMessageRef.current = handleSendMessage;
+  }, [handleSendMessage]);
+
+  // Initialize Speech Recognizer & Initial Speech
+  useEffect(() => {
+    if (isSpeechRecognitionSupported()) {
+      recognizerRef.current = new SpeechRecognizer({
+        onResult: ({ final, interim }) => {
+          if (final) {
+            setInputText(final);
+            if (handleSendMessageRef.current) {
+              handleSendMessageRef.current(final);
+            }
+          } else if (interim) {
+            setInputText(interim);
+          }
+        },
+        onError: (userFriendlyError) => {
+          console.warn("Speech Rec Error:", userFriendlyError);
+          setErrorMsg(userFriendlyError);
+          setIsRecording(false);
+        },
+        onEnd: () => {
+          setIsRecording(false);
+        }
+      });
+    }
+
+    if (situation.initialMessage) {
+      speakText(situation.initialMessage);
+    }
+
+    return () => {
+      stopSpeaking();
+      if (recognizerRef.current) {
+        recognizerRef.current.stop();
+      }
+    };
+  }, [situation]);
+
+  // Auto scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isAiThinking]);
+
+  // Handle Mic Toggle
+  const toggleRecording = () => {
+    if (!recognizerRef.current) {
+      setErrorMsg("お使いのブラウザは音声認識(Web Speech API)に対応していません。テキスト入力をご利用ください。");
+      return;
+    }
+
+    if (isRecording) {
+      recognizerRef.current.stop();
+      setIsRecording(false);
+    } else {
+      setErrorMsg('');
+      setIsRecording(true);
+      recognizerRef.current.start();
+    }
   };
+
+
 
   // Get Hint Suggestions
   const handleFetchHints = async () => {

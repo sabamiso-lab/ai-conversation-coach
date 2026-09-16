@@ -45,13 +45,13 @@ describe('ApiKeyModal component', () => {
     fireEvent.change(inputKey, { target: { value: '  AIzaSyNewKey  ' } });
 
     const selectModel = screen.getByRole('combobox');
-    fireEvent.change(selectModel, { target: { value: 'gemini-2.0-flash' } });
+    fireEvent.change(selectModel, { target: { value: 'gemini-3.5-flash-lite' } });
 
     const submitBtn = screen.getByRole('button', { name: /保存して適用/i });
     fireEvent.click(submitBtn);
 
     expect(handleSaveKey).toHaveBeenCalledWith('AIzaSyNewKey');
-    expect(handleSaveModel).toHaveBeenCalledWith('gemini-2.0-flash');
+    expect(handleSaveModel).toHaveBeenCalledWith('gemini-3.5-flash-lite');
   });
 
   it('calls onClose when cancel button is clicked', () => {

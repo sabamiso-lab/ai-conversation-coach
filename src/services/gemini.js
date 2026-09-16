@@ -123,17 +123,17 @@ export function repairJson(rawJson) {
     try {
       const sanitized = sanitizeControlChars(cleaned);
       return JSON.parse(sanitized);
-    } catch (e2) {
+    } catch {
       // Attempt 3: Auto-close truncated JSON
       try {
         const autoClosed = autoCloseJson(cleaned);
         return JSON.parse(autoClosed);
-      } catch (e3) {
+      } catch {
         // Attempt 4: Combination of sanitize + auto-close
         try {
           const combined = autoCloseJson(sanitizeControlChars(cleaned));
           return JSON.parse(combined);
-        } catch (e4) {
+        } catch {
           throw e1;
         }
       }

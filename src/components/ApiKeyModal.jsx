@@ -55,10 +55,7 @@ export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, curren
               value={modelInput}
               onChange={(e) => setModelInput(e.target.value)}
             >
-              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (デフォルト・超高速)</option>
-              <option value="gemini-2.0-flash">gemini-2.0-flash (最新・高速)</option>
-              <option value="gemini-1.5-flash">gemini-1.5-flash (標準)</option>
-              <option value="gemini-1.5-pro">gemini-1.5-pro (高精度)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (標準・超高速)</option>
             </select>
           </div>
 

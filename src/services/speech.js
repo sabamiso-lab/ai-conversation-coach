@@ -22,6 +22,7 @@ export class SpeechRecognizer {
     }
 
     this.supported = true;
+    this.isListening = false;
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
@@ -49,6 +50,7 @@ export class SpeechRecognizer {
 
     this.recognition.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
+      this.isListening = false;
       let userFriendlyError = '音声認識エラーが発生しました。';
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         userFriendlyError = 'マイクの使用が拒否されています。ブラウザのアドレスバーにある鍵マーク（またはマイクアイコン）からマイクの使用を許可してください。';
@@ -64,26 +66,31 @@ export class SpeechRecognizer {
     };
 
     this.recognition.onend = () => {
+      this.isListening = false;
       if (onEnd) onEnd();
     };
   }
 
   start() {
-    if (this.recognition) {
+    if (this.recognition && !this.isListening) {
       try {
+        this.isListening = true;
         this.recognition.start();
       } catch (err) {
+        this.isListening = false;
         console.warn("Speech recognition start failed:", err);
       }
     }
   }
 
   stop() {
-    if (this.recognition) {
+    if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();
       } catch (err) {
         console.warn("Speech recognition stop error:", err);
+      } finally {
+        this.isListening = false;
       }
     }
   }
@@ -92,18 +99,7 @@ export class SpeechRecognizer {
 /**
  * Text-to-Speech Helper
  */
-export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd } = {}) {
-  if (!isSpeechSynthesisSupported()) return;
-
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.rate = rate;
-  utterance.pitch = pitch;
-
-  // Try to find a good English voice
+function setVoiceAndSpeak(utterance, onEnd) {
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
   if (naturalVoice) {
@@ -115,6 +111,32 @@ export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEn
   }
 
   window.speechSynthesis.speak(utterance);
+}
+
+export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd } = {}) {
+  if (!isSpeechSynthesisSupported()) return;
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = rate;
+  utterance.pitch = pitch;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    setVoiceAndSpeak(utterance, onEnd);
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      setVoiceAndSpeak(utterance, onEnd);
+    };
+    // Fallback if event doesn't fire
+    setTimeout(() => {
+      setVoiceAndSpeak(utterance, onEnd);
+    }, 100);
+  }
 }
 
 export function stopSpeaking() {

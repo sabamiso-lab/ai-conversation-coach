@@ -108,7 +108,7 @@ export const handler = async (event: APIGatewayEvent) => {
   let data: SituationInput;
   try {
     data = JSON.parse(event.body);
-  } catch (err) {
+  } catch {
     return {
       statusCode: 400,
       headers: defaultResponseHeaders,

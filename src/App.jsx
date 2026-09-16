@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import ApiKeyModal from './components/ApiKeyModal';
 import SituationSelector from './components/SituationSelector';
@@ -8,24 +8,10 @@ const STORAGE_KEY = 'gemini_api_key_speakflow';
 const STORAGE_MODEL_KEY = 'gemini_model_speakflow';
 
 export default function App() {
-  const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gemini-3.5-flash-lite');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem(STORAGE_KEY) || '');
+  const [model, setModel] = useState(() => localStorage.getItem(STORAGE_MODEL_KEY) || 'gemini-3.5-flash-lite');
   const [selectedSituation, setSelectedSituation] = useState(null);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-
-  // Load stored API key & model
-  useEffect(() => {
-    const savedKey = localStorage.getItem(STORAGE_KEY);
-    const savedModel = localStorage.getItem(STORAGE_MODEL_KEY);
-
-    if (savedKey) setApiKey(savedKey);
-    if (savedModel) setModel(savedModel);
-    
-    // Open modal on first launch if no API Key
-    if (!savedKey) {
-      setIsApiKeyModalOpen(true);
-    }
-  }, []);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(() => !localStorage.getItem(STORAGE_KEY));
 
   const handleSaveApiKey = (newKey) => {
     setApiKey(newKey);
