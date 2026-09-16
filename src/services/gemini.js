@@ -166,7 +166,7 @@ async function callGeminiApi(apiKey, model, systemInstruction, contents, respons
     },
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 4096
+      maxOutputTokens: 8192
     }
   };
 
@@ -467,7 +467,7 @@ async function callGeminiApiWithGrounding(apiKey, model, prompt) {
     ],
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 4096
+      maxOutputTokens: 8192
     }
   };
 
