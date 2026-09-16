@@ -1,0 +1,28 @@
+{
+  "name": "speakflow-backend-cdk",
+  "version": "1.0.0",
+  "description": "AWS CDK Stack for SpeakFlow (DynamoDB, Lambda, API Gateway)",
+  "bin": {
+    "cdk": "bin/cdk.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "seed": "ts-node scripts/seed.ts"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.138",
+    "@types/node": "^20.11.0",
+    "aws-cdk": "^2.138.0",
+    "esbuild": "^0.21.5",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.3.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.554.0",
+    "@aws-sdk/lib-dynamodb": "^3.554.0",
+    "aws-cdk-lib": "^2.138.0",
+    "constructs": "^10.3.0"
+  }
+}

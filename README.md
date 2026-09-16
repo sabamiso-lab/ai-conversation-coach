@@ -18,6 +18,7 @@
   <img src="https://img.shields.io/badge/React-19-blue.svg?logo=react" alt="React 19" />
   <img src="https://img.shields.io/badge/Vite-8.x-646CFF.svg?logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/AI Engine-Gemini 3.5 Flash--Lite-8E44AD.svg?logo=google" alt="Gemini 3.5 Flash-Lite" />
+  <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Speech API-Web Speech API-10B981.svg" alt="Web Speech API" />
   <img src="https://img.shields.io/badge/Deployment-GitHub Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
@@ -37,8 +38,9 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 
 ## 🌟 主な機能 (Key Features)
 
-### 🎭 1. シチュエーション別ロールプレイ
+### 🎭 1. シチュエーション別ロールプレイ & DynamoDB 動的配信
 - **多様な実用シーン**: カフェでの注文、空港チェックイン、ホテル予約、ビジネス進捗ミーティング、英語ジョブインタビュー、自由フリートークなど。
+- **Amazon DynamoDB 連携**: シチュエーションデータは AWS DynamoDB から安全に動的配信されます。アプリの再ビルドなしで新しいシナリオを自由に追加・管理可能です。（※オフライン時は自動でローカルデータへフォールバックする安全設計）
 - **難易度フィルター**: `Beginner` / `Intermediate` / `Advanced` / `Casual` の4段階で自分に合ったレベルを選択可能。
 - **ミッション目標 (Goals)**: 各シナリオに明確な会話達成目標が設定されています。
 
@@ -65,7 +67,12 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 - **今回学んだキーフレーズ集**: 実用的なフレーズと日本語訳の復習カードを出力。
 - **目標達成チェック**: 設定されたシナリオ目標を達成できたかを自動判定。
 
-### ⚡ 7. Gemini モデル選択 ＆ ローカル保存
+### 🛡️ 7. 3重の API セキュリティ防護
+- **CORS 制限**: 許可されたドメイン（`https://sabamiso-lab.github.io` および `localhost`）からのみアクセスを許可。
+- **Origin / Referer ドメイン検証**: Lambda ハンドラー内でドメインを厳密判定し、直叩きや未許可サイトを排除。
+- **x-speakflow-api-key カスタムヘッダー**: API Key 照合を行い、不正な呼び出しを防止。
+
+### ⚡ 8. Gemini モデル選択 ＆ ローカル保存
 - `gemini-3.5-flash-lite`（デフォルト・超高速・軽量モデル）のほか、`gemini-2.0-flash` / `gemini-1.5-flash` / `gemini-1.5-pro` に対応。
 - API Key と使用モデル設定はブラウザの `LocalStorage` に安全に保管されます。
 
@@ -73,7 +80,7 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 
 ## 📸 画面イメージ (Application Preview)
 
-| 1. シチュエーション選択画面 | 2. リアルタイム音声対話画面 |
+| 1. シチュエーション選択画面 (DynamoDB連動) | 2. リアルタイム音声対話画面 |
 |:---:|:---:|
 | ロールプレイと難易度を選択 | 音声入力・日本語訳・ネイティブ改善提案 |
 
@@ -96,7 +103,15 @@ cd ai-conversation-coach
 npm install
 ```
 
-### 3. 開発サーバーの起動
+### 3. 環境変数の設定 (オプション)
+DynamoDB API からシチュエーションを取得する場合は、プロジェクトルート直下に `.env.local` を作成します：
+```env
+VITE_API_BASE_URL=https://xxxx.execute-api.ap-northeast-1.amazonaws.com/situations
+VITE_API_KEY=sf_secret_key_speakflow_2026
+```
+*(※設定しない場合でも、自動的にローカルのフォールバックデータで動作します)*
+
+### 4. 開発サーバーの起動
 ```bash
 npm run dev
 ```
@@ -110,6 +125,25 @@ npm run dev
 2. アプリ画面右上の **「API Key を設定」** ボタンをクリックします。
 3. 取得した API Key を入力し、使用したいモデル（推奨: `gemini-3.5-flash-lite`）を選択して保存します。
 4. ※ APIキーはブラウザの `LocalStorage` にローカル保存され、外部サーバーに送信されることは一切ありません。
+
+---
+
+## ☁️ AWS CDK バックエンドのデプロイ方法
+
+バックエンドインフラ（DynamoDB, Lambda, API Gateway）は AWS CDK (TypeScript) でコード化されています。
+
+```bash
+cd cdk
+npm install
+
+# AWS環境へのデプロイ
+npx cdk bootstrap # 初回のみ
+npx cdk deploy
+```
+
+デプロイ完了後に出力される `ApiEndpointUrl` および `ApiKeyHeaderValue` を、GitHub リポジトリの **Settings > Secrets and variables > Actions** に `VITE_API_BASE_URL` および `VITE_API_KEY` として追加することで、GitHub Pages 上のアプリに自動連携されます。
+
+詳細な構成は [cdk/README.md](cdk/README.md) をご参照ください。
 
 ---
 
@@ -141,6 +175,13 @@ ai-conversation-coach/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml            # GitHub Pages 自動デプロイワークフロー
+├── cdk/                          # AWS CDK バックエンドインフラ (TypeScript)
+│   ├── bin/cdk.ts                # CDK エントリポイント
+│   ├── lib/
+│   │   └── speakflow-backend-stack.ts # DynamoDB, Lambda, API Gateway 定義
+│   ├── lambda/
+│   │   └── getSituations.ts      # Origin/API Key検証付き Lambda ハンドラー
+│   └── README.md
 ├── index.html
 ├── package.json
 ├── vite.config.js
@@ -158,10 +199,11 @@ ai-conversation-coach/
     │   ├── HintPanel.jsx         # AI回答ヒントモーダル
     │   └── ReportModal.jsx       # 総合診断レポート画面
     ├── services/
+    │   ├── api.js                # DynamoDB API 通信 ＆ フォールバックロジック
     │   ├── gemini.js             # Gemini API 呼び出し (Structured JSON / Chat / Report)
     │   └── speech.js             # Web Speech API (音声認識・音声合成)
     └── data/
-        └── situations.js         # シチュエーションデータ＆難易度定義
+        └── situations.js         # シチュエーションデータ＆フォールバック定義
 ```
 
 ---
@@ -169,6 +211,7 @@ ai-conversation-coach/
 ## 🛠️ 技術スタック (Tech Stack)
 
 - **Frontend Core**: React 19, Vite 8
+- **Backend / Infrastructure**: AWS CDK, AWS Lambda, Amazon DynamoDB, Amazon API Gateway (HTTP API)
 - **AI / LLM Engine**: Google Gemini API (`gemini-3.5-flash-lite` デフォルト)
 - **Speech Engine**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`)
 - **Icons**: [Lucide React](https://lucide.dev/)
