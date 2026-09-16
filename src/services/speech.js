@@ -99,6 +99,8 @@ export class SpeechRecognizer {
 /**
  * Text-to-Speech Helper
  */
+let pendingSpeechTimeout = null;
+
 function setVoiceAndSpeak(utterance, onEnd) {
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
@@ -116,8 +118,8 @@ function setVoiceAndSpeak(utterance, onEnd) {
 export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd } = {}) {
   if (!isSpeechSynthesisSupported()) return;
 
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
+  // Cancel any ongoing speech & clear pending timers/event listeners
+  stopSpeaking();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
@@ -128,19 +130,38 @@ export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEn
   if (voices.length > 0) {
     setVoiceAndSpeak(utterance, onEnd);
   } else {
-    window.speechSynthesis.onvoiceschanged = () => {
+    let hasSpoken = false;
+
+    const doSpeak = () => {
+      if (hasSpoken) return;
+      hasSpoken = true;
+
+      if (pendingSpeechTimeout) {
+        clearTimeout(pendingSpeechTimeout);
+        pendingSpeechTimeout = null;
+      }
       window.speechSynthesis.onvoiceschanged = null;
+
       setVoiceAndSpeak(utterance, onEnd);
     };
-    // Fallback if event doesn't fire
-    setTimeout(() => {
-      setVoiceAndSpeak(utterance, onEnd);
+
+    window.speechSynthesis.onvoiceschanged = () => {
+      doSpeak();
+    };
+
+    pendingSpeechTimeout = setTimeout(() => {
+      doSpeak();
     }, 100);
   }
 }
 
 export function stopSpeaking() {
   if (isSpeechSynthesisSupported()) {
+    if (pendingSpeechTimeout) {
+      clearTimeout(pendingSpeechTimeout);
+      pendingSpeechTimeout = null;
+    }
+    window.speechSynthesis.onvoiceschanged = null;
     window.speechSynthesis.cancel();
   }
 }
