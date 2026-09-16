@@ -1,8 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+export function getDocClient() {
+  const client = new DynamoDBClient({});
+  return DynamoDBDocumentClient.from(client);
+}
 
 const TABLE_NAME = process.env.TABLE_NAME || 'SpeakFlowSituations';
 const API_KEY_VALUE = process.env.API_KEY_VALUE || 'sf_secret_key_default';
@@ -175,6 +177,7 @@ export const handler = async (event: APIGatewayEvent) => {
   };
 
   try {
+    const docClient = getDocClient();
     const command = new PutCommand({
       TableName: TABLE_NAME,
       Item: item,
