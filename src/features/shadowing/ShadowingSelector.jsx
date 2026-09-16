@@ -64,14 +64,14 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
       {/* Title Banner */}
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
           <Headphones size={16} /> Shadowing Studio
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
           シャドーイング訓練教材を選択
         </h1>
-        <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto' }}>
+        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
           お手本音声を聴きながら直後に影のように復唱するトレーニングです。リスニング力とネイティブのイントネーション・スピード感を鍛えます。
         </p>
       </div>
@@ -81,9 +81,9 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
         style={{
           background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '20px',
           color: '#FFFFFF',
-          marginBottom: '32px',
+          marginBottom: '28px',
           boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
           position: 'relative',
           overflow: 'hidden'
@@ -91,13 +91,13 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
               <Sparkles size={13} /> Gemini AI カスタム作成
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 4px 0' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0' }}>
               好きなトピックで自分だけのシャドーイング文章を生成
             </h2>
-            <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: 0 }}>
+            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
               「海外での家探し」「IT業界のプレゼン」「空港でのトラブル」など、興味のあるテーマから即座に作成できます。
             </p>
           </div>
@@ -105,16 +105,16 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
           <button
             className="btn btn-primary"
             onClick={() => setIsFormOpen(!isFormOpen)}
-            style={{ borderRadius: '12px', padding: '10px 18px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
+            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
           >
-            <PlusCircle size={18} /> {isFormOpen ? 'フォームを閉じる' : 'AIで作成する'}
+            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
           </button>
         </div>
 
         {/* Custom AI Form Collapse */}
         {isFormOpen && (
-          <form onSubmit={handleGenerateCustomScript} style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <form onSubmit={handleGenerateCustomScript} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
                   学んでみたいトピック・シチュエーション
@@ -122,7 +122,7 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="例: レストランでの予約キャンセル、海外での病院受診..."
+                  placeholder="例: レストランの予約、病院受診..."
                   value={topicInput}
                   onChange={(e) => setTopicInput(e.target.value)}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)' }}
@@ -158,15 +158,15 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
                 type="submit"
                 className="btn btn-primary"
                 disabled={isGenerating || !topicInput.trim()}
-                style={{ padding: '10px 24px' }}
+                style={{ padding: '9px 20px', borderRadius: '10px' }}
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" /> Geminiがスクリプトを作成中...
+                    <Loader2 size={16} className="animate-spin" /> スクリプト作成中...
                   </>
                 ) : (
                   <>
-                    <Zap size={16} /> スクリプトを生成して練習開始
+                    <Zap size={16} /> スクリプト生成して練習開始
                   </>
                 )}
               </button>

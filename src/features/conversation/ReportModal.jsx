@@ -88,7 +88,7 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
             </div>
 
             {/* Strengths & Improvements */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '20px' }}>
               <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '14px', borderRadius: '12px' }}>
                 <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#047857', marginBottom: '8px' }}>
                   💪 良かった点
@@ -120,7 +120,7 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {report.keyPhrases.map((item, i) => (
-                    <div key={i} style={{ background: '#F1F5F9', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                    <div key={i} style={{ background: '#F1F5F9', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px', fontSize: '0.88rem' }}>
                       <span style={{ fontWeight: 700, color: '#4F46E5' }}>{item.phrase}</span>
                       <span style={{ color: '#475569' }}>{item.meaning}</span>
                     </div>
@@ -130,7 +130,7 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
             )}
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '10px', marginTop: '24px' }}>
               <button className="btn btn-secondary" onClick={onClose}>
                 閉じる
               </button>

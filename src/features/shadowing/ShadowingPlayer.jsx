@@ -198,12 +198,12 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
       )}
 
       {/* Main Practice Card */}
-      <div className="chat-container" style={{ display: 'block', padding: '28px' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
+      <div className="chat-container" style={{ display: 'block', padding: '18px 16px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <h2 style={{ fontSize: 'clamp(1.15rem, 3.5vw, 1.4rem)', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
             {script.title}
           </h2>
-          <div style={{ fontSize: '0.9rem', color: '#64748B', fontWeight: 600 }}>
+          <div style={{ fontSize: '0.86rem', color: '#64748B', fontWeight: 600 }}>
             {script.titleJa}
           </div>
         </div>
@@ -214,23 +214,23 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
             background: '#F8FAFC',
             border: '1px solid #E2E8F0',
             borderRadius: '16px',
-            padding: '16px 20px',
+            padding: '14px 16px',
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '16px',
-            marginBottom: '24px'
+            gap: '12px',
+            marginBottom: '20px'
           }}
         >
           {/* Play/Stop Button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
               className={`btn ${isPlaying ? 'btn-accent' : 'btn-primary'}`}
               onClick={handlePlayAudio}
-              style={{ padding: '10px 20px', borderRadius: '9999px', fontSize: '0.95rem' }}
+              style={{ padding: '8px 16px', borderRadius: '9999px', fontSize: '0.9rem' }}
             >
-              {isPlaying ? <><Square size={18} /> 音声停止</> : <><Play size={18} /> お手本再生</>}
+              {isPlaying ? <><Square size={16} /> 音声停止</> : <><Play size={16} /> お手本再生</>}
             </button>
 
             <button
@@ -239,18 +239,20 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
               style={{
                 color: isLooping ? '#4F46E5' : '#64748B',
                 borderColor: isLooping ? '#818CF8' : 'transparent',
-                fontWeight: 600
+                fontWeight: 600,
+                padding: '8px 12px',
+                fontSize: '0.84rem'
               }}
               title="リピート再生モード"
             >
-              <Repeat size={16} /> リピート {isLooping ? 'ON' : 'OFF'}
+              <Repeat size={15} /> リピート {isLooping ? 'ON' : 'OFF'}
             </button>
           </div>
 
           {/* Speed Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Gauge size={15} /> 再生速度:
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Gauge size={14} /> 速度:
             </span>
             {[0.7, 0.85, 1.0, 1.2].map(speed => (
               <button
@@ -261,52 +263,52 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
                   color: playbackSpeed === speed ? '#FFFFFF' : '#475569',
                   border: '1px solid',
                   borderColor: playbackSpeed === speed ? '#4F46E5' : '#CBD5E1',
-                  borderRadius: '8px',
-                  padding: '4px 10px',
-                  fontSize: '0.8rem',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '0.76rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
               >
-                {speed === 1.0 ? '1.0x (標準)' : `${speed}x`}
+                {speed === 1.0 ? '1.0x' : `${speed}x`}
               </button>
             ))}
           </div>
         </div>
 
         {/* Display Mode Toggles */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             <button
               className={`btn ${viewMode === 'slash' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('slash')}
-              style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: '8px' }}
+              style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
             >
-              / スラッシュ区切り
+              / 区切り
             </button>
             <button
               className={`btn ${viewMode === 'full' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('full')}
-              style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: '8px' }}
+              style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
             >
-              標準テキスト
+              標準
             </button>
             <button
               className={`btn ${viewMode === 'blank' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('blank')}
-              style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: '8px' }}
+              style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
             >
-              🙈 穴埋めブラインド
+              🙈 穴埋め
             </button>
           </div>
 
           <button
             className="btn btn-ghost"
             onClick={() => setShowTranslation(!showTranslation)}
-            style={{ fontSize: '0.82rem', color: '#64748B' }}
+            style={{ fontSize: '0.78rem', color: '#64748B', padding: '4px 8px' }}
           >
-            {showTranslation ? <><EyeOff size={15} /> 日本語訳を隠す</> : <><Eye size={15} /> 日本語訳を表示</>}
+            {showTranslation ? <><EyeOff size={14} /> 訳を隠す</> : <><Eye size={14} /> 訳を表示</>}
           </button>
         </div>
 

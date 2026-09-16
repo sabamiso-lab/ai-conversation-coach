@@ -70,7 +70,7 @@ export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, curren
             </a>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '10px' }}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               キャンセル
             </button>

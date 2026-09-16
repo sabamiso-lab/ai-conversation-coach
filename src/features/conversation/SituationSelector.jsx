@@ -121,14 +121,14 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
       {/* Title Banner */}
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
           <MessageSquare size={16} /> Conversation Studio
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
           英会話の訓練シチュエーションを選択
         </h1>
-        <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto' }}>
+        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
           AIが指定した役柄になりきってリアルな対話を行います。実生活や仕事ですぐに使える表現力を身につけましょう。
         </p>
       </div>
@@ -138,9 +138,9 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         style={{
           background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '20px',
           color: '#FFFFFF',
-          marginBottom: '32px',
+          marginBottom: '28px',
           boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
           position: 'relative',
           overflow: 'hidden'
@@ -148,18 +148,18 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '6px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
               <Sparkles size={13} /> Google Search Grounding
               {!apiKey && (
                 <span style={{ background: '#F59E0B', color: '#FFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', marginLeft: '4px' }}>
-                  ⚠️ API Key未設定
+                  ⚠️ Key未設定
                 </span>
               )}
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
               📰 本日のトレンドニュースからシチュエーションをAI生成
             </h2>
-            <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: 0, maxWidth: '680px' }}>
+            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0, maxWidth: '680px' }}>
               Google検索で最新ニュースを取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
             </p>
           </div>
@@ -167,9 +167,9 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
           <button
             className="btn btn-primary"
             onClick={() => setIsFormOpen(!isFormOpen)}
-            style={{ borderRadius: '12px', padding: '10px 18px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
+            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
           >
-            <PlusCircle size={18} /> {isFormOpen ? 'フォームを閉じる' : 'AIで作成する'}
+            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
           </button>
         </div>
 
@@ -182,7 +182,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                 handleGenerateNews('custom', customNewsTopic);
               }
             }} 
-            style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
           >
             {/* Difficulty Selection */}
             <div style={{ marginBottom: '16px' }}>
@@ -203,8 +203,8 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                         color: '#FFFFFF',
                         border: isSelected ? '1px solid #818CF8' : '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '10px',
-                        padding: '8px 14px',
-                        fontSize: '0.84rem',
+                        padding: '6px 12px',
+                        fontSize: '0.82rem',
                         fontWeight: isSelected ? 800 : 600,
                         cursor: isGeneratingNews ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s ease',
@@ -215,11 +215,6 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                       }}
                     >
                       {diff.label}
-                      {isSelected && (
-                        <span style={{ fontSize: '0.74rem', opacity: 0.85, fontWeight: 600, marginLeft: '2px' }}>
-                          ({diff.desc})
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -232,24 +227,24 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
                   ② 語り合ってみたいニュースキーワード・話題 (自由入力)
                 </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <input
                     type="text"
                     className="input-field"
-                    placeholder="例: 大谷翔平の試合、Apple新製品発表、AIの最新動向..."
+                    placeholder="例: 大谷翔平の試合、Apple新製品、AI動向..."
                     value={customNewsTopic}
                     onChange={(e) => setCustomNewsTopic(e.target.value)}
-                    style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', flex: 1 }}
+                    style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', flex: '1 1 200px', minWidth: '180px' }}
                   />
                   <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={isGeneratingNews || !customNewsTopic.trim()}
-                    style={{ padding: '10px 20px', borderRadius: '10px', whiteSpace: 'nowrap' }}
+                    style={{ padding: '9px 16px', borderRadius: '10px', whiteSpace: 'nowrap', flex: '0 0 auto' }}
                   >
                     {isGeneratingNews && generatingCategory === 'custom' ? (
                       <>
-                        <Loader2 size={16} className="animate-spin" /> 検索生成中...
+                        <Loader2 size={16} className="animate-spin" /> 生成中...
                       </>
                     ) : (
                       <>
