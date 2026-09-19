@@ -2,6 +2,11 @@
 
 SpeakFlow のバックエンドインフラ（DynamoDB, AWS Lambda, API Gateway）を定義した AWS CDK プロジェクトです。
 
+> 📖 **関連ドキュメント**:
+> - システムアーキテクチャ・技術仕様: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+> - ドキュメント一覧: [docs/README.md](../docs/README.md)
+> - アプリケーショントップ: [README.md](../README.md)
+
 ---
 
 ## 🛠️ 含まれるリソース
