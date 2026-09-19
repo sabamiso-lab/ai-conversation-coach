@@ -20,4 +20,10 @@ describe('LoadingState component', () => {
     expect(screen.getByText('AIが分析中...')).toBeInTheDocument();
     expect(screen.getByText('詳細な評価レポートを作成しています。')).toBeInTheDocument();
   });
+
+  it('applies animate-spin class to icon', () => {
+    const { container } = render(<LoadingState message="Loading..." />);
+    const icon = container.querySelector('.animate-spin');
+    expect(icon).toBeInTheDocument();
+  });
 });
