@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Sparkles, Key, RotateCcw, MessageSquare, Headphones } from 'lucide-react';
+import { Sparkles, Key, RotateCcw, MessageSquare, Headphones, Zap } from 'lucide-react';
 
 export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation, onResetSession }) {
   const location = useLocation();
@@ -37,6 +37,13 @@ export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation
             >
               <Headphones size={18} />
               <span>シャドーイング</span>
+            </NavLink>
+            <NavLink 
+              to="/blitz" 
+              className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}
+            >
+              <Zap size={18} />
+              <span>瞬間英作文</span>
             </NavLink>
           </nav>
         </div>
@@ -77,8 +84,16 @@ export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation
           <Headphones size={20} className="bottom-nav-icon" />
           <span>シャドーイング</span>
         </NavLink>
+        <NavLink 
+          to="/blitz" 
+          className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Zap size={20} className="bottom-nav-icon" />
+          <span>瞬間英作文</span>
+        </NavLink>
       </nav>
     </>
   );
 }
+
 

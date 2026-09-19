@@ -870,4 +870,85 @@ Return strictly JSON with this structure:
   return cleanAndParseJson(rawJson);
 }
 
+/**
+ * Generate Instant Oral Translation (瞬間英作文) questions using Gemini
+ */
+export async function generateBlitzQuestions({ apiKey, model, topicPrompt, difficulty = 'Intermediate', count = 10 }) {
+  if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
+
+  const systemPrompt = `
+You are an expert English Conversation Coach specializing in Instant Oral Translation (瞬間英作文) and Pattern Practice.
+Generate a set of ${count} high-quality, practical Instant Oral Translation questions based on the user's requested topic and difficulty level.
+
+Target Difficulty: ${difficulty}
+Topic/Context: "${topicPrompt}"
+
+REQUIREMENTS:
+1. Each question must have:
+   - "prompt": A clear, natural Japanese prompt sentence.
+   - "answer": The most natural, standard English translation.
+   - "acceptedAnswers": An array of 2-3 alternative valid English phrasing options.
+   - "explanation": Brief, clear Japanese explanation of the grammar point or phrase usage (1-2 sentences).
+   - "grammarPoint": Short label for the key grammar or phrase point (e.g., "should have + p.p.", "take for granted").
+2. Ensure the English sentences sound 100% natural and idiomatic in modern conversational English.
+
+Return strictly JSON with this structure:
+{
+  "title": "Topic title in Japanese",
+  "questions": [
+    {
+      "id": "q-1",
+      "prompt": "日本語出題文",
+      "answer": "Standard English answer.",
+      "acceptedAnswers": ["Alternative 1", "Alternative 2"],
+      "explanation": "解説文（日本語）",
+      "grammarPoint": "キー構文"
+    }
+  ]
+}
+`;
+
+  const contents = [
+    { role: 'user', parts: [{ text: `Generate ${count} Instant Oral Translation questions for topic: "${topicPrompt}" at level: ${difficulty}.` }] }
+  ];
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      title: { type: "STRING" },
+      questions: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            id: { type: "STRING" },
+            prompt: { type: "STRING" },
+            answer: { type: "STRING" },
+            acceptedAnswers: { type: "ARRAY", items: { type: "STRING" } },
+            explanation: { type: "STRING" },
+            grammarPoint: { type: "STRING" }
+          },
+          required: ["prompt", "answer", "acceptedAnswers", "explanation", "grammarPoint"]
+        }
+      }
+    },
+    required: ["title", "questions"]
+  };
+
+  const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
+  const data = cleanAndParseJson(rawJson);
+
+  const questions = (data.questions || []).map((q, idx) => ({
+    ...q,
+    id: q.id || `gen-${Date.now()}-${idx}`,
+    acceptedAnswers: q.acceptedAnswers || []
+  }));
+
+  return {
+    title: data.title || topicPrompt,
+    questions
+  };
+}
+
+
 
