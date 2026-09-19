@@ -29,8 +29,7 @@ describe('FloatingCoachWidget component', () => {
     questionInput: '',
     onQuestionInputChange: vi.fn(),
     onAskQuestion: vi.fn(),
-    onClearHistory: vi.fn(),
-    onApplyPhrase: vi.fn()
+    onClearHistory: vi.fn()
   };
 
   it('renders floating action button (FAB) by default', () => {
@@ -101,8 +100,7 @@ describe('FloatingCoachWidget component', () => {
     expect(onAskQuestion).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onApplyPhrase when suggested phrase button is clicked', () => {
-    const onApplyPhrase = vi.fn();
+  it('renders suggested phrases when provided', () => {
     const messagesWithPhrases: CoachMessage[] = [
       {
         id: 'msg-1',
@@ -120,17 +118,12 @@ describe('FloatingCoachWidget component', () => {
         {...defaultProps}
         isOpen={true}
         coachMessages={messagesWithPhrases}
-        onApplyPhrase={onApplyPhrase}
       />
     );
 
     expect(screen.getByText('"Could I have a cup of tea?"')).toBeInTheDocument();
     expect(screen.getByText('お茶を一杯いただけますか？')).toBeInTheDocument();
-
-    const applyBtn = screen.getByRole('button', { name: /会話入力欄にセット/i });
-    fireEvent.click(applyBtn);
-
-    expect(onApplyPhrase).toHaveBeenCalledWith('Could I have a cup of tea?');
+    expect(screen.queryByRole('button', { name: /会話入力欄にセット/i })).not.toBeInTheDocument();
   });
 
   it('calls onClearHistory and onClose when buttons are clicked', () => {

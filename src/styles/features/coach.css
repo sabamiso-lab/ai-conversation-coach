@@ -449,31 +449,6 @@
   margin-top: 2px;
 }
 
-.btn-apply-phrase {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #4F46E5;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.btn-apply-phrase:hover {
-  background: #4338CA;
-}
-
-.btn-apply-phrase.copied {
-  background: #10B981;
-}
-
 .coach-error-banner {
   display: flex;
   align-items: center;

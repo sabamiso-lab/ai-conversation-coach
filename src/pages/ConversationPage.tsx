@@ -72,7 +72,6 @@ export default function ConversationPage({
             onQuestionInputChange={setGeneralQuestionInput}
             onAskQuestion={askGeneralQuestion}
             onClearHistory={clearGeneralHistory}
-            onApplyPhrase={() => {}}
           />
         </>
       ) : (

@@ -1,19 +1,15 @@
 import React from 'react';
-import { Bot, Lightbulb, Check, CornerDownLeft } from 'lucide-react';
+import { Bot, Lightbulb } from 'lucide-react';
 import { CoachMessage } from '../../../types';
 
 export interface CoachMessageItemProps {
   message: CoachMessage;
   index: number;
-  copiedIndex: string | null;
-  onApplyPhrase?: (phrase: string, indexKey?: string) => void;
 }
 
 export function CoachMessageItem({
   message,
-  index,
-  copiedIndex,
-  onApplyPhrase
+  index
 }: CoachMessageItemProps) {
   return (
     <div className={`coach-msg-row ${message.role}`}>
@@ -39,39 +35,16 @@ export function CoachMessageItem({
               <Lightbulb size={13} color="#F59E0B" /> 使えるおすすめ英語フレーズ:
             </div>
             <div className="coach-phrases-list">
-              {message.suggestedPhrases.map((phrase, pIdx) => {
-                const key = `${index}-${pIdx}`;
-                const isCopied = copiedIndex === key;
-                return (
-                  <div key={pIdx} className="coach-phrase-item">
-                    <div className="phrase-text-col">
-                      <div className="phrase-en">"{phrase.english}"</div>
-                      {phrase.japanese && (
-                        <div className="phrase-ja">{phrase.japanese}</div>
-                      )}
-                    </div>
-                    {onApplyPhrase && (
-                      <button
-                        type="button"
-                        className={`btn-apply-phrase ${isCopied ? 'copied' : ''}`}
-                        onClick={() => onApplyPhrase(phrase.english, key)}
-                        title="会話入力欄にセット"
-                        aria-label="会話入力欄にセット"
-                      >
-                        {isCopied ? (
-                          <>
-                            <Check size={12} /> 反映済
-                          </>
-                        ) : (
-                          <>
-                            <CornerDownLeft size={12} /> 入力欄へ
-                          </>
-                        )}
-                      </button>
+              {message.suggestedPhrases.map((phrase, pIdx) => (
+                <div key={pIdx} className="coach-phrase-item">
+                  <div className="phrase-text-col">
+                    <div className="phrase-en">"{phrase.english}"</div>
+                    {phrase.japanese && (
+                      <div className="phrase-ja">{phrase.japanese}</div>
                     )}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -79,3 +52,4 @@ export function CoachMessageItem({
     </div>
   );
 }
+

@@ -37,7 +37,6 @@ export interface FloatingCoachWidgetProps {
   onQuestionInputChange: (val: string) => void;
   onAskQuestion: (question?: string) => Promise<unknown> | void;
   onClearHistory: () => void;
-  onApplyPhrase?: (phrase: string, indexKey?: string) => void;
   hideFabOnMobile?: boolean;
 }
 
@@ -58,7 +57,6 @@ export default function FloatingCoachWidget({
   onQuestionInputChange,
   onAskQuestion,
   onClearHistory,
-  onApplyPhrase,
   hideFabOnMobile = false
 }: FloatingCoachWidgetProps) {
   // Find latest AI and User utterance in conversation
@@ -77,7 +75,6 @@ export default function FloatingCoachWidget({
     blitzContext
   });
 
-  const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -100,16 +97,6 @@ export default function FloatingCoachWidget({
     e.preventDefault();
     if (!questionInput.trim() || isLoading) return;
     onAskQuestion();
-  };
-
-  const handleApplyPhrase = (phraseText: string, indexKey?: string) => {
-    if (onApplyPhrase) {
-      onApplyPhrase(phraseText);
-      if (indexKey) {
-        setCopiedIndex(indexKey);
-        setTimeout(() => setCopiedIndex(null), 2000);
-      }
-    }
   };
 
   return (
@@ -213,8 +200,6 @@ export default function FloatingCoachWidget({
                 key={msg.id || i}
                 message={msg}
                 index={i}
-                copiedIndex={copiedIndex}
-                onApplyPhrase={handleApplyPhrase}
               />
             ))}
 

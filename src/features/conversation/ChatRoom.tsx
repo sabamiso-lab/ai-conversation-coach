@@ -298,9 +298,6 @@ export default function ChatRoom({
         onQuestionInputChange={setCoachQuestionInput}
         onAskQuestion={askCoachQuestion}
         onClearHistory={clearCoachHistory}
-        onApplyPhrase={(phrase) => {
-          setInputText(phrase);
-        }}
         hideFabOnMobile={true}
       />
     </div>
