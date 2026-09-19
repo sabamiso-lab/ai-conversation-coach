@@ -188,8 +188,7 @@ ai-conversation-coach/
 │   └── README.md
 ├── index.html
 ├── package.json
-├── vite.config.js
-├── vitest.config.js              # フロントエンド Vitest 設定
+├── vite.config.js              # Vite & Vitest 設定 (jsdom / テスト自動検知)
 ├── .oxlintrc.json                # Oxlint 設定
 └── src/
     ├── main.jsx
@@ -206,7 +205,14 @@ ai-conversation-coach/
     ├── components/               # 共通 UI コンポーネント
     │   └── common/
     │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション
-    │       └── ApiKeyModal.jsx   # Gemini API Key 設定モーダル
+    │       ├── Modal.jsx         # 汎用モーダル (Overlay, Header, ESCキー検知, アクセシビリティ対応)
+    │       ├── ApiKeyModal.jsx   # Gemini API Key 設定モーダル
+    │       ├── DifficultyBadge.jsx # 難易度バッジ (Beginner / Intermediate / Advanced カラー自動判定)
+    │       ├── CategoryFilter.jsx # カテゴリ切り替えピル型フィルターボタングループ
+    │       ├── LoadingState.jsx  # 統一ローディングインジケーター (スピナー & メッセージ)
+    │       ├── PageHeader.jsx    # ページ上部タイトルバナー (スタジオバッジ, 見出し, 説明文)
+    │       ├── MicButton.jsx     # 音声認識 (マイク) トグルボタン (録音中アニメーション対応)
+    │       └── __tests__/        # 共通コンポーネント単体テスト
     ├── contexts/                 # React Context
     │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
     ├── hooks/                    # カスタムフック
