@@ -17,16 +17,32 @@ vi.mock('../../../services/gemini', async () => {
 
 describe('Instant Oral Blitz Feature', () => {
   describe('PRESET_BLITZ_TOPICS & RANDOM_BLITZ_TOPICS', () => {
-    it('contains preset topics with valid questions', () => {
-      expect(PRESET_BLITZ_TOPICS.length).toBeGreaterThan(0);
+    it('contains preset topics with valid questions, unique IDs, and acceptedAnswers', () => {
+      expect(PRESET_BLITZ_TOPICS.length).toBeGreaterThanOrEqual(12);
+
+      const topicIds = new Set();
+      const questionIds = new Set();
+      const grammarTopics = PRESET_BLITZ_TOPICS.filter(t => t.category === 'Grammar');
+      expect(grammarTopics.length).toBeGreaterThanOrEqual(10);
+
       PRESET_BLITZ_TOPICS.forEach((topic) => {
         expect(topic.id).toBeTruthy();
+        expect(topicIds.has(topic.id)).toBe(false);
+        topicIds.add(topic.id);
+
         expect(topic.title).toBeTruthy();
         expect(topic.questions.length).toBeGreaterThan(0);
 
         topic.questions.forEach((q) => {
+          expect(q.id).toBeTruthy();
+          expect(questionIds.has(q.id)).toBe(false);
+          questionIds.add(q.id);
+
           expect(q.prompt).toBeTruthy();
           expect(q.answer).toBeTruthy();
+          expect(q.explanation).toBeTruthy();
+          expect(q.grammarPoint).toBeTruthy();
+          expect(Array.isArray(q.acceptedAnswers)).toBe(true);
         });
       });
     });
@@ -52,7 +68,7 @@ describe('Instant Oral Blitz Feature', () => {
       );
 
       expect(screen.getByText(/瞬間英作文・パターンプラクティス/i)).toBeInTheDocument();
-      expect(screen.getByText('基礎構文パターン')).toBeInTheDocument();
+      expect(screen.getByText(/基礎構文パターン/)).toBeInTheDocument();
       expect(screen.getByText('ビジネス即レス会話')).toBeInTheDocument();
 
       const startButtons = screen.getAllByRole('button', { name: /瞬間英作文を開始/i });

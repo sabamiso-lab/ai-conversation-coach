@@ -2,9 +2,24 @@ import React, { useState } from 'react';
 import { PRESET_BLITZ_TOPICS, getRandomBlitzTopic, POPULAR_BLITZ_TOPIC_CHIPS } from './blitzTopics';
 import { 
   Zap, Briefcase, Smile, Clock, Loader2, 
-  Dices
+  Dices, BookOpen, Sparkles, Layers, TrendingUp,
+  Compass, HelpCircle, MessageSquare
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
+
+const ICON_MAP = {
+  Briefcase,
+  Smile,
+  Zap,
+  BookOpen,
+  Sparkles,
+  Clock,
+  Layers,
+  TrendingUp,
+  Compass,
+  HelpCircle,
+  MessageSquare
+};
 import CategoryFilter from '../../components/common/CategoryFilter';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
 import AiGeneratorCard from '../../components/common/AiGeneratorCard';
@@ -218,7 +233,7 @@ export default function BlitzTopicSelector({
       {/* Topics Grid */}
       <div className="situation-grid">
         {filteredTopics.map(topic => {
-          const IconComponent = topic.icon === 'Briefcase' ? Briefcase : topic.icon === 'Smile' ? Smile : Zap;
+          const IconComponent = ICON_MAP[topic.icon] || Zap;
 
           return (
             <div
