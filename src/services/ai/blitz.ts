@@ -1,10 +1,50 @@
 import { callGeminiApi } from './client';
 import { cleanAndParseJson } from '../../utils/jsonRepair';
+import { BlitzQuestion } from '../../types';
+
+export interface GenerateBlitzQuestionsOptions {
+  apiKey: string;
+  model?: string;
+  topicPrompt?: string;
+  difficulty?: string;
+  count?: number;
+}
+
+export interface GenerateBlitzQuestionsResult {
+  title: string;
+  questions: BlitzQuestion[];
+}
+
+export interface EvaluateBlitzSpeechOptions {
+  apiKey: string;
+  model?: string;
+  prompt: string;
+  standardAnswer: string;
+  acceptedAnswers?: string[];
+  grammarPoint?: string;
+  userSpeech: string;
+}
+
+export interface BlitzSpeechEvaluationResult {
+  isCorrect: boolean;
+  status: 'PERFECT' | 'ACCEPTABLE' | 'NEEDS_WORK';
+  statusLabelJa: string;
+  score: number;
+  evaluationJa: string;
+  improvedSpeech: string;
+  grammarAdviceJa?: string;
+}
 
 /**
  * Generate Instant Oral Translation (瞬間英作文) questions using Gemini
  */
-export async function generateBlitzQuestions({ apiKey, model, topicPrompt, difficulty = 'Intermediate', count = 10 }) {
+export async function generateBlitzQuestions({
+  apiKey,
+  model,
+  topicPrompt,
+  difficulty = 'Intermediate',
+  count = 10
+}: GenerateBlitzQuestionsOptions): Promise<GenerateBlitzQuestionsResult> {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
   const isRandomRequest = !topicPrompt || !topicPrompt.trim() || topicPrompt.trim() === 'おまかせ' || topicPrompt.trim() === 'ランダム';
@@ -54,7 +94,7 @@ Return strictly JSON with this structure:
     : `Generate ${count} Instant Oral Translation questions for topic: "${topicInstruction}" at level: ${difficulty}.`;
 
   const contents = [
-    { role: 'user', parts: [{ text: userPromptText }] }
+    { role: 'user' as const, parts: [{ text: userPromptText }] }
   ];
 
   const schema = {
@@ -81,16 +121,16 @@ Return strictly JSON with this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  const data = cleanAndParseJson(rawJson);
+  const data = cleanAndParseJson<{ title?: string; questions?: Array<any> }>(rawJson);
 
-  const questions = (data.questions || []).map((q, idx) => ({
+  const questions: BlitzQuestion[] = (data.questions || []).map((q: any, idx: number) => ({
     ...q,
     id: q.id || `gen-${Date.now()}-${idx}`,
     acceptedAnswers: q.acceptedAnswers || []
   }));
 
   return {
-    title: data.title || (isRandomRequest ? 'AIおまかせ英作文セット' : topicPrompt),
+    title: data.title || (isRandomRequest ? 'AIおまかせ英作文セット' : (topicPrompt || '')),
     questions
   };
 }
@@ -106,7 +146,7 @@ export async function evaluateBlitzSpeech({
   acceptedAnswers = [],
   grammarPoint = '',
   userSpeech
-}) {
+}: EvaluateBlitzSpeechOptions): Promise<BlitzSpeechEvaluationResult> {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
   if (!userSpeech || !userSpeech.trim()) {
     throw new Error("ユーザーの発話内容がありません。");
@@ -151,7 +191,7 @@ Return strictly JSON matching this structure:
 `;
 
   const contents = [
-    { role: 'user', parts: [{ text: `Evaluate this spoken English: "${userSpeech}" for prompt: "${prompt}".` }] }
+    { role: 'user' as const, parts: [{ text: `Evaluate this spoken English: "${userSpeech}" for prompt: "${prompt}".` }] }
   ];
 
   const schema = {
@@ -169,16 +209,5 @@ Return strictly JSON matching this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  const data = cleanAndParseJson(rawJson);
-
-  return {
-    isCorrect: Boolean(data.isCorrect),
-    status: data.status || (data.score >= 80 ? 'PERFECT' : data.score >= 50 ? 'ACCEPTABLE' : 'NEEDS_WORK'),
-    statusLabelJa: data.statusLabelJa || (data.isCorrect ? '👍 通じる！' : '💪 要復習'),
-    score: typeof data.score === 'number' ? data.score : (data.isCorrect ? 85 : 40),
-    evaluationJa: data.evaluationJa || '',
-    improvedSpeech: data.improvedSpeech || standardAnswer,
-    grammarAdviceJa: data.grammarAdviceJa || ''
-  };
+  return cleanAndParseJson<BlitzSpeechEvaluationResult>(rawJson);
 }
-

@@ -1,21 +1,39 @@
 import { SITUATIONS } from '../data/situations';
+import { Situation } from '../types';
 
 /**
  * Safely parse goals field from various DynamoDB attribute formats
  */
-function parseGoals(goals) {
-  if (Array.isArray(goals)) return goals;
-  if (goals instanceof Set) return Array.from(goals);
-  if (goals?.SS && Array.isArray(goals.SS)) return goals.SS;
-  if (goals && typeof goals === 'object') return Object.values(goals).flat();
+function parseGoals(goals: unknown): string[] {
+  if (Array.isArray(goals)) return goals.map(String);
+  if (goals instanceof Set) return Array.from(goals).map(String);
+  if (goals && typeof goals === 'object' && 'SS' in goals && Array.isArray((goals as { SS: unknown[] }).SS)) {
+    return (goals as { SS: unknown[] }).SS.map(String);
+  }
+  if (goals && typeof goals === 'object') {
+    return Object.values(goals).flat().map(String);
+  }
   return [];
+}
+
+export interface FetchSituationsResult {
+  data: Situation[];
+  isFallback: boolean;
+  error?: string;
+}
+
+export interface CreateSituationResult {
+  success: boolean;
+  situation?: Situation;
+  error?: string;
+  isFallback?: boolean;
 }
 
 /**
  * Fetch list of roleplay situations from AWS DynamoDB API.
  * Automatically falls back to local SITUATIONS array if offline, API not set, or error occurs.
  */
-export async function fetchSituations() {
+export async function fetchSituations(): Promise<FetchSituationsResult> {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const apiKey = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
 
@@ -53,9 +71,9 @@ export async function fetchSituations() {
 
     // Format DynamoDB data if needed and return
     const nowInSeconds = Math.floor(Date.now() / 1000);
-    const formattedSituations = fetchedSituations
-      .filter((item) => !item.expiresAt || item.expiresAt > nowInSeconds)
-      .map((item) => ({
+    const formattedSituations: Situation[] = fetchedSituations
+      .filter((item: any) => !item.expiresAt || item.expiresAt > nowInSeconds)
+      .map((item: any): Situation => ({
         id: item.id,
         title: item.title,
         titleJa: item.titleJa,
@@ -75,18 +93,18 @@ export async function fetchSituations() {
       }));
 
     return { data: formattedSituations, isFallback: false };
-  } catch (error) {
+  } catch (error: unknown) {
     clearTimeout(timeoutId);
-    console.warn('⚠️ Failed to fetch situations from API. Using local fallback.', error.message);
-    return { data: SITUATIONS, isFallback: true, error: error.message };
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.warn('⚠️ Failed to fetch situations from API. Using local fallback.', errMsg);
+    return { data: SITUATIONS, isFallback: true, error: errMsg };
   }
 }
 
 /**
  * Register a new situation via AWS DynamoDB API (POST /situations).
- * @param {Object} situationData
  */
-export async function createSituation(situationData) {
+export async function createSituation(situationData: Partial<Situation>): Promise<CreateSituationResult> {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const apiKey = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
 
@@ -98,9 +116,9 @@ export async function createSituation(situationData) {
       goals: Array.isArray(situationData.goals)
         ? situationData.goals
         : typeof situationData.goals === 'string'
-        ? situationData.goals.split('\n').map(g => g.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+        ? (situationData.goals as string).split('\n').map(g => g.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
         : [],
-    };
+    } as Situation;
     return { success: true, situation: mockCreated, isFallback: true };
   }
 
@@ -127,10 +145,10 @@ export async function createSituation(situationData) {
 
     const json = await response.json();
     return { success: true, situation: json.situation, isFallback: false };
-  } catch (error) {
+  } catch (error: unknown) {
     clearTimeout(timeoutId);
-    console.error('❌ Failed to register situation:', error.message);
-    return { success: false, error: error.message };
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('❌ Failed to register situation:', errMsg);
+    return { success: false, error: errMsg };
   }
 }
-

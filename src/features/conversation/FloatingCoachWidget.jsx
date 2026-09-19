@@ -109,6 +109,31 @@ const GENERAL_QUICK_PROMPTS = [
   }
 ];
 
+/**
+ * @typedef {Object} FloatingCoachWidgetProps
+ * @property {import('../../types').CoachMode} [mode]
+ * @property {import('../../types').Situation | null} [situation]
+ * @property {import('../../types').ChatMessage[]} [conversationHistory]
+ * @property {import('../../types').CoachConversationContext | null} [conversationContext]
+ * @property {import('../../types').CoachShadowingContext | null} [shadowingContext]
+ * @property {import('../../types').CoachBlitzContext | null} [blitzContext]
+ * @property {boolean} isOpen
+ * @property {() => void} onToggle
+ * @property {() => void} onClose
+ * @property {import('../../types').CoachMessage[]} coachMessages
+ * @property {boolean} isLoading
+ * @property {string | null} error
+ * @property {string} questionInput
+ * @property {(val: string) => void} onQuestionInputChange
+ * @property {(question?: string) => Promise<any> | void} onAskQuestion
+ * @property {() => void} onClearHistory
+ * @property {((phrase: string, indexKey?: any) => void)} [onApplyPhrase]
+ * @property {boolean} [hideFabOnMobile]
+ */
+
+/**
+ * @param {FloatingCoachWidgetProps} props
+ */
 export default function FloatingCoachWidget({
   mode = 'conversation',
   situation = null,
@@ -126,7 +151,8 @@ export default function FloatingCoachWidget({
   onQuestionInputChange,
   onAskQuestion,
   onClearHistory,
-  onApplyPhrase
+  onApplyPhrase,
+  hideFabOnMobile = false
 }) {
   // Find latest AI and User utterance in conversation
   const reversedHistory = [...conversationHistory].reverse();
@@ -210,7 +236,7 @@ export default function FloatingCoachWidget({
       {/* Floating Action Button (FAB) */}
       <button
         type="button"
-        className={`floating-coach-fab ${isOpen ? 'active' : ''}`}
+        className={`floating-coach-fab ${isOpen ? 'active' : ''} ${hideFabOnMobile ? 'hide-on-mobile' : ''}`}
         onClick={onToggle}
         aria-label="AIコーチに質問する"
         title="AIコーチに現在の会話について相談する"

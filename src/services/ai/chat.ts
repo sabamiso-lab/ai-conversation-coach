@@ -1,14 +1,74 @@
-import { callGeminiApi } from './client';
+import { callGeminiApi, GeminiContent } from './client';
 import {
   truncateRepetitiveLoops,
   cleanPhrase,
   cleanAndParseJson
 } from '../../utils/jsonRepair';
+import { Situation } from '../../types';
+
+export interface SendChatMessageOptions {
+  apiKey: string;
+  model?: string;
+  situation: Situation;
+  history: Array<{ role: 'user' | 'ai' | 'model'; text: string }>;
+  userText: string;
+}
+
+export interface SendChatMessageResult {
+  aiResponseText: string;
+  aiResponseTranslation: string;
+  userTextTranslation: string;
+  clarityStatus: 'FULL' | 'PARTIAL' | 'UNCLEAR';
+  clarityBadgeJa: string;
+  clarityFeedbackJa: string;
+  simpleAlternative?: string | null;
+  betterPhrasing?: string | null;
+  phrasingTip?: string | null;
+}
+
+export interface GetHintSuggestionsOptions {
+  apiKey: string;
+  model?: string;
+  situation: Situation;
+  history: Array<{ role: 'user' | 'ai' | 'model'; text: string }>;
+}
+
+export interface HintSuggestionItem {
+  english: string;
+  japanese: string;
+  difficulty: string;
+  nuance?: string;
+}
+
+export interface GenerateSessionReportOptions {
+  apiKey: string;
+  model?: string;
+  situation: Situation;
+  history: Array<{ role: 'user' | 'ai' | 'model'; text: string }>;
+}
+
+export interface SessionReportResult {
+  overallScore: number;
+  grammarScore: number;
+  vocabScore: number;
+  fluencyScore: number;
+  summaryJa: string;
+  strengthsJa: string[];
+  improvementsJa: string[];
+  keyPhrases: Array<{ phrase: string; meaning: string }>;
+  goalsAchieved: Array<{ goal: string; achieved: boolean }>;
+}
 
 /**
  * Send a chat turn to Gemini and receive roleplay response + user feedback
  */
-export async function sendChatMessage({ apiKey, model, situation, history, userText }) {
+export async function sendChatMessage({
+  apiKey,
+  model,
+  situation,
+  history,
+  userText
+}: SendChatMessageOptions): Promise<SendChatMessageResult> {
   if (!apiKey) {
     throw new Error("Gemini API key is required. Please set your API key in settings.");
   }
@@ -18,8 +78,8 @@ You are acting as an English conversation tutor helping the user master practica
 Scenario Title: ${situation.title}
 Target Difficulty Level: ${situation.difficulty || 'Intermediate'}
 Your Persona / Role: ${situation.systemRole}
-User Role: ${situation.userRole}
-Scenario Context: ${situation.description}
+User Role: ${situation.userRole || 'Learner'}
+Scenario Context: ${situation.description || situation.descriptionJa}
 
 Scenario Mission Goals:
 ${(situation.goals && situation.goals.length > 0) ? situation.goals.map((g, i) => `${i + 1}. ${g}`).join('\n') : '1. Have a natural, productive English conversation.'}
@@ -70,7 +130,7 @@ Return your response strictly as JSON with this structure:
 `;
 
   // Format conversation history for Gemini API
-  const contents = [];
+  const contents: GeminiContent[] = [];
   
   // Add initial message if history is empty
   if (history.length === 0 && situation.initialMessage) {
@@ -110,7 +170,7 @@ Return your response strictly as JSON with this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  const parsed = cleanAndParseJson(rawJson);
+  const parsed = cleanAndParseJson<SendChatMessageResult>(rawJson);
   if (parsed) {
     if (parsed.clarityFeedbackJa) {
       parsed.clarityFeedbackJa = truncateRepetitiveLoops(parsed.clarityFeedbackJa);
@@ -128,12 +188,17 @@ Return your response strictly as JSON with this structure:
 /**
  * Generate 3 hint options for what the user can say next
  */
-export async function getHintSuggestions({ apiKey, model, situation, history }) {
+export async function getHintSuggestions({
+  apiKey,
+  model,
+  situation,
+  history
+}: GetHintSuggestionsOptions): Promise<HintSuggestionItem[]> {
   if (!apiKey) throw new Error("API Key required");
 
   const systemPrompt = `
 You are a helpful English conversation coach. The user is participating in this scenario:
-Scenario: ${situation.title} (${situation.userRole})
+Scenario: ${situation.title} (${situation.userRole || 'Learner'})
 
 Based on the conversation history so far, generate 3 different practical ideas/sentences the user could say next to keep the conversation going or fulfill their scenario goals (${situation.goals ? situation.goals.join(', ') : ''}).
 
@@ -161,7 +226,7 @@ Return strictly a JSON array of 3 hint objects:
     ? history.map(item => `${item.role === 'user' ? 'User' : 'AI Coach'}: ${item.text}`).join('\n')
     : `AI Coach: ${situation.initialMessage}`;
 
-  const contents = [
+  const contents: GeminiContent[] = [
     {
       role: 'user',
       parts: [{
@@ -184,13 +249,18 @@ Return strictly a JSON array of 3 hint objects:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return cleanAndParseJson(rawJson);
+  return cleanAndParseJson<HintSuggestionItem[]>(rawJson);
 }
 
 /**
  * Generate comprehensive post-session evaluation report
  */
-export async function generateSessionReport({ apiKey, model, situation, history }) {
+export async function generateSessionReport({
+  apiKey,
+  model,
+  situation,
+  history
+}: GenerateSessionReportOptions): Promise<SessionReportResult> {
   if (!apiKey) throw new Error("API Key required");
 
   const systemPrompt = `
@@ -235,7 +305,7 @@ Return strictly JSON matching this structure:
     ? history.map(item => `${item.role === 'user' ? 'User' : 'AI Coach'}: ${item.text}`).join('\n')
     : `AI Coach: ${situation.initialMessage}`;
 
-  const contents = [
+  const contents: GeminiContent[] = [
     {
       role: 'user',
       parts: [{
@@ -281,5 +351,5 @@ Return strictly JSON matching this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return cleanAndParseJson(rawJson);
+  return cleanAndParseJson<SessionReportResult>(rawJson);
 }

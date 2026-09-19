@@ -4,7 +4,7 @@ import { generateNewsSituation } from '../../services/gemini';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
   ArrowRight, Target, Loader2, Globe, 
-  Zap, Newspaper, Sparkles
+  Zap, Newspaper
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
@@ -133,40 +133,6 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
         title="英会話の訓練シチュエーションを選択"
         description="AIが指定した役柄になりきってリアルな対話を行います。実生活や仕事ですぐに使える表現力を身につけましょう。"
       />
-
-      {/* AI Coach Feature Highlight Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-        border: '1px solid #C7D2FE',
-        borderRadius: '16px',
-        padding: '12px 18px',
-        marginBottom: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px',
-        flexWrap: 'wrap',
-        boxShadow: '0 2px 8px rgba(79, 70, 229, 0.08)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            background: '#4F46E5',
-            color: '#fff',
-            padding: '3px 8px',
-            borderRadius: '8px',
-            fontSize: '0.72rem',
-            fontWeight: 800,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <Sparkles size={12} /> NEW
-          </span>
-          <span style={{ fontSize: '0.86rem', color: '#3730A3', fontWeight: 600 }}>
-            会話中や学習に迷ったら、右下の <strong>「✨ AIに相談」</strong> ボタンからいつでも日本語で質問・アドバイスを受けられます！
-          </span>
-        </div>
-      </div>
 
       {/* --- Dynamic News Grounding Generator Section --- */}
       <AiGeneratorCard

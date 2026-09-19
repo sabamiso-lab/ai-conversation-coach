@@ -1,10 +1,19 @@
 import { useContext } from 'react';
-import { SettingsContext } from '../contexts/SettingsContext';
+import { SettingsContext, SettingsContextType } from '../contexts/SettingsContext';
 
-export function useSettings() {
+const defaultSettings: SettingsContextType = {
+  apiKey: '',
+  model: 'gemini-3.5-flash-lite',
+  selectedSituation: null,
+  setSelectedSituation: () => {},
+  isApiKeyModalOpen: false,
+  saveApiKey: () => {},
+  saveModel: () => {},
+  openApiKeyModal: () => {},
+  closeApiKeyModal: () => {}
+};
+
+export function useSettings(): SettingsContextType {
   const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error('useSettings must be used within a SettingsProvider');
-  }
-  return context;
+  return context || defaultSettings;
 }

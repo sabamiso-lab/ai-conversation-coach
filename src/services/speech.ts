@@ -2,37 +2,67 @@
  * Web Speech API wrapper for Speech Recognition & Text-to-Speech
  */
 
-export const isSpeechRecognitionSupported = () => {
-  return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+// Global Web Speech API type declarations
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+export const isSpeechRecognitionSupported = (): boolean => {
+  return typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 };
 
-export const isSpeechSynthesisSupported = () => {
-  return 'speechSynthesis' in window;
+export const isSpeechSynthesisSupported = (): boolean => {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window;
 };
+
+export interface SpeechRecognizerOptions {
+  onResult?: (result: { final: string; interim: string }) => void;
+  onError?: (userFriendlyError: string, rawError?: string) => void;
+  onStart?: () => void;
+  onEnd?: () => void;
+  lang?: string;
+  continuous?: boolean;
+}
 
 /**
  * Speech Recognition Manager
  */
 export class SpeechRecognizer {
-  constructor({ onResult, onError, onEnd, lang = 'en-US' }) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  public supported: boolean;
+  public isListening: boolean;
+  private recognition: any;
+  private onErrorCallback?: (userFriendlyError: string, rawError?: string) => void;
+
+  constructor({ onResult, onError, onStart, onEnd, lang = 'en-US', continuous = false }: SpeechRecognizerOptions) {
+    const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
     if (!SpeechRecognition) {
       this.supported = false;
+      this.isListening = false;
       return;
     }
 
     this.supported = true;
     this.isListening = false;
+    this.onErrorCallback = onError;
     this.recognition = new SpeechRecognition();
-    this.recognition.continuous = false;
+    this.recognition.continuous = continuous;
     this.recognition.interimResults = true;
     this.recognition.lang = lang;
 
-    this.recognition.onresult = (event) => {
+    this.recognition.onstart = () => {
+      this.isListening = true;
+      if (onStart) onStart();
+    };
+
+    this.recognition.onresult = (event: any) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      // Aggregate all results from index 0 to avoid losing earlier finalized sentences
+      for (let i = 0; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
         } else {
@@ -48,7 +78,13 @@ export class SpeechRecognizer {
       }
     };
 
-    this.recognition.onerror = (event) => {
+    this.recognition.onerror = (event: any) => {
+      // Ignore user-initiated abort or cancel
+      if (event.error === 'aborted') {
+        this.isListening = false;
+        return;
+      }
+
       console.warn('Speech recognition error:', event.error);
       this.isListening = false;
       let userFriendlyError = '音声認識エラーが発生しました。';
@@ -62,7 +98,7 @@ export class SpeechRecognizer {
         userFriendlyError = '音声認識ネットワーク接続エラーが発生しました。';
       }
 
-      if (onError) onError(userFriendlyError, event.error);
+      if (this.onErrorCallback) this.onErrorCallback(userFriendlyError, event.error);
     };
 
     this.recognition.onend = () => {
@@ -71,19 +107,25 @@ export class SpeechRecognizer {
     };
   }
 
-  start() {
+  start(): void {
     if (this.recognition && !this.isListening) {
       try {
-        this.isListening = true;
         this.recognition.start();
-      } catch (err) {
+        this.isListening = true;
+      } catch (err: any) {
         this.isListening = false;
         console.warn("Speech recognition start failed:", err);
+        // If already started, do not crash
+        if (err?.name !== 'InvalidStateError') {
+          if (this.onErrorCallback) {
+            this.onErrorCallback('マイクの起動に失敗しました。もう一度お試しください。', err?.message);
+          }
+        }
       }
     }
   }
 
-  stop() {
+  stop(): void {
     if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();
@@ -94,14 +136,26 @@ export class SpeechRecognizer {
       }
     }
   }
+
+  abort(): void {
+    if (this.recognition) {
+      try {
+        this.recognition.abort();
+      } catch (err) {
+        console.warn("Speech recognition abort error:", err);
+      } finally {
+        this.isListening = false;
+      }
+    }
+  }
 }
 
 /**
  * Text-to-Speech Helper
  */
-let pendingSpeechTimeout = null;
+let pendingSpeechTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function setVoiceAndSpeak(utterance, onEnd) {
+function setVoiceAndSpeak(utterance: SpeechSynthesisUtterance, onEnd?: () => void): void {
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
   if (naturalVoice) {
@@ -109,13 +163,20 @@ function setVoiceAndSpeak(utterance, onEnd) {
   }
 
   if (onEnd) {
-    utterance.onend = onEnd;
+    utterance.onend = () => onEnd();
   }
 
   window.speechSynthesis.speak(utterance);
 }
 
-export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd } = {}) {
+export interface SpeakTextOptions {
+  lang?: string;
+  rate?: number;
+  pitch?: number;
+  onEnd?: () => void;
+}
+
+export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd }: SpeakTextOptions = {}): void {
   if (!isSpeechSynthesisSupported()) return;
 
   // Cancel any ongoing speech & clear pending timers/event listeners
@@ -155,7 +216,7 @@ export function speakText(text, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEn
   }
 }
 
-export function stopSpeaking() {
+export function stopSpeaking(): void {
   if (isSpeechSynthesisSupported()) {
     if (pendingSpeechTimeout) {
       clearTimeout(pendingSpeechTimeout);

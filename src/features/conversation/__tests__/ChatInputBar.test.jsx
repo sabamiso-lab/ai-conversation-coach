@@ -20,7 +20,7 @@ describe('ChatInputBar', () => {
       />
     );
 
-    expect(screen.getByText('マイクを押すかテキストを入力してください')).toBeInTheDocument();
+    expect(screen.getByText(/マイクで発話するか、テキストを入力して送信してください/)).toBeInTheDocument();
     expect(screen.getByPlaceholderText('英語でメッセージを入力...')).toBeInTheDocument();
 
     const sendButton = screen.getByRole('button', { name: '' });
@@ -43,9 +43,9 @@ describe('ChatInputBar', () => {
       />
     );
 
-    expect(screen.getByText('🎙️ 音声認識中... 英語で発話してください')).toBeInTheDocument();
+    expect(screen.getByText(/音声認識中... 英語で発話してください/)).toBeInTheDocument();
 
-    const input = screen.getByPlaceholderText('音声認識中...');
+    const input = screen.getByPlaceholderText(/音声認識中.../);
     fireEvent.change(input, { target: { value: 'Hello again' } });
     expect(onInputChange).toHaveBeenCalledWith('Hello again');
 

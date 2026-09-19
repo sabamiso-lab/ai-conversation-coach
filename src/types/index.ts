@@ -9,13 +9,20 @@ export interface Situation {
   title: string;
   titleJa: string;
   category: string;
+  icon?: string;
+  difficulty?: string;
   systemRole: string;
+  userRole?: string;
+  description?: string;
   descriptionJa: string;
   initialMessage: string;
   initialMessageJa?: string;
   initialMessageTranslation?: string;
   goals: string[];
   newsSource?: NewsSource;
+  isNews?: boolean;
+  expiresAt?: number;
+  newsCategory?: string | null;
 }
 
 export interface ChatMessage {
@@ -24,12 +31,12 @@ export interface ChatMessage {
   text: string;
   translation?: string;
   userTextTranslation?: string;
-  clarityStatus?: 'natural' | 'acceptable' | 'needs_improvement';
+  clarityStatus?: 'FULL' | 'PARTIAL' | 'UNCLEAR' | 'natural' | 'acceptable' | 'needs_improvement';
   clarityBadgeJa?: string;
   clarityFeedbackJa?: string;
-  simpleAlternative?: string;
-  betterPhrasing?: string;
-  phrasingTip?: string;
+  simpleAlternative?: string | null;
+  betterPhrasing?: string | null;
+  phrasingTip?: string | null;
 }
 
 export interface HintSuggestion {
@@ -69,8 +76,10 @@ export interface CoachBlitzContext {
   totalQuestions?: number;
   currentQuestion?: {
     id?: string;
-    japanese: string;
-    sampleAnswer: string;
+    japanese?: string;
+    prompt?: string;
+    sampleAnswer?: string;
+    answer?: string;
     keyPoints?: string[];
   };
   userSpeech?: string;
@@ -84,8 +93,10 @@ export interface CoachBlitzContext {
   } | null;
   allQuestions?: Array<{
     id?: string;
-    japanese: string;
-    sampleAnswer: string;
+    japanese?: string;
+    prompt?: string;
+    sampleAnswer?: string;
+    answer?: string;
     keyPoints?: string[];
   }>;
 }
@@ -111,10 +122,17 @@ export interface BetterExpression {
 
 export interface SessionReport {
   overallScore: number;
-  clearPoints: string[];
-  improvementPoints: string[];
-  betterExpressions: BetterExpression[];
+  grammarScore?: number;
+  vocabScore?: number;
+  fluencyScore?: number;
   summaryJa: string;
+  strengthsJa?: string[];
+  improvementsJa?: string[];
+  keyPhrases?: Array<{ phrase: string; meaning: string }>;
+  goalsAchieved?: Array<{ goal: string; achieved: boolean }>;
+  clearPoints?: string[];
+  improvementPoints?: string[];
+  betterExpressions?: BetterExpression[];
 }
 
 export interface ShadowingSentence {
@@ -141,17 +159,40 @@ export interface ShadowingEvaluation {
 
 export interface BlitzQuestion {
   id: string;
-  japanese: string;
-  sampleAnswer: string;
-  keyPoints: string[];
+  prompt: string;
+  answer: string;
+  acceptedAnswers?: string[];
+  explanation?: string;
+  grammarPoint?: string;
+  japanese?: string;
+  sampleAnswer?: string;
+  keyPoints?: string[];
 }
 
 export interface BlitzTopic {
   id: string;
   title: string;
   titleJa: string;
-  descriptionJa: string;
+  category?: string;
+  difficulty?: string;
+  icon?: string;
+  description?: string;
+  descriptionJa?: string;
   questions: BlitzQuestion[];
+}
+
+export interface BlitzResult {
+  questionId: string;
+  question: BlitzQuestion;
+  isCorrect: boolean;
+  userSpeech: string;
+  matchScore: number;
+  responseTimeSec: number;
+  aiEvaluation?: {
+    isCorrect: boolean;
+    feedbackJa: string;
+    improvedAnswer?: string;
+  } | null;
 }
 
 export interface GeminiApiOptions {

@@ -1,10 +1,49 @@
 import { callGeminiApi } from './client';
 import { cleanAndParseJson } from '../../utils/jsonRepair';
 
+export interface GenerateShadowingScriptOptions {
+  apiKey: string;
+  model?: string;
+  topic?: string;
+  difficulty?: string;
+}
+
+export interface ShadowingScriptResult {
+  id: string;
+  title: string;
+  titleJa: string;
+  category: string;
+  text: string;
+  slashedText: string;
+  translation: string;
+  tipsJa: string;
+  difficulty: string;
+  difficultyLabel: string;
+}
+
+export interface EvaluateShadowingOptions {
+  apiKey: string;
+  model?: string;
+  originalText: string;
+  userSpeechText: string;
+}
+
+export interface ShadowingEvaluationResult {
+  score: number;
+  feedbackJa: string;
+  strengthsJa: string[];
+  improvementsJa: string[];
+}
+
 /**
  * Generate custom shadowing script via Gemini AI based on user topic & difficulty
  */
-export async function generateShadowingScript({ apiKey, model, topic, difficulty = 'Intermediate' }) {
+export async function generateShadowingScript({
+  apiKey,
+  model,
+  topic,
+  difficulty = 'Intermediate'
+}: GenerateShadowingScriptOptions): Promise<ShadowingScriptResult> {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
   const isRandomRequest = !topic || !topic.trim() || topic.trim() === 'おまかせ' || topic.trim() === 'ランダム';
@@ -45,7 +84,7 @@ Return strictly JSON matching this structure:
     : `Please generate a shadowing script about "${topicInstruction}" for a ${difficulty} level learner.`;
 
   const contents = [
-    { role: 'user', parts: [{ text: userPromptText }] }
+    { role: 'user' as const, parts: [{ text: userPromptText }] }
   ];
 
   const schema = {
@@ -63,7 +102,7 @@ Return strictly JSON matching this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  const data = cleanAndParseJson(rawJson);
+  const data = cleanAndParseJson<Omit<ShadowingScriptResult, 'id' | 'difficulty' | 'difficultyLabel'>>(rawJson);
 
   return {
     ...data,
@@ -76,7 +115,12 @@ Return strictly JSON matching this structure:
 /**
  * Evaluate user's shadowing audio speech transcript against the original text using Gemini
  */
-export async function evaluateShadowingPerformance({ apiKey, model, originalText, userSpeechText }) {
+export async function evaluateShadowingPerformance({
+  apiKey,
+  model,
+  originalText,
+  userSpeechText
+}: EvaluateShadowingOptions): Promise<ShadowingEvaluationResult> {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
   const systemPrompt = `
@@ -101,7 +145,7 @@ Return strictly JSON with this structure:
 `;
 
   const contents = [
-    { role: 'user', parts: [{ text: `Original: "${originalText}"\nUser: "${userSpeechText}"\nEvaluate performance.` }] }
+    { role: 'user' as const, parts: [{ text: `Original: "${originalText}"\nUser: "${userSpeechText}"\nEvaluate performance.` }] }
   ];
 
   const schema = {
@@ -116,5 +160,5 @@ Return strictly JSON with this structure:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  return cleanAndParseJson(rawJson);
+  return cleanAndParseJson<ShadowingEvaluationResult>(rawJson);
 }

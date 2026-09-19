@@ -4,22 +4,40 @@ import BlitzSession from '../features/blitz/BlitzSession';
 import BlitzSummary from '../features/blitz/BlitzSummary';
 import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
+import { useSettings } from '../hooks/useSettings';
 import { generateBlitzQuestions } from '../services/gemini';
+import { BlitzQuestion, CoachBlitzContext } from '../types';
 
-export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
+export interface InstantBlitzPageProps {
+  apiKey?: string;
+  model?: string;
+  onOpenApiKeyModal?: () => void;
+}
+
+export default function InstantBlitzPage({
+  apiKey: propsApiKey,
+  model: propsModel,
+  onOpenApiKeyModal: propsOnOpenApiKeyModal
+}: InstantBlitzPageProps) {
+  const settings = useSettings();
+
+  const apiKey = propsApiKey ?? settings.apiKey ?? '';
+  const model = propsModel ?? settings.model ?? 'gemini-3.5-flash-lite';
+  const onOpenApiKeyModal = propsOnOpenApiKeyModal ?? settings.openApiKeyModal;
+
   // 'selector' | 'session' | 'summary'
-  const [viewState, setViewState] = useState('selector');
+  const [viewState, setViewState] = useState<'selector' | 'session' | 'summary'>('selector');
 
   const [activeTitle, setActiveTitle] = useState('');
-  const [activeQuestions, setActiveQuestions] = useState([]);
+  const [activeQuestions, setActiveQuestions] = useState<BlitzQuestion[]>([]);
   const [timerSeconds, setTimerSeconds] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [summaryData, setSummaryData] = useState(null);
-  const [blitzLiveContext, setBlitzLiveContext] = useState(null);
+  const [summaryData, setSummaryData] = useState<any>(null);
+  const [blitzLiveContext, setBlitzLiveContext] = useState<CoachBlitzContext | null>(null);
 
   const isSessionActive = viewState === 'session';
 
-  const activeBlitzContext = isSessionActive ? (blitzLiveContext || {
+  const activeBlitzContext: CoachBlitzContext | null = isSessionActive ? (blitzLiveContext || {
     topicTitle: activeTitle,
     allQuestions: activeQuestions
   }) : null;
@@ -43,7 +61,7 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
   });
 
   // プリセットトピックでセッション開始
-  const handleStartSession = (questions, title, seconds) => {
+  const handleStartSession = (questions: BlitzQuestion[], title: string, seconds: number) => {
     setActiveTitle(title);
     setActiveQuestions(questions);
     setTimerSeconds(seconds);
@@ -51,7 +69,7 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
   };
 
   // Gemini AI でお題を生成してセッション開始
-  const handleGenerateCustom = async ({ topicPrompt, difficulty, timerSeconds: seconds }) => {
+  const handleGenerateCustom = async ({ topicPrompt, difficulty, timerSeconds: seconds }: { topicPrompt?: string; difficulty?: string; timerSeconds: number }) => {
     try {
       setIsGenerating(true);
       const generated = await generateBlitzQuestions({
@@ -66,21 +84,22 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
       setActiveQuestions(generated.questions);
       setTimerSeconds(seconds);
       setViewState('session');
-    } catch (err) {
-      alert(`AI生成に失敗しました: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`AI生成に失敗しました: ${msg}`);
     } finally {
       setIsGenerating(false);
     }
   };
 
   // セッション完了
-  const handleCompleteSession = (data) => {
+  const handleCompleteSession = (data: any) => {
     setSummaryData(data);
     setViewState('summary');
   };
 
   // 間違えた問題だけでリトライ
-  const handleRetryIncorrect = (incorrectQuestions) => {
+  const handleRetryIncorrect = (incorrectQuestions: BlitzQuestion[]) => {
     setActiveTitle(`${activeTitle} (言えなかった問題リトライ)`);
     setActiveQuestions(incorrectQuestions);
     setViewState('session');

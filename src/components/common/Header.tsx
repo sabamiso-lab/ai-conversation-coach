@@ -1,16 +1,41 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Sparkles, Key, RotateCcw, MessageSquare, Headphones, Zap } from 'lucide-react';
+import { useSettings } from '../../hooks/useSettings';
+import { Situation } from '../../types';
 
-export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation, onResetSession }) {
+export interface HeaderProps {
+  onOpenApiKeyModal?: () => void;
+  hasApiKey?: boolean;
+  selectedSituation?: Situation | null;
+  onResetSession?: () => void;
+}
+
+export default function Header({
+  onOpenApiKeyModal,
+  hasApiKey,
+  selectedSituation,
+  onResetSession
+}: HeaderProps) {
   const location = useLocation();
   const isConversationPage = location.pathname === '/' || location.pathname === '/conversation';
+
+  const settings = useSettings();
+
+  const effectiveOpenApiKeyModal = onOpenApiKeyModal ?? settings.openApiKeyModal;
+  const effectiveHasApiKey = hasApiKey !== undefined ? hasApiKey : Boolean(settings.apiKey);
+  const effectiveSituation = selectedSituation !== undefined ? selectedSituation : settings.selectedSituation;
+  const effectiveResetSession = onResetSession ?? (() => settings.setSelectedSituation(null));
 
   return (
     <>
       <header className="app-header">
         <div className="header-left">
-          <NavLink to="/" className="logo-area" onClick={() => selectedSituation && onResetSession && onResetSession()}>
+          <NavLink 
+            to="/" 
+            className="logo-area" 
+            onClick={() => effectiveSituation && effectiveResetSession && effectiveResetSession()}
+          >
             <div className="logo-icon">
               <Sparkles size={22} />
             </div>
@@ -49,20 +74,20 @@ export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation
         </div>
 
         <div className="header-actions">
-          {isConversationPage && selectedSituation && (
-            <button className="btn btn-secondary" onClick={onResetSession} title="シチュエーション一覧へ">
+          {isConversationPage && effectiveSituation && (
+            <button className="btn btn-secondary" onClick={effectiveResetSession} title="シチュエーション一覧へ">
               <RotateCcw size={16} /> 
               <span className="btn-text-desktop">シチュエーション一覧</span>
             </button>
           )}
 
           <button 
-            className={`btn ${hasApiKey ? 'btn-secondary' : 'btn-primary'}`}
-            onClick={onOpenApiKeyModal}
-            title={hasApiKey ? "API Key 設定済み" : "API Key を設定"}
+            className={`btn ${effectiveHasApiKey ? 'btn-secondary' : 'btn-primary'}`}
+            onClick={effectiveOpenApiKeyModal}
+            title={effectiveHasApiKey ? "API Key 設定済み" : "API Key を設定"}
           >
             <Key size={16} /> 
-            <span>{hasApiKey ? 'Key 設定中' : 'API Key 設定'}</span>
+            <span>{effectiveHasApiKey ? 'Key 設定中' : 'API Key 設定'}</span>
           </button>
         </div>
       </header>

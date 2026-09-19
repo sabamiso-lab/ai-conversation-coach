@@ -67,16 +67,8 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     });
   }, [sendMessage]);
 
-  const handleSendMessageRef = useRef(handleSendMessage);
-  useEffect(() => {
-    handleSendMessageRef.current = handleSendMessage;
-  }, [handleSendMessage]);
-
   const handleFinalResult = useCallback((finalText) => {
     setInputText(finalText);
-    if (handleSendMessageRef.current) {
-      handleSendMessageRef.current(finalText);
-    }
   }, [setInputText]);
 
   const handleInterimResult = useCallback((interimText) => {
@@ -87,11 +79,18 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     setErrorMsg(speechErr);
   }, [setErrorMsg]);
 
-  const { isRecording, toggleRecording } = useSpeechRecognition({
+  const { isSupported, isRecording, stopRecording, toggleRecording } = useSpeechRecognition({
     onFinalResult: handleFinalResult,
     onInterimResult: handleInterimResult,
     onError: handleSpeechError
   });
+
+  // Stop recording when AI starts thinking
+  useEffect(() => {
+    if (isAiThinking && isRecording) {
+      stopRecording();
+    }
+  }, [isAiThinking, isRecording, stopRecording]);
 
   // Initial Speech & Cleanup
   useEffect(() => {
@@ -200,6 +199,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
             isRecording={isRecording}
             onToggleRecording={toggleRecording}
             isAiThinking={isAiThinking}
+            isSupported={isSupported}
           />
         </div>
 
@@ -284,6 +284,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         onApplyPhrase={(phrase) => {
           setInputText(phrase);
         }}
+        hideFabOnMobile={true}
       />
     </div>
   );

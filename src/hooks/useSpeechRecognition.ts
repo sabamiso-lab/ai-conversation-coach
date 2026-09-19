@@ -5,14 +5,20 @@ interface UseSpeechRecognitionOptions {
   onFinalResult: (finalText: string) => void;
   onInterimResult?: (interimText: string) => void;
   onError?: (errorMessage: string) => void;
+  onStart?: () => void;
+  onEnd?: () => void;
   lang?: string;
+  continuous?: boolean;
 }
 
 export function useSpeechRecognition({
   onFinalResult,
   onInterimResult,
   onError,
-  lang = 'en-US'
+  onStart,
+  onEnd,
+  lang = 'en-US',
+  continuous = false
 }: UseSpeechRecognitionOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState('');
@@ -21,12 +27,16 @@ export function useSpeechRecognition({
   const onFinalResultRef = useRef(onFinalResult);
   const onInterimResultRef = useRef(onInterimResult);
   const onErrorRef = useRef(onError);
+  const onStartRef = useRef(onStart);
+  const onEndRef = useRef(onEnd);
 
   useEffect(() => {
     onFinalResultRef.current = onFinalResult;
     onInterimResultRef.current = onInterimResult;
     onErrorRef.current = onError;
-  }, [onFinalResult, onInterimResult, onError]);
+    onStartRef.current = onStart;
+    onEndRef.current = onEnd;
+  }, [onFinalResult, onInterimResult, onError, onStart, onEnd]);
 
   const isSupported = isSpeechRecognitionSupported();
 
@@ -35,18 +45,22 @@ export function useSpeechRecognition({
 
     recognizerRef.current = new SpeechRecognizer({
       lang,
-      onResult: ({ final, interim }) => {
-        if (final) {
-          if (onFinalResultRef.current) {
-            onFinalResultRef.current(final);
-          }
-        } else if (interim) {
-          if (onInterimResultRef.current) {
-            onInterimResultRef.current(interim);
-          }
+      continuous,
+      onStart: () => {
+        setIsRecording(true);
+        if (onStartRef.current) {
+          onStartRef.current();
         }
       },
-      onError: (userFriendlyError) => {
+      onResult: ({ final, interim }: { final: string; interim: string }) => {
+        if (final && onFinalResultRef.current) {
+          onFinalResultRef.current(final);
+        }
+        if (interim && onInterimResultRef.current) {
+          onInterimResultRef.current(interim);
+        }
+      },
+      onError: (userFriendlyError: string) => {
         console.warn('Speech Rec Error:', userFriendlyError);
         setError(userFriendlyError);
         setIsRecording(false);
@@ -56,15 +70,18 @@ export function useSpeechRecognition({
       },
       onEnd: () => {
         setIsRecording(false);
+        if (onEndRef.current) {
+          onEndRef.current();
+        }
       }
     });
 
     return () => {
       if (recognizerRef.current) {
-        recognizerRef.current.stop();
+        recognizerRef.current.abort();
       }
     };
-  }, [isSupported, lang]);
+  }, [isSupported, lang, continuous]);
 
   const startRecording = useCallback(() => {
     if (!recognizerRef.current) {
@@ -76,13 +93,19 @@ export function useSpeechRecognition({
       return;
     }
     setError('');
-    setIsRecording(true);
     recognizerRef.current.start();
   }, []);
 
   const stopRecording = useCallback(() => {
     if (recognizerRef.current) {
       recognizerRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  const abortRecording = useCallback(() => {
+    if (recognizerRef.current) {
+      recognizerRef.current.abort();
       setIsRecording(false);
     }
   }, []);
@@ -102,6 +125,7 @@ export function useSpeechRecognition({
     setError,
     startRecording,
     stopRecording,
+    abortRecording,
     toggleRecording
   };
 }

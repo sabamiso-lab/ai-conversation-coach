@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { speakText, stopSpeaking } from '../speech';
+import { speakText, stopSpeaking, SpeechRecognizer, isSpeechRecognitionSupported } from '../speech';
 
 describe('speech.js TTS module', () => {
   let mockSpeak;
@@ -104,3 +104,148 @@ describe('speech.js TTS module', () => {
     expect(mockSpeak).not.toHaveBeenCalled();
   });
 });
+
+describe('SpeechRecognizer module', () => {
+  let mockRecognitionInstance;
+  let originalSpeechRecognition;
+
+  beforeEach(() => {
+    mockRecognitionInstance = {
+      continuous: false,
+      interimResults: false,
+      lang: '',
+      start: vi.fn(),
+      stop: vi.fn(),
+      abort: vi.fn(),
+      onstart: null,
+      onresult: null,
+      onerror: null,
+      onend: null
+    };
+
+    originalSpeechRecognition = window.SpeechRecognition;
+    window.SpeechRecognition = vi.fn().mockImplementation(() => mockRecognitionInstance);
+  });
+
+  afterEach(() => {
+    window.SpeechRecognition = originalSpeechRecognition;
+  });
+
+  it('detects speech recognition support correctly', () => {
+    expect(isSpeechRecognitionSupported()).toBe(true);
+
+    delete window.SpeechRecognition;
+    delete window.webkitSpeechRecognition;
+    expect(isSpeechRecognitionSupported()).toBe(false);
+  });
+
+  it('configures recognition with custom continuous and lang options', () => {
+    const recognizer = new SpeechRecognizer({
+      lang: 'en-GB',
+      continuous: true
+    });
+
+    expect(recognizer.supported).toBe(true);
+    expect(mockRecognitionInstance.continuous).toBe(true);
+    expect(mockRecognitionInstance.lang).toBe('en-GB');
+    expect(mockRecognitionInstance.interimResults).toBe(true);
+  });
+
+  it('aggregates all results from index 0 across multiple result events', () => {
+    const onResult = vi.fn();
+    const recognizer = new SpeechRecognizer({ onResult });
+
+    // Event 1: First final sentence
+    mockRecognitionInstance.onresult({
+      resultIndex: 0,
+      results: [
+        Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true })
+      ]
+    });
+
+    expect(onResult).toHaveBeenCalledWith({
+      final: 'Hello world.',
+      interim: ''
+    });
+
+    // Event 2: Second sentence in progress (interim)
+    mockRecognitionInstance.onresult({
+      resultIndex: 1,
+      results: [
+        Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true }),
+        Object.assign([{ transcript: 'How are you' }], { isFinal: false })
+      ]
+    });
+
+    // Both final (sentence 1) and interim (sentence 2) should be retained!
+    expect(onResult).toHaveBeenLastCalledWith({
+      final: 'Hello world.',
+      interim: 'How are you'
+    });
+
+    // Event 3: Second sentence finalized
+    mockRecognitionInstance.onresult({
+      resultIndex: 1,
+      results: [
+        Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true }),
+        Object.assign([{ transcript: 'How are you?' }], { isFinal: true })
+      ]
+    });
+
+    expect(onResult).toHaveBeenLastCalledWith({
+      final: 'Hello world. How are you?',
+      interim: ''
+    });
+  });
+
+  it('handles onstart and onend callbacks and manages isListening state', () => {
+    const onStart = vi.fn();
+    const onEnd = vi.fn();
+    const recognizer = new SpeechRecognizer({ onStart, onEnd });
+
+    recognizer.start();
+    expect(mockRecognitionInstance.start).toHaveBeenCalled();
+
+    // Trigger onstart
+    mockRecognitionInstance.onstart();
+    expect(recognizer.isListening).toBe(true);
+    expect(onStart).toHaveBeenCalled();
+
+    // Trigger onend
+    mockRecognitionInstance.onend();
+    expect(recognizer.isListening).toBe(false);
+    expect(onEnd).toHaveBeenCalled();
+  });
+
+  it('ignores user abort error and does not report error for aborted', () => {
+    const onError = vi.fn();
+    const recognizer = new SpeechRecognizer({ onError });
+
+    recognizer.isListening = true;
+    mockRecognitionInstance.onerror({ error: 'aborted' });
+
+    expect(recognizer.isListening).toBe(false);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('maps standard speech errors to user-friendly messages', () => {
+    const onError = vi.fn();
+    new SpeechRecognizer({ onError });
+
+    mockRecognitionInstance.onerror({ error: 'not-allowed' });
+    expect(onError).toHaveBeenCalledWith(
+      expect.stringContaining('マイクの使用が拒否されています'),
+      'not-allowed'
+    );
+  });
+
+  it('aborts recognition and resets listening state', () => {
+    const recognizer = new SpeechRecognizer({});
+    recognizer.isListening = true;
+
+    recognizer.abort();
+    expect(mockRecognitionInstance.abort).toHaveBeenCalled();
+    expect(recognizer.isListening).toBe(false);
+  });
+});
+

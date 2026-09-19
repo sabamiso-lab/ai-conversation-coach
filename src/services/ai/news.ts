@@ -1,10 +1,27 @@
 import { callGeminiApi, callGeminiApiWithGrounding } from './client';
 import { cleanAndParseJson } from '../../utils/jsonRepair';
+import { Situation } from '../../types';
+
+export interface GenerateNewsOptions {
+  apiKey: string;
+  model?: string;
+  category?: string;
+  topic?: string;
+  difficulty?: string;
+  onProgressStatus?: (status: string) => void;
+}
 
 /**
  * Generate a dynamic English conversation scenario based on real-time news using Google Search Grounding
  */
-export async function generateNewsSituation({ apiKey, model, category = 'Technology', topic = '', difficulty = 'Intermediate', onProgressStatus = () => {} }) {
+export async function generateNewsSituation({
+  apiKey,
+  model,
+  category = 'Technology',
+  topic = '',
+  difficulty = 'Intermediate',
+  onProgressStatus = () => {}
+}: GenerateNewsOptions): Promise<Situation> {
   if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
 
   const searchTarget = topic.trim() ? `topic: "${topic.trim()}" (Category: ${category})` : `category: "${category}"`;
@@ -31,8 +48,8 @@ ${difficulty === 'Advanced' ? '   - Highlight detailed facts, key statistics, an
   const metadata = groundingResult.groundingMetadata;
 
   // Extract top news article title and URL from groundingMetadata
-  let sourceTitle = null;
-  let sourceUrl = null;
+  let sourceTitle: string | null = null;
+  let sourceUrl: string | null = null;
 
   if (metadata && Array.isArray(metadata.groundingChunks)) {
     for (const chunk of metadata.groundingChunks) {
@@ -79,7 +96,6 @@ DIFFICULTY LEVEL GUIDELINES:
 
 IMPORTANT: Keep description and descriptionJa concise (2-3 sentences max).
 
-
 Adhere strictly to this JSON schema:
 {
   "title": "Short punchy English title summarizing the scenario",
@@ -124,7 +140,7 @@ Adhere strictly to this JSON schema:
     { role: 'user', parts: [{ text: structPrompt }] }
   ], schema);
 
-  const scenarioData = cleanAndParseJson(rawJson);
+  const scenarioData = cleanAndParseJson<any>(rawJson);
 
   // Calculate Unix timestamp for tomorrow 00:00:00 in seconds (midnight of next day)
   const tomorrow = new Date();
@@ -140,8 +156,8 @@ Adhere strictly to this JSON schema:
     expiresAt: expiresAt,
     newsCategory: category,
     newsSource: sourceUrl ? {
-      title: sourceTitle || `${category} News Article`,
+      title: sourceTitle || 'Google Search News Result',
       url: sourceUrl
-    } : null
+    } : undefined
   };
 }

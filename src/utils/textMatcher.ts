@@ -1,10 +1,7 @@
 /**
  * テキストから記号を除去し、小文字化・余分な空白を除去する
- * 
- * @param {string} str - 入力テキスト
- * @returns {string} 正規化されたテキスト
  */
-export function normalizeText(str) {
+export function normalizeText(str: string | null | undefined): string {
   if (!str) return '';
   return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
 }
@@ -12,12 +9,16 @@ export function normalizeText(str) {
 /**
  * ユーザーの発話テキストとお手本テキストの単語一致率（0〜100%）を計算する
  * 
- * @param {string} userText - ユーザーの発話テキスト
- * @param {string} targetAnswer - 正解テキスト
- * @param {string[]} [acceptedAnswers=[]] - 許容される別解リスト
- * @returns {number} 一致率パーセンテージ (0〜100)
+ * @param userText - ユーザーの発話テキスト
+ * @param targetAnswer - 正解テキスト
+ * @param acceptedAnswers - 許容される別解リスト
+ * @returns 一致率パーセンテージ (0〜100)
  */
-export function calculateTextMatchScore(userText, targetAnswer, acceptedAnswers = []) {
+export function calculateTextMatchScore(
+  userText: string | null | undefined,
+  targetAnswer: string,
+  acceptedAnswers: string[] = []
+): number {
   if (!userText) return 0;
 
   const userNorm = normalizeText(userText);

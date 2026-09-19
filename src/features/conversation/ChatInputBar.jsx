@@ -20,6 +20,7 @@ export default function ChatInputBar({
   isRecording,
   onToggleRecording,
   isAiThinking,
+  isSupported = true,
   className = 'chat-controls'
 }) {
   return (
@@ -31,7 +32,7 @@ export default function ChatInputBar({
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          color: isRecording ? '#E11D48' : '#64748B',
+          color: isRecording ? '#E11D48' : !isSupported ? '#94A3B8' : '#64748B',
           fontWeight: 600,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -51,12 +52,17 @@ export default function ChatInputBar({
                 animation: 'pulseMic 1s infinite'
               }}
             />
-            <span>🎙️ 音声認識中... 英語で発話してください</span>
+            <span>🎙️ 音声認識中... 英語で発話してください（マイク再押下で完了）</span>
+          </>
+        ) : !isSupported ? (
+          <>
+            <Mic size={14} style={{ flexShrink: 0 }} />
+            <span>音声認識非対応のブラウザです（テキストで入力してください）</span>
           </>
         ) : (
           <>
             <Mic size={14} style={{ flexShrink: 0 }} />
-            <span>マイクを押すかテキストを入力してください</span>
+            <span>マイクで発話するか、テキストを入力して送信してください</span>
           </>
         )}
       </div>
@@ -66,15 +72,22 @@ export default function ChatInputBar({
           isRecording={isRecording}
           onClick={onToggleRecording}
           iconSize={24}
+          disabled={isAiThinking || !isSupported}
+          title={!isSupported ? 'お使いのブラウザは音声認識に対応していません' : isAiThinking ? 'AIが返答中はマイクを使用できません' : undefined}
         />
 
         <input
           type="text"
           className="input-field"
-          placeholder={isRecording ? "音声認識中..." : "英語でメッセージを入力..."}
+          placeholder={isRecording ? "音声認識中... 話し終わったら送信できます" : "英語でメッセージを入力..."}
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onSendMessage()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isAiThinking && inputText.trim()) {
+              e.preventDefault();
+              onSendMessage();
+            }
+          }}
           disabled={isAiThinking}
         />
 

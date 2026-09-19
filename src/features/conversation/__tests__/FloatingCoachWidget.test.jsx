@@ -43,6 +43,13 @@ describe('FloatingCoachWidget component', () => {
     expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
 
+  it('adds hide-on-mobile class to FAB when hideFabOnMobile is true', () => {
+    render(<FloatingCoachWidget {...defaultProps} hideFabOnMobile={true} />);
+
+    const fab = screen.getByRole('button', { name: /AIコーチに質問する/i });
+    expect(fab).toHaveClass('hide-on-mobile');
+  });
+
   it('renders coach panel when isOpen is true in conversation mode', () => {
     render(<FloatingCoachWidget {...defaultProps} isOpen={true} />);
 

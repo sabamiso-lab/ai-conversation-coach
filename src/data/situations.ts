@@ -1,18 +1,4 @@
-export interface Situation {
-  id: string;
-  title: string;
-  titleJa: string;
-  category: string;
-  icon: string;
-  difficulty: string;
-  systemRole: string;
-  userRole: string;
-  description: string;
-  descriptionJa: string;
-  initialMessage: string;
-  initialMessageJa: string;
-  goals: string[];
-}
+import { Situation } from '../types';
 
 export const SITUATIONS: Situation[] = [
   {

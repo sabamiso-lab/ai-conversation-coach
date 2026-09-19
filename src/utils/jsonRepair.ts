@@ -5,7 +5,7 @@
 /**
  * Fix unescaped control characters (like raw linebreaks) inside JSON strings
  */
-export function sanitizeControlChars(str) {
+export function sanitizeControlChars(str: string): string {
   let result = '';
   let inString = false;
   let isEscaped = false;
@@ -44,10 +44,10 @@ export function sanitizeControlChars(str) {
 /**
  * Auto-close unclosed string literals, array brackets `]`, and object braces `}`
  */
-export function autoCloseJson(str) {
+export function autoCloseJson(str: string): string {
   let inString = false;
   let isEscaped = false;
-  const stack = [];
+  const stack: string[] = [];
 
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
@@ -105,8 +105,8 @@ export function autoCloseJson(str) {
 /**
  * Truncate repetitive phrase loops in AI-generated text
  */
-export function truncateRepetitiveLoops(text) {
-  if (!text || typeof text !== 'string') return text;
+export function truncateRepetitiveLoops(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') return text || '';
 
   // 1. Detect exact phrase pattern repeating 2+ times
   const patternRegex = /(.{3,80}?)\1{2,}/su;
@@ -126,7 +126,7 @@ export function truncateRepetitiveLoops(text) {
   if (praiseMatches && praiseMatches.length >= 4) {
     let count = 0;
     let cutIndex = -1;
-    let m;
+    let m: RegExpExecArray | null;
     const searchRegex = /(?:素晴らしい|グッジョブ|お見事|バッチリ|最高|ナイス|ハッピー|イエス|素敵|すてき|すごい|ファイト|よくできました|おめでとう|やったね)[！!]/g;
     while ((m = searchRegex.exec(text)) !== null) {
       count++;
@@ -161,7 +161,7 @@ export function truncateRepetitiveLoops(text) {
 /**
  * Clean and format individual English phrase suggestions
  */
-export function cleanPhrase(text) {
+export function cleanPhrase(text: unknown): string | null {
   if (!text || typeof text !== 'string') return null;
 
   let cleaned = text.trim();
@@ -183,7 +183,7 @@ export function cleanPhrase(text) {
 /**
  * Clean raw text response from API and safely parse JSON with repair fallback
  */
-export function repairJson(rawJson) {
+export function repairJson<T = unknown>(rawJson: string): T {
   if (!rawJson) throw new Error("Empty response from API");
 
   let cleaned = rawJson.trim();
@@ -193,22 +193,22 @@ export function repairJson(rawJson) {
 
   // Attempt 1: Direct parse
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned) as T;
   } catch (e1) {
     // Attempt 2: Sanitize control characters
     try {
       const sanitized = sanitizeControlChars(cleaned);
-      return JSON.parse(sanitized);
+      return JSON.parse(sanitized) as T;
     } catch {
       // Attempt 3: Auto-close truncated JSON
       try {
         const autoClosed = autoCloseJson(cleaned);
-        return JSON.parse(autoClosed);
+        return JSON.parse(autoClosed) as T;
       } catch {
         // Attempt 4: Combination of sanitize + auto-close
         try {
           const combined = autoCloseJson(sanitizeControlChars(cleaned));
-          return JSON.parse(combined);
+          return JSON.parse(combined) as T;
         } catch {
           throw e1;
         }
@@ -220,13 +220,14 @@ export function repairJson(rawJson) {
 /**
  * Clean and parse JSON, throwing a user-friendly error on failure
  */
-export function cleanAndParseJson(rawJson) {
+export function cleanAndParseJson<T = unknown>(rawJson: string): T {
   if (!rawJson) throw new Error("Empty response from API");
 
   try {
-    return repairJson(rawJson);
-  } catch (err) {
+    return repairJson<T>(rawJson);
+  } catch (err: unknown) {
     console.error("JSON Parse Error. Raw string length:", rawJson.length, "Raw string snippet:", rawJson.slice(0, 300));
-    throw new Error(`JSON parsing failed: ${err.message}. The response may have been cut off or formatted incorrectly.`);
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`JSON parsing failed: ${msg}. The response may have been cut off or formatted incorrectly.`);
   }
 }

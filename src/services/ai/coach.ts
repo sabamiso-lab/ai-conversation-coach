@@ -286,11 +286,11 @@ Return your response strictly as JSON with this structure:
   // Clean suggested phrases
   const cleanedPhrases: CoachPhrase[] = Array.isArray(parsed.suggestedPhrases)
     ? parsed.suggestedPhrases
-        .filter(p => p && p.english)
         .map(p => ({
-          english: cleanPhrase(p.english),
-          japanese: p.japanese || ''
+          english: cleanPhrase(p?.english),
+          japanese: p?.japanese || ''
         }))
+        .filter((p): p is CoachPhrase => Boolean(p.english))
     : [];
 
   return {

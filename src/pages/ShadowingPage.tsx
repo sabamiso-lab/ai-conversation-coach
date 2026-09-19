@@ -3,12 +3,30 @@ import ShadowingSelector from '../features/shadowing/ShadowingSelector';
 import ShadowingPlayer from '../features/shadowing/ShadowingPlayer';
 import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
+import { useSettings } from '../hooks/useSettings';
+import { ShadowingScript, CoachShadowingContext } from '../types';
 
-export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
-  const [selectedScript, setSelectedScript] = useState(null);
-  const [shadowingLiveContext, setShadowingLiveContext] = useState(null);
+export interface ShadowingPageProps {
+  apiKey?: string;
+  model?: string;
+  onOpenApiKeyModal?: () => void;
+}
 
-  const initialShadowingContext = selectedScript ? {
+export default function ShadowingPage({
+  apiKey: propsApiKey,
+  model: propsModel,
+  onOpenApiKeyModal: propsOnOpenApiKeyModal
+}: ShadowingPageProps) {
+  const settings = useSettings();
+
+  const apiKey = propsApiKey ?? settings.apiKey ?? '';
+  const model = propsModel ?? settings.model ?? 'gemini-3.5-flash-lite';
+  const onOpenApiKeyModal = propsOnOpenApiKeyModal ?? settings.openApiKeyModal;
+
+  const [selectedScript, setSelectedScript] = useState<ShadowingScript | null>(null);
+  const [shadowingLiveContext, setShadowingLiveContext] = useState<CoachShadowingContext | null>(null);
+
+  const initialShadowingContext: CoachShadowingContext | null = selectedScript ? {
     title: selectedScript.title,
     category: selectedScript.category,
     fullText: selectedScript.fullText,
@@ -47,7 +65,7 @@ export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {!selectedScript ? (
         <ShadowingSelector
-          onSelectScript={(script) => {
+          onSelectScript={(script: any) => {
             setSelectedScript(script);
             setShadowingLiveContext(null);
           }}
