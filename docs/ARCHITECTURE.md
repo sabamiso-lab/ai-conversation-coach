@@ -78,40 +78,61 @@ flowchart TD
 
 ## 3. フロントエンド設計
 
-### 3.1. ディレクトリ構造と責務 (Feature-Driven Architecture)
+### 3.1. ディレクトリ構造と責務 (Feature-Driven Architecture & 100% TypeScript)
+
+SpeakFlow はフロントエンドコードベースの **100% TypeScript (`.ts` / `.tsx`) 化** を達成しており、責務ごとに明確に分離された Feature-Driven な構成をとっています。
 
 ```
 src/
 ├── components/
-│   └── common/           # 汎用 UI コンポーネント (Header, Modal, MicButton 等)
-├── contexts/             # グローバル状態 (SettingsContext: API Key, 選択モデル)
-├── data/                 # 静的マスターデータ (プリセットシチュエーション、スクリプト等)
+│   └── common/           # 汎用 UI コンポーネント (Header, Modal, MicButton, PageHeader, AiGeneratorCard 等)
+├── contexts/             # グローバル状態 (SettingsContext: API Key, 選択モデル, モーダル開閉)
+├── data/                 # 静的マスターデータ (プリセットシチュエーション、シャドーイングスクリプト等)
 ├── features/             # ドメイン別モジュール (UI + 専用ロジック + テスト)
-│   ├── conversation/     # ロールプレイ (ChatRoom, ChatSidebar, FloatingCoachWidget)
-│   ├── blitz/            # 瞬間英作文 (BlitzSession, BlitzSpeechBox, BlitzAnswerPanel)
-│   └── shadowing/        # シャドーイング (ShadowingPlayer, ScriptViewer, AudioControls)
-├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition 等)
-├── pages/                # トップレベル画面ページ (ConversationPage, BlitzPage, ShadowingPage)
+│   ├── conversation/     # ロールプレイ対話機能
+│   │   ├── coach/        # AIコーチ分割サブコンポーネント (CoachMessageItem, CoachContextBanner, coachPrompts)
+│   │   ├── ChatRoom.tsx, ChatSidebar.tsx, ChatInputBar.tsx, MessageItem.tsx
+│   │   ├── NewsGeneratorSection.tsx (動的ニュース対話生成)
+│   │   └── FloatingCoachWidget.tsx (薄いオーケストレーター)
+│   ├── blitz/            # 瞬間英作文機能
+│   │   ├── BlitzSession.tsx, BlitzSpeechBox.tsx, BlitzAnswerPanel.tsx, BlitzSummary.tsx
+│   │   ├── useBlitzTimer.ts (回答制限タイマー)
+│   │   └── useBlitzSpeech.ts (音声認識・発話待機制御フック)
+│   └── shadowing/        # シャドーイング特訓機能
+│       ├── ShadowingPlayer.tsx, ShadowingSelector.tsx, ShadowingAudioControls.tsx, ShadowingEvaluationCard.tsx
+│       └── useShadowingAudio.ts (音声再生・ループタイマー・速度制御フック)
+├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition, useSettings 等)
+├── pages/                # トップレベル画面ページ (ConversationPage, InstantBlitzPage, ShadowingPage)
 ├── services/             # 外部通信・AI・API クライアント層 (純粋 TypeScript)
-│   ├── ai/               # Gemini API 個別エンドポイントモジュール (chat, blitz, coach, etc.)
+│   ├── ai/               # Gemini API 個別エンドポイントモジュール (chat, blitz, coach, shadowing, news)
 │   ├── api.ts            # DynamoDB API クライアント (ローカルフォールバック内蔵)
 │   ├── gemini.ts         # Gemini サービス統括エントリポイント
-│   └── speech.ts         # Web Speech API ラッパー
+│   └── speech.ts         # Web Speech API (音声認識 & 音声合成) ラッパー
 ├── styles/               # モジュラー CSS アーキテクチャ
 │   ├── tokens.css        # デザイントークン (色、フォント、シャドウ、余白)
 │   ├── base.css          # リセット、レイアウト、ユーティリティ
 │   ├── components.css    # 共通コンポーネント用スタイル
 │   ├── responsive.css    # モバイル固定ボトムナビ・メディアクエリ
 │   └── features/         # 機能別固有 CSS (conversation, blitz, shadowing, coach)
-├── types/                # TypeScript 型定義 (index.ts)
+├── types/                # 厳格な TypeScript ドメイン型定義 (index.ts)
 └── utils/                # 共通ヘルパー (jsonRepair.ts, textMatcher.ts 等)
 ```
 
 ### 3.2. スタイリングアーキテクチャ (Modular CSS)
 - CSS フレームワークに依存せず、**Vanilla CSS によるモジュラー構成**を採用。
 - `tokens.css` で CSS カスタムプロパティ（CSS 変数）を一元管理し、ダーク/ライトの統一テーマを提供。
-- 各画面や機能ごとのスタイルは `styles/features/` に分離し、コンポーネント間のスタイルの衝突・肥大化を防止。
+- 各画面や機能ごとのスタイルは `styles/features/` に分離し、インラインスタイルを排除してクラス名による一貫したデザインを担保。
 - モバイル表示時は `responsive.css` により、固定ボトムナビゲーションを含む専用レイアウトへ自動適応。
+
+### 3.3. 状態管理とハイブリッド Context アクセス (Prop Drilling の完全解消)
+- `SettingsContext`（API Key、選択モデル、モーダル制御）は、深い階層のコンポーネントで直接 `useSettings()` フックから参照します。これにより親コンポーネント（`App.tsx` や各 `Page`）での不要な Props バケツリレー（Prop Drilling）を完全に解消。
+- 各セレクター（`SituationSelector`, `ShadowingSelector`, `BlitzTopicSelector` など）は **ハイブリッド設計** を採用：
+  ```tsx
+  const settings = useSettings();
+  const apiKey = propsApiKey !== undefined ? propsApiKey : (settings.apiKey || '');
+  const model = propsModel !== undefined ? propsModel : (settings.model || 'gemini-3.5-flash-lite');
+  ```
+  Props が省略された場合は自動的に Context から取得し、テスト時やStorybookなどの分離環境では外部から Props を明示注入できる柔軟性とテスタビリティを両立しています。
 
 ---
 

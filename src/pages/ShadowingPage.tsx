@@ -65,7 +65,7 @@ export default function ShadowingPage({
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {!selectedScript ? (
         <ShadowingSelector
-          onSelectScript={(script: any) => {
+          onSelectScript={(script: ShadowingScript) => {
             setSelectedScript(script);
             setShadowingLiveContext(null);
           }}

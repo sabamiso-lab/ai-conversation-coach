@@ -5,14 +5,14 @@ import Alert from '../../components/common/Alert';
 import ShadowingAudioControls from './ShadowingAudioControls';
 import ShadowingEvaluationCard from './ShadowingEvaluationCard';
 import ShadowingScriptViewer from './ShadowingScriptViewer';
-import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useSettings } from '../../hooks/useSettings';
-import { CoachShadowingContext } from '../../types';
+import { useShadowingAudio } from './useShadowingAudio';
+import { CoachShadowingContext, ShadowingScript, ShadowingEvaluation } from '../../types';
 
 export interface ShadowingPlayerProps {
-  script: any;
+  script: ShadowingScript;
   onBack: () => void;
   apiKey?: string;
   model?: string;
@@ -33,28 +33,19 @@ export default function ShadowingPlayer({
   const model = propsModel ?? settings.model;
   const onOpenApiKeyModal = propsOnOpenApiKeyModal ?? settings.openApiKeyModal;
 
-  // Speech Playback Settings
-  const [playbackSpeed, setPlaybackSpeed] = useState(0.85); // Default slightly easy
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLooping, setIsLooping] = useState(false);
-  const isLoopingRef = React.useRef(isLooping);
-  const loopTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handlePlayAudioRef = React.useRef<() => void>(() => {});
+  const scriptText = script?.text || '';
 
-  React.useEffect(() => {
-    isLoopingRef.current = isLooping;
-    if (!isLooping && loopTimeoutRef.current) {
-      clearTimeout(loopTimeoutRef.current);
-      loopTimeoutRef.current = null;
-    }
-  }, [isLooping]);
-
-  const clearLoopTimer = useCallback(() => {
-    if (loopTimeoutRef.current) {
-      clearTimeout(loopTimeoutRef.current);
-      loopTimeoutRef.current = null;
-    }
-  }, []);
+  // Audio Playback Custom Hook
+  const {
+    playbackSpeed,
+    setPlaybackSpeed,
+    isPlaying,
+    isLooping,
+    setIsLooping,
+    togglePlayAudio,
+    stopAudio,
+    clearLoopTimer
+  } = useShadowingAudio();
 
   // Recording & Evaluation States
   const [userTranscript, setUserTranscript] = useState('');
@@ -62,7 +53,7 @@ export default function ShadowingPlayer({
   
   // Evaluation Result State
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evalResult, setEvalResult] = useState<any>(null);
+  const [evalResult, setEvalResult] = useState<ShadowingEvaluation | null>(null);
 
   const handleFinalResult = useCallback((finalText: string) => {
     setUserTranscript(finalText);
@@ -109,46 +100,14 @@ export default function ShadowingPlayer({
   useEffect(() => {
     return () => {
       clearLoopTimer();
-      stopSpeaking();
       abortRecording();
     };
   }, [abortRecording, clearLoopTimer]);
 
-  const scriptText = script?.text || '';
-
   // Handle Speech Playback
   const handlePlayAudio = useCallback(() => {
-    clearLoopTimer();
-
-    if (isPlaying) {
-      stopSpeaking();
-      setIsPlaying(false);
-      return;
-    }
-
-    if (!scriptText) return;
-
-    setIsPlaying(true);
-    speakText(scriptText, {
-      lang: 'en-US',
-      rate: playbackSpeed,
-      onEnd: () => {
-        setIsPlaying(false);
-        if (isLoopingRef.current) {
-          clearLoopTimer();
-          loopTimeoutRef.current = setTimeout(() => {
-            if (isLoopingRef.current) {
-              handlePlayAudioRef.current();
-            }
-          }, 500);
-        }
-      }
-    });
-  }, [isPlaying, scriptText, playbackSpeed, clearLoopTimer]);
-
-  useEffect(() => {
-    handlePlayAudioRef.current = handlePlayAudio;
-  }, [handlePlayAudio]);
+    togglePlayAudio(scriptText);
+  }, [togglePlayAudio, scriptText]);
 
   // Handle Recording Toggle
   const toggleRecording = () => {
@@ -157,18 +116,10 @@ export default function ShadowingPlayer({
       setErrorMsg('');
       setUserTranscript('');
       setEvalResult(null);
-
-      // Stop sample audio playback so mic does not capture speaker output
-      if (isPlaying) {
-        stopSpeaking();
-        setIsPlaying(false);
-      }
-    } else {
-      // Stopping recording
-      if (isPlaying) {
-        stopSpeaking();
-        setIsPlaying(false);
-      }
+    }
+    // Stop sample audio playback so mic does not capture speaker output
+    if (isPlaying) {
+      stopAudio();
     }
     rawToggleRecording();
   };

@@ -16,13 +16,13 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-blue.svg?logo=react" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6.svg?logo=typescript" alt="TypeScript 5.9" />
+  <img src="https://img.shields.io/badge/TypeScript-100%25%20Strict-3178C6.svg?logo=typescript" alt="TypeScript 100% Strict" />
   <img src="https://img.shields.io/badge/React%20Router-7-CA4245.svg?logo=reactrouter" alt="React Router 7" />
   <img src="https://img.shields.io/badge/Vite-8-646CFF.svg?logo=vite" alt="Vite 8" />
   <img src="https://img.shields.io/badge/AI%20Engine-Gemini%203.5%20Flash--Lite-8E44AD.svg?logo=google" alt="Gemini 3.5 Flash-Lite" />
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
-  <img src="https://img.shields.io/badge/Testing-144%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 144 Tests" />
+  <img src="https://img.shields.io/badge/Testing-158%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 158 Tests" />
   <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>

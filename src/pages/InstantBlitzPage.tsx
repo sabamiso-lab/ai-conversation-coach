@@ -6,7 +6,7 @@ import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
 import { useSettings } from '../hooks/useSettings';
 import { generateBlitzQuestions } from '../services/gemini';
-import { BlitzQuestion, CoachBlitzContext } from '../types';
+import { BlitzQuestion, CoachBlitzContext, BlitzSessionSummaryData } from '../types';
 
 export interface InstantBlitzPageProps {
   apiKey?: string;
@@ -32,7 +32,7 @@ export default function InstantBlitzPage({
   const [activeQuestions, setActiveQuestions] = useState<BlitzQuestion[]>([]);
   const [timerSeconds, setTimerSeconds] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [summaryData, setSummaryData] = useState<any>(null);
+  const [summaryData, setSummaryData] = useState<BlitzSessionSummaryData | null>(null);
   const [blitzLiveContext, setBlitzLiveContext] = useState<CoachBlitzContext | null>(null);
 
   const isSessionActive = viewState === 'session';
@@ -97,7 +97,7 @@ export default function InstantBlitzPage({
   };
 
   // セッション完了
-  const handleCompleteSession = (data: any) => {
+  const handleCompleteSession = (data: BlitzSessionSummaryData) => {
     setSummaryData(data);
     setViewState('summary');
   };

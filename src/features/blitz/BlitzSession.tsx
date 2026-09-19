@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RotateCcw, Zap, Eye, Timer, Sparkles } from 'lucide-react';
-import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported } from '../../services/speech';
+import { speakText, stopSpeaking } from '../../services/speech';
 import { calculateTextMatchScore } from '../../utils/textMatcher';
 import { evaluateBlitzSpeech, BlitzSpeechEvaluationResult } from '../../services/ai/blitz';
 import { BlitzQuestion, BlitzResult, CoachBlitzContext } from '../../types';
 import { useBlitzTimer } from './useBlitzTimer';
+import { useBlitzSpeech } from './useBlitzSpeech';
 import BlitzEvaluationPanel from './BlitzEvaluationPanel';
 import BlitzSpeechBox from './BlitzSpeechBox';
 import BlitzAnswerPanel from './BlitzAnswerPanel';
@@ -40,13 +41,23 @@ export default function BlitzSession({
 }: BlitzSessionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [userTranscript, setUserTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [speechError, setSpeechError] = useState('');
   const [userResults, setUserResults] = useState<BlitzResult[]>([]);
   const [startTime] = useState(() => Date.now());
   const [questionStartTime, setQuestionStartTime] = useState(() => Date.now());
+
+  // Speech recognition custom hook
+  const {
+    isListening,
+    userTranscript,
+    setUserTranscript,
+    interimTranscript,
+    fullUserText,
+    speechError,
+    startListening,
+    stopListening,
+    toggleListening: toggleMic,
+    resetSpeech
+  } = useBlitzSpeech();
 
   // AI 自動発話評価用の状態
   const [enableAiEvaluation, setEnableAiEvaluation] = useState(true);
@@ -55,9 +66,6 @@ export default function BlitzSession({
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
 
   const currentQuestion = questions[currentIndex];
-  const recognizerRef = useRef<SpeechRecognizer | null>(null);
-
-  const fullUserText = `${userTranscript} ${interimTranscript}`.trim();
 
   // AI 発話評価リクエスト
   const requestAiEvaluation = useCallback(async (speechText?: string) => {
@@ -89,11 +97,7 @@ export default function BlitzSession({
   // 回答開示
   const revealAnswer = useCallback(() => {
     if (isRevealed) return;
-    if (recognizerRef.current) {
-      recognizerRef.current.stop();
-      setIsListening(false);
-    }
-
+    stopListening();
     setIsRevealed(true);
 
     // ネイティブ模範音声の自動再生
@@ -105,7 +109,7 @@ export default function BlitzSession({
     if (enableAiEvaluation && apiKey && fullUserText) {
       requestAiEvaluation(fullUserText);
     }
-  }, [isRevealed, currentQuestion, enableAiEvaluation, apiKey, fullUserText, requestAiEvaluation]);
+  }, [isRevealed, stopListening, currentQuestion, enableAiEvaluation, apiKey, fullUserText, requestAiEvaluation]);
 
   // タイマーカスタムフック
   const { timeLeft, progressPercent: timerPercent, resetTimer } = useBlitzTimer({
@@ -141,75 +145,20 @@ export default function BlitzSession({
     }
   }, [onContextChange, title, currentIndex, questions, currentQuestion, fullUserText, isRevealed, aiEvaluation]);
 
-  // 音声認識のセットアップ
-  useEffect(() => {
-    if (isSpeechRecognitionSupported()) {
-      recognizerRef.current = new SpeechRecognizer({
-        lang: 'en-US',
-        onResult: ({ final, interim }) => {
-          if (final) {
-            setUserTranscript((prev) => (prev ? `${prev} ${final}` : final));
-            setInterimTranscript('');
-          } else {
-            setInterimTranscript(interim);
-          }
-        },
-        onError: (errMsg) => {
-          setSpeechError(errMsg);
-          setIsListening(false);
-        },
-        onEnd: () => {
-          setIsListening(false);
-        }
-      });
-    }
-
-    return () => {
-      if (recognizerRef.current) {
-        recognizerRef.current.stop();
-      }
-      stopSpeaking();
-    };
-  }, []);
-
   const startSpeechForNextQuestion = () => {
     setIsRevealed(false);
-    setUserTranscript('');
-    setInterimTranscript('');
-    setSpeechError('');
+    resetSpeech();
     setAiEvaluation(null);
     setIsEvaluating(false);
     setEvaluationError(null);
     setQuestionStartTime(Date.now());
     resetTimer(timerSeconds);
     stopSpeaking();
-
-    if (recognizerRef.current && isSpeechRecognitionSupported()) {
-      try {
-        recognizerRef.current.start();
-        setIsListening(true);
-      } catch (e) {
-        console.warn('Auto start speech failed', e);
-      }
-    }
-  };
-
-  const toggleMic = () => {
-    if (!recognizerRef.current) return;
-
-    if (isListening) {
-      recognizerRef.current.stop();
-      setIsListening(false);
-    } else {
-      setSpeechError('');
-      recognizerRef.current.start();
-      setIsListening(true);
-    }
+    startListening();
   };
 
   const handleSaveEditedSpeech = (newText: string) => {
     setUserTranscript(newText);
-    setInterimTranscript('');
     if (newText) {
       requestAiEvaluation(newText);
     }
@@ -253,7 +202,7 @@ export default function BlitzSession({
     } else {
       const totalDurationSec = Math.round((Date.now() - startTime) / 1000);
       const correctCount = nextResults.filter((r) => r.isCorrect).length;
-      const totalResponseTime = nextResults.reduce((acc, cur) => acc + cur.responseTimeSec, 0);
+      const totalResponseTime = nextResults.reduce((acc, cur) => acc + (cur.responseTimeSec ?? 0), 0);
       const avgResponseTimeSec = +(totalResponseTime / nextResults.length).toFixed(1);
 
       onCompleteSession({

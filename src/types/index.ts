@@ -43,7 +43,15 @@ export interface HintSuggestion {
   english: string;
   japanese: string;
   nuance?: string;
+  difficulty?: string;
 }
+
+export interface ConversationKeyPhrase {
+  phrase: string;
+  meaning: string;
+}
+
+export type ConversationReport = SessionReport;
 
 export interface CoachPhrase {
   english: string;
@@ -144,16 +152,29 @@ export interface ShadowingSentence {
 export interface ShadowingScript {
   id: string;
   title: string;
+  titleJa: string;
   category: string;
-  fullText: string;
-  sentences: ShadowingSentence[];
+  difficulty: string;
+  difficultyLabel?: string;
+  description?: string;
+  text: string;
+  slashedText?: string;
+  translation?: string;
+  tipsJa?: string;
+  sentences?: ShadowingSentence[];
   audioUrl?: string;
+  fullText?: string;
 }
 
 export interface ShadowingEvaluation {
-  accuracyScore: number;
-  pronunciationScore: number;
+  score: number;
   feedbackJa: string;
+  feedback?: string;
+  strengthsJa?: string[];
+  improvementsJa?: string[];
+  accuracyScore?: number;
+  pronunciationScore?: number;
+  overallScore?: number;
   recognizedText?: string;
 }
 
@@ -164,6 +185,7 @@ export interface BlitzQuestion {
   acceptedAnswers?: string[];
   explanation?: string;
   grammarPoint?: string;
+  // Backward compatibility fields
   japanese?: string;
   sampleAnswer?: string;
   keyPoints?: string[];
@@ -182,16 +204,16 @@ export interface BlitzTopic {
 }
 
 export interface BlitzResult {
-  questionId: string;
+  questionId?: string;
   question: BlitzQuestion;
   isCorrect: boolean;
-  userSpeech: string;
-  matchScore: number;
-  responseTimeSec: number;
+  userSpeech?: string;
+  matchScore?: number;
+  responseTimeSec?: number;
   aiEvaluation?: {
-    isCorrect: boolean;
+    isCorrect?: boolean;
     score?: number;
-    status?: 'PERFECT' | 'ACCEPTABLE' | 'NEEDS_WORK';
+    status?: 'PERFECT' | 'ACCEPTABLE' | 'NEEDS_WORK' | string;
     statusLabelJa?: string;
     evaluationJa?: string;
     improvedSpeech?: string;
@@ -199,6 +221,18 @@ export interface BlitzResult {
     improvedAnswer?: string;
     grammarAdviceJa?: string;
   } | null;
+}
+
+export interface BlitzSessionSummaryData {
+  title?: string;
+  topicTitle?: string;
+  totalQuestions?: number;
+  correctCount?: number;
+  accuracyRate?: number;
+  results?: BlitzResult[];
+  totalDurationSec?: number;
+  totalTimeSec?: number;
+  avgResponseTimeSec?: number;
 }
 
 export interface GeminiApiOptions {

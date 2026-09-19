@@ -26,10 +26,10 @@
 
 ## 1. 基本設計原則 (Core Principles)
 
-### 1.1. TypeScript First & 漸進的型付け
-- 新規に作成するロジックファイルやコンポーネントは、原則として **TypeScript (`.ts` / `.tsx`)** で実装します。
-- 既存の JavaScript (`.jsx` / `.js`) は段階的にリファクタリング・移行しますが、既存コードを改修する際にも型定義（JSDoc または TS化）を意識します。
-- 型定義は `src/types/index.ts` に集約、または機能モジュール固有の型として明示します。
+### 1.1. TypeScript 100% Strict & 完全型付け
+- フロントエンド（`src/` 配下全ファイル）は **100% TypeScript (`.ts` / `.tsx`)** で実装されています。
+- `any` 型の安易な使用を排除し、`src/types/index.ts` にドメインモデルや API レスポンス型を厳格に集約。
+- 型定義はコンポーネント・フック・サービス全体で一貫して再利用され、コンパイル時検査（`tsc --noEmit`）で型安全性を保証します。
 
 ### 1.2. Graceful Degradation (堅牢なフォールバック設計)
 - 外部 API（Gemini API、AWS DynamoDB API、Web Speech API）がオフラインやエラー、または未設定の場合でも、アプリ全体がクラッシュせずローカルデータへ自動フォールバックする設計を徹底します。
@@ -41,6 +41,7 @@
 
 ### 1.4. Clean Architecture & Feature-Driven
 - 機能ドメイン（ロールプレイ、シャドーイング、瞬間英作文）ごとに凝集した `features/` ディレクトリ構成を採用し、汎用UI部品（`components/common/`）やインフラ層と疎結合を保ちます。
+- 肥大化したコンポーネントは「オーケストレーター（薄い親コンポーネント）」＋「専任サブコンポーネント」＋「専用カスタムフック」へ分割し、単一責任の原則（SRP）を徹底します。
 
 ---
 
@@ -57,16 +58,17 @@
 ├── docs/                   # プロジェクト各種ドキュメント
 ├── public/                 # 静的アセット (favicon, アイコン等)
 ├── tsconfig.json           # ルート TypeScript 設定 (strict, bundler module resolution)
-├── src/                    # フロントエンド アプリケーションコード
+├── src/                    # フロントエンド アプリケーションコード (100% TypeScript)
 │   ├── components/
-│   │   └── common/         # プロジェクト共通の UI コンポーネント
-│   ├── contexts/           # React Context (SettingsContext.tsx など広域状態)
-│   ├── data/               # 静的データ・デフォルトシナリオ・フォールバック
+│   │   └── common/         # プロジェクト共通の UI コンポーネント (Modal, PageHeader, AiGeneratorCard 等)
+│   ├── contexts/           # React Context (SettingsContext.tsx: API Key, 選択モデル, モーダル開閉)
+│   ├── data/               # 静的データ・デフォルトシナリオ・フォールバック (TS化)
 │   ├── features/           # 機能ドメイン別のコード (UI + ロジック + テスト)
-│   │   ├── blitz/          # 瞬間英作文 (Session, AnswerPanel, EvalPanel, SpeechBox, useBlitzTimer)
-│   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, CoachWidget)
-│   │   └── shadowing/      # シャドーイング (Player, ScriptViewer, AudioControls, EvalCard)
-│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useBlitzTimer 等)
+│   │   ├── blitz/          # 瞬間英作文 (Session, Summary, TopicSelector, useBlitzSpeech, useBlitzTimer)
+│   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, MessageItem, NewsGeneratorSection)
+│   │   │   └── coach/      # AIコーチ分割UI (CoachMessageItem, CoachContextBanner, coachPrompts)
+│   │   └── shadowing/      # シャドーイング (Player, Selector, AudioControls, EvalCard, useShadowingAudio)
+│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useSpeechRecognition 等)
 │   ├── pages/              # 画面ルーティング単位のトップレベルページ (TSX)
 │   ├── services/           # 外部通信・AI・API クライアント (完全 TypeScript 化)
 │   │   └── ai/             # Gemini API 呼び出しモジュール (client, chat, coach, blitz, shadowing, news)

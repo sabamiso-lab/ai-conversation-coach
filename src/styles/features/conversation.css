@@ -205,6 +205,44 @@
   color: #E0E7FF;
 }
 
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.msg-action-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.message-row.user .msg-action-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+.message-row.user .msg-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.message-row.ai .msg-action-btn {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.message-row.ai .msg-action-btn:hover {
+  background: #E2E8F0;
+}
+
 .better-phrasing-card {
   margin-top: 8px;
   background: var(--accent-amber-light);
