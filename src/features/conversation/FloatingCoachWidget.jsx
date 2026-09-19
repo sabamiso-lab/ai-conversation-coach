@@ -112,6 +112,9 @@ const GENERAL_QUICK_PROMPTS = [
 export default function FloatingCoachWidget({
   mode = 'conversation',
   situation = null,
+  conversationHistory = [],
+  shadowingContext = null,
+  blitzContext = null,
   isOpen,
   onToggle,
   onClose,
@@ -124,13 +127,39 @@ export default function FloatingCoachWidget({
   onClearHistory,
   onApplyPhrase
 }) {
+  // Find latest AI utterance in conversation
+  const reversedHistory = [...conversationHistory].reverse();
+  const lastAiMsg = reversedHistory.find(m => m.role === 'ai') || (situation?.initialMessage ? { text: situation.initialMessage } : null);
+  const lastAiText = lastAiMsg?.text || '';
+
   let quickPrompts = GENERAL_QUICK_PROMPTS;
   if (mode === 'shadowing') {
-    quickPrompts = SHADOWING_QUICK_PROMPTS;
+    quickPrompts = SHADOWING_QUICK_PROMPTS.map(p => {
+      if (p.label === 'リエゾン・発音のコツ' && shadowingContext?.title) {
+        return { ...p, query: `スクリプト「${shadowingContext.title}」について、音が繋がる部分（リエゾン/リンキング）や脱落の発音の注意点を詳しく解説してください。` };
+      }
+      return p;
+    });
   } else if (mode === 'blitz') {
-    quickPrompts = BLITZ_QUICK_PROMPTS;
+    quickPrompts = BLITZ_QUICK_PROMPTS.map(p => {
+      if (p.label === '別の自然な言い回し・表現' && blitzContext?.currentQuestion) {
+        return { ...p, query: `お題「${blitzContext.currentQuestion.japanese}」に対して、標準解答「${blitzContext.currentQuestion.sampleAnswer}」以外の別の自然な表現を教えてください。` };
+      }
+      if (p.label === 'なぜこの語順・文法になる？' && blitzContext?.currentQuestion) {
+        return { ...p, query: `お題「${blitzContext.currentQuestion.japanese}」（英語: "${blitzContext.currentQuestion.sampleAnswer}"）の語順や文法の理由を初心者向けに解説してください。` };
+      }
+      return p;
+    });
   } else if (situation) {
-    quickPrompts = CONVERSATION_QUICK_PROMPTS;
+    quickPrompts = CONVERSATION_QUICK_PROMPTS.map(p => {
+      if (p.label === '相手の発言のニュアンス' && lastAiText) {
+        return { ...p, query: `直前の相手の発言「${lastAiText}」の日本語訳とニュアンス、言外の意図を詳しく分かりやすく解説してください。` };
+      }
+      if (p.label === 'ここで使える自然な返答' && lastAiText) {
+        return { ...p, query: `直前の相手の発言「${lastAiText}」に対して、ここで自然に返答できるおすすめの英語フレーズを教えてください。` };
+      }
+      return p;
+    });
   }
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);

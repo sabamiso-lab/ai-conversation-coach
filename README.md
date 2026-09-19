@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>Google Gemini API</b>（<code>gemini-3.5-flash-lite</code>）を搭載した、リアルタイム音声会話・実践的ロールプレイ・ニュース動的シナリオ生成・<b>シャドーイング音読特訓</b>・<b>瞬間英作文＆パターンプラクティス (Instant Oral Blitz)</b>・詳細スコア診断を提供する総合英会話学習 Web アプリケーション。
+  <b>Google Gemini API</b>（<code>gemini-3.5-flash-lite</code>）を搭載した、リアルタイム音声会話・実践的ロールプレイ・ニュース動的シナリオ生成・<b>シャドーイング音読特訓</b>・<b>瞬間英作文＆パターンプラクティス (Instant Oral Blitz)</b>・<b>全画面常駐 AI コーチ</b>・詳細スコア診断を提供する総合英会話学習 Web アプリケーション。
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/AI%20Engine-Gemini%203.5%20Flash--Lite-8E44AD.svg?logo=google" alt="Gemini 3.5 Flash-Lite" />
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
-  <img src="https://img.shields.io/badge/Testing-Vitest-6E9F18.svg?logo=vitest" alt="Vitest" />
+  <img src="https://img.shields.io/badge/Testing-120%2B%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 120+ Tests" />
   <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
@@ -48,17 +48,19 @@ SpeakFlow は GitHub Pages にて公開されています。以下のリンク�
   - **Better Phrasing**: ユーザーの発話に対し、文法やニュアンスをより自然にしたネイティブ表現とワンポイントアドバイスをリアルタイム表示。
   - **日本語訳トグル**: ユーザー発話と AI 応答の両方をワンタップで日本語表示切り替え。
   - **AI 応答ヒント**: 返答に困った際、文脈に沿った3段階（Easy / Medium / Advanced）の回答候補を提示。
-  - **リアルタイム AI コーチ相談 (Floating Coach Widget)**: 会話中に右下のウィジェットから日本語で自由に質問可能。「相手の発言のニュアンスは？」「この場面のマナーは？」「どう返答すべき？」など、現在の会話コンテキストを踏まえた助言とおすすめフレーズを即座に提示。
 - **総合診断レポート**: 会話終了時に 100 点満点の総合スコア（文法・語彙・流暢さ）、改善ポイント、学んだ重要キーフレーズ集、目標達成判定をレポート出力。
 
 ### ⚡ 2. 瞬間英作文 ＆ パターンプラクティス (Instant Oral Blitz)
 - **瞬発力スピーキング特訓**: 日本語プロンプトが表示されてから英語で即座に回答するタイムアタック形式の英作文トレーニング。
 - **柔軟なタイマー設定**: 3秒（超高速・瞬発力特訓）、5秒（標準・テンポよく即答）、7秒（じっくり発話）、制限なし（自分のペース）から選択可能。
 - **多彩なトレーニング問題 ＆ AI 自動生成**:
-  - 文法構文パターン（助動詞・関係代名詞・仮定法など）、ビジネス即レス会話、日常・トラベル会話のプリセット問題集。
-  - **AI カスタムお題生成**: 自由なテーマ入力に加え、サイコロアイコンによる「おまかせ自動選定」や人気トピックチップからワンタップでオリジナル問題を自動生成。
-- **音声認識 ＆ キーボード入力両対応**: 複数の言い回しパターンや類似度スコアリングによる判定、文法ポイント解説、ネイティブ音声の確認が可能。
-- **セッション結果サマリー**: 正解率、平均回答スピード、詳細振り返りレポートを表示。
+  - 文法構文パターン（助動詞・関係代名詞・仮定法など）、ビジネス即レス会話、日常・トラベル会話の豊富なプリセット問題集。
+  - **AI カスタムお題生成**: 自由なテーマ入力に加え、サイコロアイコンによる「おまかせ自動選定」や人気トピックチップからワンタップでオリジナル問題を10問自動生成。
+- **🤖 Gemini AI によるリアルタイム発話自動添削・フィードバック**:
+  - 音声認識またはテキスト入力されたユーザーの発話を、Gemini AI が即座に自動評価。
+  - 単なる正解例との一致判定だけでなく、「意味が通じるか」「文法的に自然か」「より良い言い回し」「改善アドバイス」を瞬時にフィードバック。
+- **発話テキスト手動編集機能**: 音声認識の聞き間違いがあった場合でも、ワンタップでテキストを直接編集して即座に AI 評価を再実行可能。
+- **セッション結果サマリー**: 正解率、平均回答スピード、各問の AI 添削結果を含む詳細振り返りレポートを表示。
 
 ### 🎧 3. シャドーイング・スタジオ (Shadowing Studio)
 - **リスニング ＆ 音読追随トレーニング**: ネイティブ音声の再生に合わせて同時に発話し、リスニング力とスピーキング力を向上。
@@ -66,11 +68,19 @@ SpeakFlow は GitHub Pages にて公開されています。以下のリンク�
 - **再生速度コントロール**: 0.5x, 0.75x, 1.0x, 1.25x, 1.5x の再生スピード調整に対応。
 - **音声認識による精度スコアリング**: マイクに向かって音読した内容をリアルタイム認識し、元のスクリプトとの単語一致率・テキスト類似度から精度スコア（%）を算出。
 
-### ☁️ 4. AWS サーバーレス連携 ＆ セキュリティ
+### 💡 4. 全画面常駐型 AI コーチングアシスタント (Floating Coach Widget)
+- **あらゆる画面でいつでも日本語相談**: 画面右下のフローティングボタンから、学習中いつでも専任 AI コーチを呼び出し可能。
+- **シチュエーション連動のコンテキスト認識**:
+  - **ホーム（選択画面）**: 「初心者におすすめのシチュエーションは？」「効果的な学習順序は？」など学習全般を相談。
+  - **ロールプレイ会話中**: 「相手の発言のニュアンスは？」「この場面のマナーは？」「どう返答すべき？」など会話コンテキストを踏まえた助言とおすすめフレーズを即座に提示。
+  - **シャドーイング特訓中**: 選択中の英文スクリプトを自動把握し、文法構文の解説、単語のニュアンス、発音・リエゾンのコツを解説。
+  - **瞬間英作文セッション中**: 出題中の問題やテーマを踏まえ、「他の言い回しはある？」「ネイティブはどちらをよく使う？」といった別解・ニュアンスの疑問を即時解消。
+
+### ☁️ 5. AWS サーバーレス連携 ＆ セキュリティ
 - **Amazon DynamoDB 動的シナリオ配信**: ロールプレイシナリオをクラウドから取得。生成されたニュースシナリオは TTL (Time To Live) により自動クリーニング。（※ 未設定時はローカルデータへ自動フォールバック）
 - **多層セキュリティ防護**: CORS 制限、Lambda での Origin / Referer ドメイン検証、カスタム API Key ヘッダー照合による堅牢な保護。
 
-### 📱 5. モバイル最適化レスポンシブ UI
+### 📱 6. モバイル最適化レスポンシブ UI
 - スマートフォン、タブレット、PC すべての画面サイズに対応したレスポンシブ設計。
 - モバイル表示時は固定ボトムナビゲーション（会話 ⇆ シャドーイング ⇆ 瞬間英作文）で快適に画面遷移が可能。
 
@@ -105,7 +115,7 @@ npm run dev
 
 ### 5. 単体テストの実行 (Vitest)
 ```bash
-# 全単体テストの実行
+# 全単体テストの実行 (全30テストファイル / 120+ テスト)
 npm test
 
 # ウォッチモードでのテスト実行
@@ -155,8 +165,9 @@ npx cdk deploy
 SpeakFlow は **Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)** を標準 AI エンジンとして採用しています。
 
 - **超高速応答**: リアルタイムな会話テンポを損なわない低レイテンシ応答。
-- **高い対話・分析力**: 文法アドバイス、瞬間英作文の言い回し判定、会話全体の総合診断レポートを高精度に生成。
+- **高い対話・分析力**: 文法アドバイス、瞬間英作文の発話自動添削、会話全体の総合診断レポートを高精度に生成。
 - **Google Search Grounding**: 最新のリアルタイムニュース情報を取得し、実践的な会話シナリオへ動的変換。
+- **多面的な学習サポート**: ロールプレイ対話、シャドーイング精度判定、瞬間英作文のお題生成＆自動添削、全画面常駐 AI コーチ相談の全領域でフル活用。
 
 ---
 
@@ -201,13 +212,13 @@ ai-conversation-coach/
     ├── App.jsx                   # ルーティング (React Router 7) & 全体レイアウト
     ├── index.css                 # デザインシステム (CSS Vanilla / モバイル対応)
     ├── pages/                    # メイン画面ページ
-    │   ├── ConversationPage.jsx  # AI対話・ロールプレイ画面
-    │   ├── ShadowingPage.jsx     # シャドーイング特訓画面
-    │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面
+    │   ├── ConversationPage.jsx  # AI対話・ロールプレイ画面 (常駐AIコーチ対応)
+    │   ├── ShadowingPage.jsx     # シャドーイング特訓画面 (常駐AIコーチ対応)
+    │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面 (常駐AIコーチ対応)
     ├── features/                 # 機能別モジュール (コンポーネント・データ・テスト)
     │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, FloatingCoachWidget, SituationSelector, ReportModal, HintPanel, MessageItem etc.)
     │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingAudioControls, ShadowingEvaluationCard, ShadowingSelector)
-    │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js)
+    │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js / AI発話添削内蔵)
     ├── components/               # 共通 UI コンポーネント
     │   └── common/
     │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション
@@ -225,21 +236,21 @@ ai-conversation-coach/
     │       ├── FeedbackGrid.jsx  # AI診断フィードバック表示 (良かった点・改善点グリッド)
     │       ├── NewsCitation.jsx  # Grounding ニュース出典表示 (カード形式 / バッジ形式)
     │       ├── AudioPlayButton.jsx # 英文音声読み上げ (TTS) 統一ボタン (ラベル付き / アイコン形式)
-    │       └── __tests__/        # 共通コンポーネント単体テスト
+    │       └── __tests__/        # 共通コンポーネント単体テスト群
     ├── contexts/                 # React Context
     │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
     ├── hooks/                    # カスタムフック
     │   ├── useChatSession.ts     # 会話セッション管理フック
-    │   ├── useConversationCoach.ts # リアルタイムAIコーチング・相談フック
+    │   ├── useConversationCoach.ts # 全画面対応リアルタイムAIコーチング・相談フック
     │   ├── useSettings.ts        # 設定アクセスフック
     │   └── useSpeechRecognition.ts # Web Speech API 音声認識共通フック
     ├── services/                 # 外部連携サービス層
     │   ├── ai/                   # Gemini API モジュール群
     │   │   ├── client.ts         # GoogleGenAI クライアント初期化・モデル管理
     │   │   ├── chat.js           # 会話ロールプレイ・ヒント・診断レポート生成
-    │   │   ├── coach.ts          # リアルタイムAIコーチ（文脈に応じた日本語質問・回答・フレーズ提案）
+    │   │   ├── coach.ts          # 全画面対応AIコーチ（文脈に応じた日本語質問・回答・フレーズ提案）
     │   │   ├── shadowing.js      # シャドーイング発話精度判定
-    │   │   ├── blitz.js          # 瞬間英作文 AI お題自動生成
+    │   │   ├── blitz.js          # 瞬間英作文 AI お題自動生成 ＆ 発話自動添削・評価
     │   │   ├── news.js           # Grounding ニュースシナリオ動的生成
     │   │   └── __tests__/        # AI サービス単体テスト
     │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ ローカルフォールバック
@@ -269,7 +280,7 @@ ai-conversation-coach/
 - **AI / LLM Engine**: Google Gemini API (`gemini-3.5-flash-lite`, Google Search Grounding)
 - **Speech Engine**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`)
 - **Backend / Infra**: AWS CDK, AWS Lambda, Amazon DynamoDB (TTL 有効), Amazon API Gateway (HTTP API)
-- **Testing**: Vitest, React Testing Library
+- **Testing**: Vitest (120+ Tests passing), React Testing Library
 - **Linting**: Oxlint
 - **Icons**: Lucide React
 - **CI/CD & Hosting**: GitHub Actions, GitHub Pages

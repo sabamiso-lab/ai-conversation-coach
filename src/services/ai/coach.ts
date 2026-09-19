@@ -126,15 +126,38 @@ Return your response strictly as JSON with this structure:
 
   // Build context log for prompt
   let promptContext = '';
-  if (mode === 'shadowing' && shadowingContext?.fullText) {
-    promptContext = `【シャドーイング英文スクリプト】\n${shadowingContext.fullText}\n\n`;
-  } else if (mode === 'blitz' && blitzContext?.currentQuestion) {
-    promptContext = `【出題中の瞬間英作文】\n日本語: ${blitzContext.currentQuestion.japanese}\n標準英語: ${blitzContext.currentQuestion.sampleAnswer}\n\n`;
+  if (mode === 'shadowing' && shadowingContext) {
+    promptContext = `【シャドーイング学習情報】\nタイトル: ${shadowingContext.title}\nカテゴリ: ${shadowingContext.category || ''}\n${shadowingContext.fullText ? `英文スクリプト全文:\n"${shadowingContext.fullText}"\n` : ''}\n`;
+  } else if (mode === 'blitz' && blitzContext) {
+    promptContext = `【瞬間英作文トレーニング情報】\nトピック: ${blitzContext.topicTitle}\n`;
+    if (blitzContext.currentQuestion) {
+      promptContext += `★現在出題中の問題★\n日本語のお題: 「${blitzContext.currentQuestion.japanese}」\n標準の解答英語: "${blitzContext.currentQuestion.sampleAnswer}"\n${blitzContext.currentQuestion.keyPoints ? `文法ポイント: ${blitzContext.currentQuestion.keyPoints.join(', ')}\n` : ''}\n`;
+    }
   } else if (situation) {
+    // Find the latest AI utterance and latest user utterance
+    const reversedHistory = [...history].reverse();
+    const latestAiMessage = reversedHistory.find(m => m.role === 'ai') || (situation.initialMessage ? { text: situation.initialMessage } : null);
+    const latestUserMessage = reversedHistory.find(m => m.role === 'user');
+
     const formattedLog = history.length > 0
-      ? history.map(item => `${item.role === 'user' ? 'User' : `AI Partner (${situation.systemRole})`}: ${item.text}`).join('\n')
-      : `(まだ会話は始まっていません。AIの初期挨拶: "${situation.initialMessage}")`;
-    promptContext = `【現在の英会話ロールプレイの会話ログ】\n${formattedLog}\n\n`;
+      ? history.map((item, idx) => `${idx + 1}. ${item.role === 'user' ? `User (${situation.userRole || 'Learner'})` : `AI Partner (${situation.systemRole})`}: "${item.text}"`).join('\n')
+      : `1. AI Partner (${situation.systemRole}): "${situation.initialMessage}"`;
+
+    promptContext = `【現在の英会話ロールプレイ情報】\n` +
+      `シチュエーション: ${situation.title} (${situation.titleJa || ''})\n` +
+      `AIの役柄: ${situation.systemRole}\n` +
+      `ユーザーの役柄: ${situation.userRole || 'Learner'}\n` +
+      `達成目標: ${(situation.goals && situation.goals.length > 0) ? situation.goals.join(', ') : '自然な会話'}\n\n` +
+      `【これまでの会話履歴（タイムライン順）】\n${formattedLog}\n\n`;
+
+    if (latestAiMessage) {
+      promptContext += `★重要★【直前の相手（${situation.systemRole}）の最新発言】:\n"${latestAiMessage.text}"\n\n`;
+    }
+    if (latestUserMessage) {
+      promptContext += `【直前のユーザーの最新発言】:\n"${latestUserMessage.text}"\n\n`;
+    }
+
+    promptContext += `※重要指示: ユーザーは上記の会話の真っ最中です。回答する際は、必ず上記の会話ログおよび直前の相手の発言（"${latestAiMessage?.text || ''}"）を明確に踏まえ、その発言の意図や具体的な返答の選択肢を親切に解説してください。一般的な定型文ではなく、この会話の現在の状況に直結したアドバイスをしてください。\n\n`;
   }
 
   let promptText = promptContext;
