@@ -153,7 +153,7 @@ describe('SpeechRecognizer module', () => {
 
   it('aggregates all results from index 0 across multiple result events', () => {
     const onResult = vi.fn();
-    const recognizer = new SpeechRecognizer({ onResult });
+    new SpeechRecognizer({ onResult });
 
     // Event 1: First final sentence
     mockRecognitionInstance.onresult({

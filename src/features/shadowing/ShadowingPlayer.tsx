@@ -158,12 +158,14 @@ export default function ShadowingPlayer({
       });
 
       setEvalResult({
+        score: evaluation.score,
+        feedbackJa: evaluation.feedbackJa,
+        strengthsJa: evaluation.strengthsJa || [],
+        improvementsJa: evaluation.improvementsJa || [],
         accuracyScore: evaluation.score,
         pronunciationScore: Math.min(100, Math.round(evaluation.score * 0.95 + 5)),
         overallScore: evaluation.score,
         feedback: evaluation.feedbackJa,
-        strengths: evaluation.strengthsJa || [],
-        improvements: evaluation.improvementsJa || [],
         recognizedText: userTranscript
       });
     } catch (err: unknown) {
@@ -236,7 +238,7 @@ export default function ShadowingPlayer({
               isRecording={isRecording}
               onClick={toggleRecording}
               disabled={!isSupported || isEvaluating}
-              size={56}
+              iconSize={24}
               title={isRecording ? "録音停止" : "シャドーイング録音開始"}
             />
           </div>
@@ -280,13 +282,7 @@ export default function ShadowingPlayer({
       {/* Evaluation Results Report */}
       {evalResult && (
         <ShadowingEvaluationCard
-          result={evalResult}
-          originalText={script.text}
-          onRetry={() => {
-            setUserTranscript('');
-            setEvalResult(null);
-            setErrorMsg('');
-          }}
+          evalResult={evalResult}
         />
       )}
     </div>

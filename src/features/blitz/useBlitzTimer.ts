@@ -10,6 +10,7 @@ export function useBlitzTimer({ timerSeconds, isPaused = false, onTimeUp }: UseB
   const [timeLeft, setTimeLeft] = useState(timerSeconds);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTimeUpRef = useRef(onTimeUp);
+  const hasFiredTimeUpRef = useRef(false);
 
   useEffect(() => {
     onTimeUpRef.current = onTimeUp;
@@ -24,6 +25,7 @@ export function useBlitzTimer({ timerSeconds, isPaused = false, onTimeUp }: UseB
 
   const resetTimer = useCallback((newSeconds?: number) => {
     stopTimer();
+    hasFiredTimeUpRef.current = false;
     setTimeLeft(newSeconds !== undefined ? newSeconds : timerSeconds);
   }, [stopTimer, timerSeconds]);
 
@@ -36,10 +38,6 @@ export function useBlitzTimer({ timerSeconds, isPaused = false, onTimeUp }: UseB
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0.1) {
-          stopTimer();
-          if (onTimeUpRef.current) {
-            onTimeUpRef.current();
-          }
           return 0;
         }
         return Math.max(0, +(prev - 0.1).toFixed(1));
@@ -50,6 +48,16 @@ export function useBlitzTimer({ timerSeconds, isPaused = false, onTimeUp }: UseB
       stopTimer();
     };
   }, [isPaused, timerSeconds, stopTimer]);
+
+  useEffect(() => {
+    if (timeLeft <= 0 && !hasFiredTimeUpRef.current && timerSeconds > 0) {
+      hasFiredTimeUpRef.current = true;
+      stopTimer();
+      if (onTimeUpRef.current) {
+        onTimeUpRef.current();
+      }
+    }
+  }, [timeLeft, timerSeconds, stopTimer]);
 
   const progressPercent = timerSeconds > 0
     ? Math.max(0, Math.min(100, (timeLeft / timerSeconds) * 100))
