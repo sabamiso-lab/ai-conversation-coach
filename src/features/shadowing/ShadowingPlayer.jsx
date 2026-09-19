@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Play, Square, Mic, MicOff, 
+  Play, Square, 
   ArrowLeft, Sparkles, AlertCircle, Eye, EyeOff, 
   Gauge, Repeat, Award, Lightbulb, Loader2 
 } from 'lucide-react';
+import MicButton from '../../components/common/MicButton';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
@@ -353,14 +354,13 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <button
-              className={`mic-btn ${isRecording ? 'recording' : ''}`}
+            <MicButton
+              isRecording={isRecording}
               onClick={toggleRecording}
+              iconSize={28}
               style={{ width: '64px', height: '64px' }}
-              title={isRecording ? "録音停止" : "シャドーイング録音開始"}
-            >
-              {isRecording ? <MicOff size={28} /> : <Mic size={28} />}
-            </button>
+              title={isRecording ? '録音停止' : 'シャドーイング録音開始'}
+            />
           </div>
 
           {/* User Transcript & Real-time Diff */}

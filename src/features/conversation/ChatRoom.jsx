@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, MicOff, Send, Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe, Target, X } from 'lucide-react';
+import { Mic, Send, Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe, Target } from 'lucide-react';
+import Modal from '../../components/common/Modal';
+import MicButton from '../../components/common/MicButton';
 import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
@@ -175,13 +177,11 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
             </div>
 
             <div className="input-row">
-              <button 
-                className={`mic-btn ${isRecording ? 'recording' : ''}`}
+              <MicButton
+                isRecording={isRecording}
                 onClick={toggleRecording}
-                title={isRecording ? "マイク停止" : "マイクで英語を話す"}
-              >
-                {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-              </button>
+                iconSize={24}
+              />
 
               <input
                 type="text"
@@ -278,73 +278,64 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
       />
 
       {/* Goals & News Info Modal for Mobile & Quick Access */}
-      {isGoalsModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Target size={22} color="#4F46E5" />
-                <h2 className="modal-title">会話シナリオ目標 & ニュース情報</h2>
+      <Modal
+        isOpen={isGoalsModalOpen}
+        onClose={() => setIsGoalsModalOpen(false)}
+        title="会話シナリオ目標 & ニュース情報"
+        icon={<Target size={22} color="#4F46E5" />}
+        maxWidth="520px"
+        footer={
+          <button className="btn btn-primary" onClick={() => setIsGoalsModalOpen(false)}>
+            閉じる
+          </button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {situation.newsSource && (
+            <div className="info-card" style={{ background: '#F5F3FF', borderColor: '#DDD6FE' }}>
+              <div className="info-title" style={{ color: '#5B21B6', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Globe size={16} /> 関連ニュース記事 (Grounding)
               </div>
-              <button className="btn btn-ghost" onClick={() => setIsGoalsModalOpen(false)}>
-                <X size={20} />
-              </button>
+              <div style={{ fontSize: '0.85rem', color: '#4C1D95', marginBottom: '8px', fontWeight: 600 }}>
+                {situation.newsSource.title}
+              </div>
+              <a
+                href={situation.newsSource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.8rem',
+                  color: '#4F46E5',
+                  fontWeight: 700,
+                  textDecoration: 'underline'
+                }}
+              >
+                <ExternalLink size={12} /> 元ニュース記事を開く
+              </a>
+            </div>
+          )}
+
+          <div className="info-card">
+            <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '12px', fontWeight: 600 }}>
+              {situation.descriptionJa}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {situation.newsSource && (
-                <div className="info-card" style={{ background: '#F5F3FF', borderColor: '#DDD6FE' }}>
-                  <div className="info-title" style={{ color: '#5B21B6', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Globe size={16} /> 関連ニュース記事 (Grounding)
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#4C1D95', marginBottom: '8px', fontWeight: 600 }}>
-                    {situation.newsSource.title}
-                  </div>
-                  <a
-                    href={situation.newsSource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.8rem',
-                      color: '#4F46E5',
-                      fontWeight: 700,
-                      textDecoration: 'underline'
-                    }}
-                  >
-                    <ExternalLink size={12} /> 元ニュース記事を開く
-                  </a>
-                </div>
-              )}
-
-              <div className="info-card">
-                <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '12px', fontWeight: 600 }}>
-                  {situation.descriptionJa}
-                </div>
-
-                <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#64748B', uppercase: 'true', marginBottom: '8px' }}>
-                  MISSION GOALS (達成目標)
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {situation.goals.map((g, i) => (
-                    <div key={i} style={{ fontSize: '0.88rem', color: '#1E293B', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                      <span style={{ color: '#4F46E5', fontWeight: 800 }}>✓</span> {g}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#64748B', uppercase: 'true', marginBottom: '8px' }}>
+              MISSION GOALS (達成目標)
             </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={() => setIsGoalsModalOpen(false)}>
-                閉じる
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {situation.goals.map((g, i) => (
+                <div key={i} style={{ fontSize: '0.88rem', color: '#1E293B', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#4F46E5', fontWeight: 800 }}>✓</span> {g}
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Score & Evaluation Report Modal */}
       <ReportModal

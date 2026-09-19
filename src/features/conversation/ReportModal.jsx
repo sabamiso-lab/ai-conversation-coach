@@ -1,29 +1,27 @@
 import React from 'react';
-import { Award, BookOpen, RotateCcw, X, Sparkles, AlertCircle } from 'lucide-react';
+import { Award, BookOpen, RotateCcw, AlertCircle } from 'lucide-react';
+import Modal from '../../components/common/Modal';
+import LoadingState from '../../components/common/LoadingState';
 
 export default function ReportModal({ isOpen, onClose, report, loading, error, onRestart, onRetry }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '640px' }}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={24} color="#4F46E5" />
-            <h2 className="modal-title">会話セッション診断レポート</h2>
-          </div>
-          <button className="btn btn-ghost" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748B' }}>
-            <Sparkles className="animate-spin" size={36} color="#4F46E5" style={{ margin: '0 auto 16px auto' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}>会話データをAIが分析中...</h3>
-            <p style={{ fontSize: '0.88rem', marginTop: '6px' }}>文法正確さ・語彙の多様性・対話の流れを総合評価しています。</p>
-          </div>
-        ) : error ? (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="会話セッション診断レポート"
+      icon={<Award size={24} color="#4F46E5" />}
+      maxWidth="640px"
+    >
+      {loading ? (
+        <LoadingState
+          icon="sparkles"
+          iconSize={36}
+          message="会話データをAIが分析中..."
+          subMessage="文法正確さ・語彙の多様性・対話の流れを総合評価しています。"
+        />
+      ) : error ? (
           <div style={{ padding: '24px 12px' }}>
             <div style={{ background: '#FFE4E6', border: '1px solid #FECDD3', color: '#E11D48', padding: '16px', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '0.9rem' }}>
               <AlertCircle size={22} style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -140,7 +138,6 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
             </div>
           </div>
         ) : null}
-      </div>
-    </div>
+    </Modal>
   );
 }

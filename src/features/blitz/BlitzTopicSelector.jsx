@@ -4,6 +4,9 @@ import {
   Zap, Briefcase, Smile, Sparkles, Clock, Loader2, 
   PlusCircle, Dices
 } from 'lucide-react';
+import PageHeader from '../../components/common/PageHeader';
+import CategoryFilter from '../../components/common/CategoryFilter';
+import DifficultyBadge from '../../components/common/DifficultyBadge';
 
 const CATEGORIES = ['All', 'Grammar', 'Business', 'Daily'];
 
@@ -62,17 +65,12 @@ export default function BlitzTopicSelector({
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
       {/* Title Banner */}
-      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
-          <Zap size={16} /> Oral Blitz Studio
-        </div>
-        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
-          瞬間英作文・パターンプラクティス
-        </h1>
-        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
-          日本語のメッセージを見て、1〜5秒以内に即座に英語で発話！文法を考える隙を与えず、使える構文と表現パターンを脳に爆速で叩き込みます。
-        </p>
-      </div>
+      <PageHeader
+        badgeIcon={<Zap size={16} />}
+        badgeText="Oral Blitz Studio"
+        title="瞬間英作文・パターンプラクティス"
+        description="日本語のメッセージを見て、1〜5秒以内に即座に英語で発話！文法を考える隙を与えず、使える構文と表現パターンを脳に爆速で叩き込みます。"
+      />
 
       {/* AI Custom Script Generator Card */}
       <div 
@@ -261,28 +259,15 @@ export default function BlitzTopicSelector({
       </div>
 
       {/* Category Tabs */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            className={`btn ${selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setSelectedCategory(cat)}
-            style={{ borderRadius: '9999px', padding: '8px 20px', fontSize: '0.88rem' }}
-          >
-            {cat === 'All' ? 'すべて' : cat}
-          </button>
-        ))}
-      </div>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {/* Topics Grid */}
       <div className="situation-grid">
         {filteredTopics.map(topic => {
-          const badgeStyle = topic.difficulty === 'Beginner'
-            ? { bg: '#ECFDF5', color: '#047857' }
-            : topic.difficulty === 'Advanced'
-            ? { bg: '#F3E8FF', color: '#6B21A8' }
-            : { bg: '#FEF3C7', color: '#B45309' };
-
           const IconComponent = topic.icon === 'Briefcase' ? Briefcase : topic.icon === 'Smile' ? Smile : Zap;
 
           return (
@@ -304,14 +289,7 @@ export default function BlitzTopicSelector({
                     <span className="badge" style={{ background: '#F1F5F9', color: '#475569', fontWeight: 700 }}>
                       {topic.questions ? `${topic.questions.length}問` : '10問'}
                     </span>
-                    {topic.difficulty && (
-                      <span 
-                        className="badge" 
-                        style={{ background: badgeStyle.bg, color: badgeStyle.color, fontWeight: 700 }}
-                      >
-                        {topic.difficulty}
-                      </span>
-                    )}
+                    <DifficultyBadge difficulty={topic.difficulty} />
                   </div>
                 </div>
 

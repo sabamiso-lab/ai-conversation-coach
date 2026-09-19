@@ -6,6 +6,10 @@ import {
   ArrowRight, Target, Loader2, Globe, Sparkles, 
   ExternalLink, Zap, Newspaper, PlusCircle
 } from 'lucide-react';
+import PageHeader from '../../components/common/PageHeader';
+import CategoryFilter from '../../components/common/CategoryFilter';
+import LoadingState from '../../components/common/LoadingState';
+import DifficultyBadge from '../../components/common/DifficultyBadge';
 
 const ICON_MAP = {
   Coffee,
@@ -120,17 +124,12 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
       {/* Title Banner */}
-      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
-          <MessageSquare size={16} /> Conversation Studio
-        </div>
-        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
-          英会話の訓練シチュエーションを選択
-        </h1>
-        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
-          AIが指定した役柄になりきってリアルな対話を行います。実生活や仕事ですぐに使える表現力を身につけましょう。
-        </p>
-      </div>
+      <PageHeader
+        badgeIcon={<MessageSquare size={16} />}
+        badgeText="Conversation Studio"
+        title="英会話の訓練シチュエーションを選択"
+        description="AIが指定した役柄になりきってリアルな対話を行います。実生活や仕事ですぐに使える表現力を身につけましょう。"
+      />
 
       {/* --- Dynamic News Grounding Generator Section --- */}
       <div 
@@ -321,35 +320,21 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
       </div>
 
       {/* Category Tabs */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            className={`btn ${selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setSelectedCategory(cat)}
-            style={{ borderRadius: '9999px', padding: '8px 20px', fontSize: '0.88rem' }}
-          >
-            {cat === 'All' ? 'すべて' : cat === 'News & Trends' ? '📰 News & Trends' : cat}
-          </button>
-        ))}
-      </div>
+      <CategoryFilter
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        getLabel={(cat) => cat === 'All' ? 'すべて' : cat === 'News & Trends' ? '📰 News & Trends' : cat}
+      />
 
       {/* Loading State */}
       {isLoading ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748B' }}>
-          <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: '#4F46E5' }} />
-          <p style={{ fontWeight: 600 }}>シチュエーションを読み込み中...</p>
-        </div>
+        <LoadingState message="シチュエーションを読み込み中..." />
       ) : (
         /* Grid */
         <div className="situation-grid">
           {filteredSituations.map(sit => {
             const IconComponent = ICON_MAP[sit.icon] || MessageSquare;
-            const badgeStyle = sit.difficulty === 'Beginner'
-              ? { bg: '#ECFDF5', color: '#047857' }
-              : sit.difficulty === 'Advanced'
-              ? { bg: '#F3E8FF', color: '#6B21A8' }
-              : { bg: '#FEF3C7', color: '#B45309' };
 
             return (
               <div 
@@ -372,12 +357,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                           📰 News
                         </span>
                       )}
-                      <span 
-                        className="badge" 
-                        style={{ background: badgeStyle.bg, color: badgeStyle.color, fontWeight: 700 }}
-                      >
-                        {sit.difficulty}
-                      </span>
+                      <DifficultyBadge difficulty={sit.difficulty} />
                     </div>
                   </div>
 

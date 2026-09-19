@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Key, X, Check, ExternalLink } from 'lucide-react';
+import { Key, Check, ExternalLink } from 'lucide-react';
+import Modal from './Modal';
 
 export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, currentModel, onSaveModel }) {
   const [keyInput, setKeyInput] = useState(apiKey || '');
@@ -20,19 +21,13 @@ export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, curren
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Key className="text-primary" size={20} />
-            <h2 className="modal-title">Gemini API Key 設定</h2>
-          </div>
-          <button className="btn btn-ghost" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSave}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Gemini API Key 設定"
+      icon={<Key className="text-primary" size={20} />}
+    >
+      <form onSubmit={handleSave}>
           <div className="input-group">
             <label className="input-label">API Key</label>
             <input
@@ -79,7 +74,6 @@ export default function ApiKeyModal({ isOpen, onClose, apiKey, onSaveKey, curren
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

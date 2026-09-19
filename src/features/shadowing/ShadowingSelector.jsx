@@ -6,6 +6,9 @@ import {
   Headphones, Sparkles, Play, Loader2, 
   Zap, PlusCircle, Dices 
 } from 'lucide-react';
+import PageHeader from '../../components/common/PageHeader';
+import CategoryFilter from '../../components/common/CategoryFilter';
+import DifficultyBadge from '../../components/common/DifficultyBadge';
 
 const CATEGORIES = ['All', 'Daily', 'Travel', 'Business', 'Tech & Trends', 'Custom AI'];
 
@@ -69,17 +72,12 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
   return (
     <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
       {/* Title Banner */}
-      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
-          <Headphones size={16} /> Shadowing Studio
-        </div>
-        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
-          シャドーイング訓練教材を選択
-        </h1>
-        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
-          お手本音声を聴きながら直後に影のように復唱するトレーニングです。リスニング力とネイティブのイントネーション・スピード感を鍛えます。
-        </p>
-      </div>
+      <PageHeader
+        badgeIcon={<Headphones size={16} />}
+        badgeText="Shadowing Studio"
+        title="シャドーイング訓練教材を選択"
+        description="お手本音声を聴きながら直後に影のように復唱するトレーニングです。リスニング力とネイティブのイントネーション・スピード感を鍛えます。"
+      />
 
       {/* AI Custom Script Generator Card */}
       <div 
@@ -231,50 +229,31 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
       </div>
 
       {/* Category Tabs */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            className={`btn ${selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setSelectedCategory(cat)}
-            style={{ borderRadius: '9999px', padding: '8px 20px', fontSize: '0.88rem' }}
-          >
-            {cat === 'All' ? 'すべて' : cat}
-          </button>
-        ))}
-      </div>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {/* Scripts Grid */}
       <div className="situation-grid">
-        {filteredScripts.map(script => {
-          const badgeStyle = script.difficulty === 'Beginner'
-            ? { bg: '#ECFDF5', color: '#047857' }
-            : script.difficulty === 'Advanced'
-            ? { bg: '#F3E8FF', color: '#6B21A8' }
-            : { bg: '#FEF3C7', color: '#B45309' };
-
-          return (
-            <div
-              key={script.id}
-              className="situation-card"
-              onClick={() => onSelectScript(script)}
-              style={{
-                border: script.category === 'Custom AI' ? '2px solid #6366F1' : '1px solid #E2E8F0',
-                background: script.category === 'Custom AI' ? 'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)' : '#FFFFFF'
-              }}
-            >
-              <div>
-                <div className="card-top">
-                  <div className="icon-box" style={{ background: '#EEF2FF', color: '#4F46E5' }}>
-                    <Headphones size={24} />
-                  </div>
-                  <span 
-                    className="badge" 
-                    style={{ background: badgeStyle.bg, color: badgeStyle.color, fontWeight: 700 }}
-                  >
-                    {script.difficultyLabel || script.difficulty}
-                  </span>
+        {filteredScripts.map(script => (
+          <div
+            key={script.id}
+            className="situation-card"
+            onClick={() => onSelectScript(script)}
+            style={{
+              border: script.category === 'Custom AI' ? '2px solid #6366F1' : '1px solid #E2E8F0',
+              background: script.category === 'Custom AI' ? 'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)' : '#FFFFFF'
+            }}
+          >
+            <div>
+              <div className="card-top">
+                <div className="icon-box" style={{ background: '#EEF2FF', color: '#4F46E5' }}>
+                  <Headphones size={24} />
                 </div>
+                <DifficultyBadge difficulty={script.difficultyLabel || script.difficulty} />
+              </div>
 
                 <div className="card-title">{script.title}</div>
                 <div className="card-title-ja">{script.titleJa}</div>
@@ -294,8 +273,7 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
                 シャドーイングを開始 <Play size={16} />
               </div>
             </div>
-          );
-        })}
+          ))}
       </div>
     </div>
   );
