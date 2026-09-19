@@ -917,6 +917,11 @@ body {
     font-size: 0.88rem;
   }
 
+  .btn-send-chat {
+    padding: 10px 14px !important;
+    min-width: 44px;
+  }
+
   /* Modals */
   .modal-overlay {
     padding: 12px;
@@ -959,6 +964,46 @@ body {
     align-items: stretch;
     gap: 12px;
   }
+
+  .shadowing-eval-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .judgment-buttons-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .judgment-buttons-row .btn {
+    width: 100%;
+  }
+
+  .summary-actions-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .summary-actions-row .btn {
+    width: 100%;
+  }
+
+  .summary-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .stat-card {
+    padding: 10px 4px;
+  }
+
+  .stat-val {
+    font-size: 1.05rem;
+  }
+
+  .stat-lbl {
+    font-size: 0.68rem;
+  }
+
 }
 
 @media (max-width: 480px) {

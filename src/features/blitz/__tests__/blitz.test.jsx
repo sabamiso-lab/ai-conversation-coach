@@ -36,11 +36,11 @@ describe('Instant Oral Blitz Feature', () => {
         />
       );
 
-      expect(screen.getByText(/瞬間英作文 ＆ パターンプラクティス/i)).toBeInTheDocument();
+      expect(screen.getByText(/瞬間英作文・パターンプラクティス/i)).toBeInTheDocument();
       expect(screen.getByText('基礎構文パターン')).toBeInTheDocument();
       expect(screen.getByText('ビジネス即レス会話')).toBeInTheDocument();
 
-      const startButtons = screen.getAllByRole('button', { name: /スタート/i });
+      const startButtons = screen.getAllByRole('button', { name: /瞬間英作文を開始/i });
       expect(startButtons.length).toBeGreaterThan(0);
 
       fireEvent.click(startButtons[0]);

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# CDK build artifacts
+cdk.out
+cdk/cdk.out
+cdk/dist
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

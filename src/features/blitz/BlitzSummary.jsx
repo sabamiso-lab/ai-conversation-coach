@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, ArrowRight, Zap, Target, Clock } from 'lucide-react';
+import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, Zap, Target, Clock } from 'lucide-react';
 import { speakText } from '../../services/speech';
 
 export default function BlitzSummary({

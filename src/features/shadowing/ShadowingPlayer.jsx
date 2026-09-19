@@ -192,6 +192,7 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
 
         {/* Player Controls Bar */}
         <div 
+          className="player-controls-wrap"
           style={{
             background: '#F8FAFC',
             border: '1px solid #E2E8F0',
@@ -428,7 +429,7 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
                 💬 {evalResult.feedbackJa}
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="shadowing-eval-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
                 <div style={{ background: '#ECFDF5', padding: '12px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
                   <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#047857', marginBottom: '4px' }}>
                     👍 良かった点

@@ -6,7 +6,9 @@ export const PRESET_BLITZ_TOPICS = [
   {
     id: 'grammar-foundations',
     title: '基礎構文パターン',
+    titleJa: 'Grammar Foundations',
     category: 'Grammar',
+    difficulty: 'Intermediate',
     icon: 'Zap',
     description: '助動詞 (should/could)、関係代名詞、仮定法など、英会話の核となる構文の即答トレーニング',
     questions: [
@@ -95,7 +97,9 @@ export const PRESET_BLITZ_TOPICS = [
   {
     id: 'business-quick-response',
     title: 'ビジネス即レス会話',
+    titleJa: 'Business Quick Response',
     category: 'Business',
+    difficulty: 'Intermediate',
     icon: 'Briefcase',
     description: '仕事の進捗共有、提案、日程調整、確認で使える実践フレーズ',
     questions: [
@@ -184,7 +188,9 @@ export const PRESET_BLITZ_TOPICS = [
   {
     id: 'daily-casual-phrases',
     title: '日常会話・即応やり取り',
+    titleJa: 'Daily Quick Response',
     category: 'Daily',
+    difficulty: 'Beginner',
     icon: 'Smile',
     description: '相槌、感情表現、カフェ・レストラン、友人との会話での自然な即答',
     questions: [

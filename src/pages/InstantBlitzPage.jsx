@@ -70,7 +70,7 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
   };
 
   return (
-    <div className="page-container container main-content-wrapper">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {viewState === 'selector' && (
         <BlitzTopicSelector
           onStartSession={handleStartSession}

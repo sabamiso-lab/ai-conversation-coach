@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 import { PRESET_BLITZ_TOPICS } from './blitzTopics';
-import { Zap, Briefcase, Smile, Sparkles, Clock, Mic, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { 
+  Zap, Briefcase, Smile, Sparkles, Clock, Loader2, 
+  PlusCircle
+} from 'lucide-react';
+
+const CATEGORIES = ['All', 'Grammar', 'Business', 'Daily'];
+
+const DIFFICULTIES = [
+  { id: 'Beginner', label: '🌱 初級 (Beginner)' },
+  { id: 'Intermediate', label: '⚡ 中級 (Intermediate)' },
+  { id: 'Advanced', label: '🔥 上級 (Advanced)' }
+];
+
+const TIMER_OPTIONS = [
+  { sec: 3, label: '⚡ 3秒 (超高速)', desc: '上級者向け・瞬発力特訓' },
+  { sec: 5, label: '⏱️ 5秒 (標準)', desc: 'テンポよく即答' },
+  { sec: 7, label: '🌱 7秒 (じっくり)', desc: 'ゆっくり確実に発話' },
+  { sec: 0, label: '♾️ 制限なし', desc: '自分のペースで' }
+];
 
 export default function BlitzTopicSelector({
   onStartSession,
@@ -9,167 +27,263 @@ export default function BlitzTopicSelector({
   hasApiKey,
   onOpenApiKeyModal
 }) {
-  const [customTopic, setCustomTopic] = useState('');
-  const [difficulty, setDifficulty] = useState('Intermediate');
-  const [timerSeconds, setTimerSeconds] = useState(5); // 3, 5, 7, 0 (no limit)
+  const [topics] = useState(PRESET_BLITZ_TOPICS);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [timerSeconds, setTimerSeconds] = useState(5);
 
-  const getIconComponent = (iconName) => {
-    switch (iconName) {
-      case 'Zap': return <Zap className="topic-icon-svg text-yellow-500" size={24} />;
-      case 'Briefcase': return <Briefcase className="topic-icon-svg text-blue-500" size={24} />;
-      case 'Smile': return <Smile className="topic-icon-svg text-green-500" size={24} />;
-      default: return <Zap className="topic-icon-svg" size={24} />;
-    }
-  };
+  // Custom AI State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [customTopic, setCustomTopic] = useState('');
+  const [customDifficulty, setCustomDifficulty] = useState('Intermediate');
 
   const handleCustomSubmit = (e) => {
     e.preventDefault();
     if (!customTopic.trim()) return;
     if (!hasApiKey) {
-      onOpenApiKeyModal();
+      if (onOpenApiKeyModal) onOpenApiKeyModal();
       return;
     }
+
     onGenerateCustom({
       topicPrompt: customTopic.trim(),
-      difficulty,
+      difficulty: customDifficulty,
       timerSeconds
     });
   };
 
+  const filteredTopics = selectedCategory === 'All'
+    ? topics
+    : topics.filter(t => t.category === selectedCategory);
+
   return (
-    <div className="blitz-selector-container">
-      {/* ヒーローヘッダー */}
-      <div className="blitz-hero-header">
-        <div className="hero-badge">
-          <Zap size={16} /> <span>大量インプット ✕ 超高速発話</span>
+    <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
+      {/* Title Banner */}
+      <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 8px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#EEF2FF', color: '#4F46E5', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, marginBottom: '10px' }}>
+          <Zap size={16} /> Oral Blitz Studio
         </div>
-        <h1 className="hero-title">⚡ 瞬間英作文 ＆ パターンプラクティス</h1>
-        <p className="hero-subtitle">
-          日本語のメッセージを見て、1〜5秒以内に即座に英語で発話！<br />
-          文法を考える隙を与えず、使える構文と表現パターンを脳に爆速で叩き込みます。
+        <h1 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+          瞬間英作文・パターンプラクティス
+        </h1>
+        <p style={{ color: '#64748B', fontSize: '0.92rem', marginTop: '8px', maxWidth: '640px', margin: '8px auto 0 auto', lineHeight: 1.5 }}>
+          日本語のメッセージを見て、1〜5秒以内に即座に英語で発話！文法を考える隙を与えず、使える構文と表現パターンを脳に爆速で叩き込みます。
         </p>
       </div>
 
-      {/* 設定・タイマー選択 */}
-      <div className="blitz-config-card">
-        <div className="config-title">
-          <Clock size={18} /> <span>タイマー設定 (制限時間)</span>
-        </div>
-        <div className="timer-options">
-          {[
-            { sec: 3, label: '⚡ 3秒 (超高速)', desc: '上級者向け・瞬発力特訓' },
-            { sec: 5, label: '⏱️ 5秒 (標準)', desc: 'テンポよく即答' },
-            { sec: 7, label: '🌱 7秒 (じっくり)', desc: 'ゆっくり確実に発話' },
-            { sec: 0, label: '♾️ 制限時間なし', desc: '自分のペースで' }
-          ].map((option) => (
-            <button
-              key={option.sec}
-              type="button"
-              className={`timer-chip ${timerSeconds === option.sec ? 'active' : ''}`}
-              onClick={() => setTimerSeconds(option.sec)}
-            >
-              <div className="chip-label">{option.label}</div>
-              <div className="chip-desc">{option.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* プリセットトピック一覧 */}
-      <div className="blitz-section-title">
-        <h3>📚 プリセット問題集</h3>
-      </div>
-      <div className="blitz-presets-grid">
-        {PRESET_BLITZ_TOPICS.map((topic) => (
-          <div key={topic.id} className="blitz-topic-card">
-            <div className="topic-card-header">
-              <div className="topic-icon-badge">
-                {getIconComponent(topic.icon)}
-              </div>
-              <div className="topic-category-tag">{topic.category}</div>
-            </div>
-            <h4 className="topic-card-title">{topic.title}</h4>
-            <p className="topic-card-desc">{topic.description}</p>
-
-            <div className="topic-card-footer">
-              <span className="question-count-badge">{topic.questions.length} 問</span>
-              <button
-                className="btn btn-primary btn-sm btn-blitz-start"
-                onClick={() => onStartSession(topic.questions, topic.title, timerSeconds)}
-              >
-                スタート <Zap size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* AI動的生成お題 */}
-      <div className="blitz-section-title mt-8">
-        <h3>✨ Gemini AI でオリジナル英作文セットを生成</h3>
-      </div>
-      <div className="blitz-custom-card">
-        <div className="custom-card-header">
-          <Sparkles className="text-purple-500" size={24} />
+      {/* AI Custom Script Generator Card */}
+      <div 
+        style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
+          borderRadius: '16px',
+          padding: '20px',
+          color: '#FFFFFF',
+          marginBottom: '28px',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h4>自由なお題で問題を作成</h4>
-            <p className="text-sm text-sub">自分の職業や興味に合わせた英作文10問セットを生成します。</p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
+              <Sparkles size={13} /> Gemini AI カスタム作成
+              {!hasApiKey && (
+                <span style={{ background: '#F59E0B', color: '#FFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', marginLeft: '4px' }}>
+                  ⚠️ Key未設定
+                </span>
+              )}
+            </div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0' }}>
+              自由なお題でオリジナル瞬間英作文10問セットを生成
+            </h2>
+            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
+              「ITエンジニアのスクラム」「海外ホテルのトラブル」「レストラン予約」など自分のシチュエーションに特化して作成できます。
+            </p>
           </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={() => setIsFormOpen(!isFormOpen)}
+            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
+          >
+            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
+          </button>
         </div>
 
-        <form onSubmit={handleCustomSubmit} className="custom-form">
-          <div className="form-group">
-            <label>生成したいトピック / シチュエーション</label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="例: ITエンジニアのデイリースクラム、海外ホテルでのトラブル対応、レストランの予約など"
-              value={customTopic}
-              onChange={(e) => setCustomTopic(e.target.value)}
-              disabled={isGenerating}
-            />
-          </div>
+        {/* Custom AI Form Collapse */}
+        {isFormOpen && (
+          <form onSubmit={handleCustomSubmit} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  生成したいトピック / シチュエーション
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="例: ITスクラム、海外旅行のトラブル... (自由入力)"
+                  value={customTopic}
+                  onChange={(e) => setCustomTopic(e.target.value)}
+                  disabled={isGenerating}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', width: '100%' }}
+                />
+              </div>
 
-          <div className="form-row">
-            <div className="form-group flex-1">
-              <label>難易度</label>
-              <select
-                className="input-field select-field"
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                disabled={isGenerating}
-              >
-                <option value="Beginner">🌱 初級 (基礎的な表現)</option>
-                <option value="Intermediate">⚡ 中級 (実践的な表現)</option>
-                <option value="Advanced">🔥 上級 (洗練された表現・複文)</option>
-              </select>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  難易度
+                </label>
+                <select
+                  className="input-field"
+                  value={customDifficulty}
+                  onChange={(e) => setCustomDifficulty(e.target.value)}
+                  disabled={isGenerating}
+                  style={{ background: '#1E293B', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)' }}
+                >
+                  {DIFFICULTIES.map(d => (
+                    <option key={d.id} value={d.id}>{d.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="form-group button-group">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
                 type="submit"
-                className="btn btn-purple btn-block"
+                className="btn btn-primary"
                 disabled={isGenerating || !customTopic.trim()}
+                style={{ padding: '9px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
               >
                 {isGenerating ? (
                   <>
-                    <span className="spinner-sm" /> 10問セット作成中...
+                    <Loader2 size={16} className="animate-spin" /> 10問セット作成中...
                   </>
                 ) : (
                   <>
-                    <Sparkles size={16} /> AI英作文セットを生成
+                    <Zap size={16} /> AI英作文セットを生成
                   </>
                 )}
               </button>
             </div>
-          </div>
+          </form>
+        )}
+      </div>
 
-          {!hasApiKey && (
-            <div className="api-key-warning-inline mt-3" onClick={onOpenApiKeyModal}>
-              <ShieldAlert size={16} /> <span>AI動的生成を利用するには API Key の設定が必要です (クリックして設定)</span>
+      {/* Timer Bar / Configuration Section */}
+      <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '16px 20px', border: '1px solid #E2E8F0', marginBottom: '24px', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+          <Clock size={16} style={{ color: '#4F46E5' }} /> ⏱️ 発話制限時間 (タイマー設定)
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
+          {TIMER_OPTIONS.map((option) => {
+            const isSelected = timerSeconds === option.sec;
+            return (
+              <button
+                key={option.sec}
+                type="button"
+                onClick={() => setTimerSeconds(option.sec)}
+                style={{
+                  background: isSelected ? '#EEF2FF' : '#F8FAFC',
+                  border: isSelected ? '2px solid #4F46E5' : '1px solid #E2E8F0',
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected ? '0 4px 12px rgba(79, 70, 229, 0.12)' : 'none'
+                }}
+              >
+                <div style={{ fontWeight: 800, fontSize: '0.86rem', color: isSelected ? '#4F46E5' : '#0F172A' }}>
+                  {option.label}
+                </div>
+                <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
+                  {option.desc}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Category Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            className={`btn ${selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setSelectedCategory(cat)}
+            style={{ borderRadius: '9999px', padding: '8px 20px', fontSize: '0.88rem' }}
+          >
+            {cat === 'All' ? 'すべて' : cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Topics Grid */}
+      <div className="situation-grid">
+        {filteredTopics.map(topic => {
+          const badgeStyle = topic.difficulty === 'Beginner'
+            ? { bg: '#ECFDF5', color: '#047857' }
+            : topic.difficulty === 'Advanced'
+            ? { bg: '#F3E8FF', color: '#6B21A8' }
+            : { bg: '#FEF3C7', color: '#B45309' };
+
+          const IconComponent = topic.icon === 'Briefcase' ? Briefcase : topic.icon === 'Smile' ? Smile : Zap;
+
+          return (
+            <div
+              key={topic.id}
+              className="situation-card"
+              onClick={() => onStartSession(topic.questions, topic.title, timerSeconds)}
+              style={{
+                border: topic.category === 'Custom AI' ? '2px solid #6366F1' : '1px solid #E2E8F0',
+                background: topic.category === 'Custom AI' ? 'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)' : '#FFFFFF'
+              }}
+            >
+              <div>
+                <div className="card-top">
+                  <div className="icon-box" style={{ background: '#EEF2FF', color: '#4F46E5' }}>
+                    <IconComponent size={24} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <span className="badge" style={{ background: '#F1F5F9', color: '#475569', fontWeight: 700 }}>
+                      {topic.questions ? `${topic.questions.length}問` : '10問'}
+                    </span>
+                    {topic.difficulty && (
+                      <span 
+                        className="badge" 
+                        style={{ background: badgeStyle.bg, color: badgeStyle.color, fontWeight: 700 }}
+                      >
+                        {topic.difficulty}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="card-title">{topic.title}</div>
+                <div className="card-title-ja">{topic.titleJa || topic.category}</div>
+
+                <p className="card-desc" style={{ WebkitLineClamp: 2 }}>
+                  {topic.description}
+                </p>
+              </div>
+
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ borderRadius: '10px', padding: '8px 16px', fontSize: '0.85rem' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartSession(topic.questions, topic.title, timerSeconds);
+                  }}
+                >
+                  瞬間英作文を開始 <Zap size={15} />
+                </button>
+              </div>
             </div>
-          )}
-        </form>
+          );
+        })}
       </div>
     </div>
   );
