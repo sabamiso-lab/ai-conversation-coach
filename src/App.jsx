@@ -4,6 +4,7 @@ import Header from './components/common/Header';
 import ApiKeyModal from './components/common/ApiKeyModal';
 import ConversationPage from './pages/ConversationPage';
 import ShadowingPage from './pages/ShadowingPage';
+import InstantBlitzPage from './pages/InstantBlitzPage';
 
 const STORAGE_KEY = 'gemini_api_key_speakflow';
 const STORAGE_MODEL_KEY = 'gemini_model_speakflow';
@@ -63,6 +64,17 @@ export default function App() {
                 />
               } 
             />
+            <Route 
+              path="/blitz" 
+              element={
+                <InstantBlitzPage
+                  apiKey={apiKey}
+                  model={model}
+                  onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+                />
+              } 
+            />
+
             <Route 
               path="*" 
               element={<Navigate to="/" replace />} 
