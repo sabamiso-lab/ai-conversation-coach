@@ -7,7 +7,8 @@ import * as apigw2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigw2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as path from 'path';
-import { SITUATIONS, Situation } from '../../src/data/situations';
+import { SITUATIONS } from '../../src/data/situations';
+import type { Situation } from '../../src/types';
 
 export interface SpeakFlowBackendStackProps extends cdk.StackProps {
   apiKeyValue?: string;
@@ -40,7 +41,7 @@ export class SpeakFlowBackendStack extends cdk.Stack {
     // 2. Lambda Function to Get Situations
     const getSituationsFunction = new nodejsLambda.NodejsFunction(this, 'GetSituationsFunction', {
       functionName: 'SpeakFlowGetSituations',
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       entry: path.join(__dirname, '../lambda/getSituations.ts'),
       handler: 'handler',
       environment: {
@@ -57,7 +58,7 @@ export class SpeakFlowBackendStack extends cdk.Stack {
     // 2b. Lambda Function to Create a Situation
     const createSituationFunction = new nodejsLambda.NodejsFunction(this, 'CreateSituationFunction', {
       functionName: 'SpeakFlowCreateSituation',
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       entry: path.join(__dirname, '../lambda/createSituation.ts'),
       handler: 'handler',
       environment: {

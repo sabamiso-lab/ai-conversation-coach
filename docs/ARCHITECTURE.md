@@ -67,7 +67,7 @@ flowchart TD
 | **AI Engine** | Google Gemini API | `@google/genai` (`gemini-3.5-flash-lite`) |
 | **Speech Engine** | Web Speech API | `webkitSpeechRecognition`, `SpeechSynthesis` |
 | **Backend / IaC** | AWS CDK (TypeScript) | v2 |
-| **Compute / DB** | AWS Lambda / Amazon DynamoDB | Node.js 20.x, Single-table design (TTL) |
+| **Compute / DB** | AWS Lambda / Amazon DynamoDB | Node.js 24.x, Single-table design (TTL) |
 | **API Gateway** | Amazon API Gateway | HTTP API (CORS & Domain Verification) |
 | **Testing** | Vitest, React Testing Library | 32 テストファイル / 144 テスト網羅 |
 | **Linting** | Oxlint | 高速 Rust 製リンター |
