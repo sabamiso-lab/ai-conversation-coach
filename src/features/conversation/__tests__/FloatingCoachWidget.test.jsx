@@ -225,7 +225,7 @@ describe('FloatingCoachWidget component', () => {
     expect(screen.getByText('"First, I wake up at 7 AM and stretch."')).toBeInTheDocument();
   });
 
-  it('renders active context banner in blitz mode', () => {
+  it('renders active context banner in blitz mode with user speech and result', () => {
     render(
       <FloatingCoachWidget
         {...defaultProps}
@@ -235,14 +235,64 @@ describe('FloatingCoachWidget component', () => {
           currentQuestion: {
             japanese: 'その時私は本を読んでいました。',
             sampleAnswer: 'I was reading a book at that time.'
-          }
+          },
+          userSpeech: 'I was read book at that time',
+          isCorrect: false
         }}
         isOpen={true}
       />
     );
 
-    expect(screen.getByText(/出題中のお題 \(過去進行形\):/)).toBeInTheDocument();
+    expect(screen.getByText(/お題 \(過去進行形\):/)).toBeInTheDocument();
     expect(screen.getByText('「その時私は本を読んでいました。」')).toBeInTheDocument();
+    expect(screen.getByText('回答・発話済み')).toBeInTheDocument();
+    expect(screen.getByText(/I was read book at that time/)).toBeInTheDocument();
+    expect(screen.getByText(/惜しい/)).toBeInTheDocument();
+  });
+
+  it('renders conversation typing preview and waiting status pill', () => {
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        conversationHistory={[
+          { id: '1', role: 'ai', text: 'Can I have your name?' }
+        ]}
+        conversationContext={{
+          currentUserInput: 'My name is Taro'
+        }}
+        isOpen={true}
+      />
+    );
+
+    expect(screen.getByText('未返答・考え中')).toBeInTheDocument();
+    expect(screen.getByText(/My name is Taro/)).toBeInTheDocument();
+  });
+
+  it('includes user speech in dynamic quick prompt for blitz mode when answered', () => {
+    const onAskQuestion = vi.fn();
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        mode="blitz"
+        blitzContext={{
+          topicTitle: '過去進行形',
+          currentQuestion: {
+            japanese: '本を読んでいました',
+            sampleAnswer: 'I was reading a book'
+          },
+          userSpeech: 'I read book'
+        }}
+        isOpen={true}
+        onAskQuestion={onAskQuestion}
+      />
+    );
+
+    const rephraseChip = screen.getByText('別の自然な言い回し・表現');
+    fireEvent.click(rephraseChip);
+
+    expect(onAskQuestion).toHaveBeenCalledWith(
+      expect.stringContaining('自分は「I read book」と答えました')
+    );
   });
 });
 

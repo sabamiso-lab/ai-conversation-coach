@@ -113,6 +113,7 @@ export default function FloatingCoachWidget({
   mode = 'conversation',
   situation = null,
   conversationHistory = [],
+  conversationContext = null,
   shadowingContext = null,
   blitzContext = null,
   isOpen,
@@ -127,10 +128,12 @@ export default function FloatingCoachWidget({
   onClearHistory,
   onApplyPhrase
 }) {
-  // Find latest AI utterance in conversation
+  // Find latest AI and User utterance in conversation
   const reversedHistory = [...conversationHistory].reverse();
   const lastAiMsg = reversedHistory.find(m => m.role === 'ai') || (situation?.initialMessage ? { text: situation.initialMessage } : null);
   const lastAiText = lastAiMsg?.text || '';
+  const lastMsg = conversationHistory.length > 0 ? conversationHistory[conversationHistory.length - 1] : (situation?.initialMessage ? { role: 'ai', text: situation.initialMessage } : null);
+  const isWaitingForUser = lastMsg?.role === 'ai';
 
   let quickPrompts = GENERAL_QUICK_PROMPTS;
   if (mode === 'shadowing') {
@@ -143,6 +146,12 @@ export default function FloatingCoachWidget({
   } else if (mode === 'blitz') {
     quickPrompts = BLITZ_QUICK_PROMPTS.map(p => {
       if (p.label === '別の自然な言い回し・表現' && blitzContext?.currentQuestion) {
+        if (blitzContext.userSpeech) {
+          return {
+            ...p,
+            query: `お題「${blitzContext.currentQuestion.japanese}」に対して自分は「${blitzContext.userSpeech}」と答えました。模範解答「${blitzContext.currentQuestion.sampleAnswer}」と比較して、どこを直すとより自然か、別の表現も交えて教えてください。`
+          };
+        }
         return { ...p, query: `お題「${blitzContext.currentQuestion.japanese}」に対して、標準解答「${blitzContext.currentQuestion.sampleAnswer}」以外の別の自然な表現を教えてください。` };
       }
       if (p.label === 'なぜこの語順・文法になる？' && blitzContext?.currentQuestion) {
@@ -156,6 +165,9 @@ export default function FloatingCoachWidget({
         return { ...p, query: `直前の相手の発言「${lastAiText}」の日本語訳とニュアンス、言外の意図を詳しく分かりやすく解説してください。` };
       }
       if (p.label === 'ここで使える自然な返答' && lastAiText) {
+        if (isWaitingForUser) {
+          return { ...p, query: `相手の直前の発言「${lastAiText}」に対してまだ返答していません。ここで自然に返答できるおすすめの英語フレーズの選択肢を教えてください。` };
+        }
         return { ...p, query: `直前の相手の発言「${lastAiText}」に対して、ここで自然に返答できるおすすめの英語フレーズを教えてください。` };
       }
       return p;
@@ -268,10 +280,18 @@ export default function FloatingCoachWidget({
                   <div className="coach-context-badge">
                     <span className="coach-context-dot" />
                     <span className="coach-context-label">{situation.systemRole || 'AI Partner'} の直前の発言:</span>
+                    <span className={`coach-answer-pill ${isWaitingForUser ? 'waiting' : 'replied'}`}>
+                      {isWaitingForUser ? '未返答・考え中' : '返答済み'}
+                    </span>
                   </div>
                   <div className="coach-context-quote" title={lastAiText || situation.initialMessage || '（会話開始待ち）'}>
                     "{lastAiText || situation.initialMessage || '（会話開始待ち）'}"
                   </div>
+                  {conversationContext?.currentUserInput && conversationContext.currentUserInput.trim() && (
+                    <div className="coach-context-input-preview">
+                      <span className="input-preview-label">入力中:</span> "{conversationContext.currentUserInput.trim()}"
+                    </div>
+                  )}
                 </div>
               )}
               {mode === 'shadowing' && shadowingContext && (
@@ -279,10 +299,22 @@ export default function FloatingCoachWidget({
                   <div className="coach-context-badge">
                     <span className="coach-context-dot" />
                     <span className="coach-context-label">英文スクリプト: {shadowingContext.title}</span>
+                    <span className={`coach-answer-pill ${shadowingContext.userSpeech ? 'replied' : 'waiting'}`}>
+                      {shadowingContext.userSpeech ? '発話録音済み' : '未録音・発話前'}
+                    </span>
                   </div>
-                  {shadowingContext.fullText && (
-                    <div className="coach-context-quote" title={shadowingContext.fullText}>
-                      "{shadowingContext.fullText.length > 70 ? `${shadowingContext.fullText.slice(0, 70)}...` : shadowingContext.fullText}"
+                  <div className="coach-context-quote" title={shadowingContext.targetText || shadowingContext.fullText || ''}>
+                    {(() => {
+                      const text = shadowingContext.targetText || shadowingContext.fullText || '';
+                      return `"${text.length > 70 ? `${text.slice(0, 70)}...` : text}"`;
+                    })()}
+                  </div>
+                  {shadowingContext.userSpeech && (
+                    <div className="coach-context-input-preview">
+                      <span className="input-preview-label">あなたの発話:</span> "{shadowingContext.userSpeech}"
+                      {shadowingContext.evalResult?.overallScore !== undefined && (
+                        <span className="score-tag"> ({shadowingContext.evalResult.overallScore}点)</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -291,11 +323,24 @@ export default function FloatingCoachWidget({
                 <div className="coach-context-item">
                   <div className="coach-context-badge">
                     <span className="coach-context-dot" />
-                    <span className="coach-context-label">出題中のお題 ({blitzContext.topicTitle}):</span>
+                    <span className="coach-context-label">お題 ({blitzContext.topicTitle}):</span>
+                    <span className={`coach-answer-pill ${blitzContext.userSpeech ? 'replied' : 'waiting'}`}>
+                      {blitzContext.userSpeech ? '回答・発話済み' : '未回答・考え中'}
+                    </span>
                   </div>
                   <div className="coach-context-quote" title={blitzContext.currentQuestion?.japanese || blitzContext.topicTitle}>
                     {blitzContext.currentQuestion ? `「${blitzContext.currentQuestion.japanese}」` : blitzContext.topicTitle}
                   </div>
+                  {blitzContext.userSpeech && (
+                    <div className="coach-context-input-preview">
+                      <span className="input-preview-label">あなたの回答:</span> "{blitzContext.userSpeech}"
+                      {blitzContext.isCorrect !== undefined && blitzContext.isCorrect !== null && (
+                        <span className={`result-tag ${blitzContext.isCorrect ? 'pass' : 'retry'}`}>
+                          {blitzContext.isCorrect ? ' ✓合格' : ' ✗惜しい'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

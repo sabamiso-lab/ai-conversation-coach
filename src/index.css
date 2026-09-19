@@ -2251,6 +2251,60 @@ body {
   line-height: 1.35;
 }
 
+.coach-answer-pill {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.coach-answer-pill.waiting {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.coach-answer-pill.replied {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.coach-context-input-preview {
+  font-size: 0.72rem;
+  color: #4338CA;
+  background: #EEF2FF;
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.input-preview-label {
+  font-weight: 700;
+  color: #6366F1;
+  margin-right: 4px;
+}
+
+.score-tag {
+  font-weight: 800;
+  color: #10B981;
+}
+
+.result-tag {
+  font-weight: 800;
+  margin-left: 6px;
+}
+
+.result-tag.pass {
+  color: #15803D;
+}
+
+.result-tag.retry {
+  color: #DC2626;
+}
+
 /* Quick Prompts */
 .coach-quick-prompts {
   display: flex;

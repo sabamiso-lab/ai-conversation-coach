@@ -51,7 +51,8 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     apiKey,
     model,
     situation,
-    messages
+    messages,
+    conversationContext: { currentUserInput: inputText }
   });
 
   // Goals Modal State for Mobile
@@ -269,6 +270,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         mode="conversation"
         situation={situation}
         conversationHistory={messages}
+        conversationContext={{ currentUserInput: inputText }}
         isOpen={isCoachOpen}
         onToggle={toggleCoachOpen}
         onClose={() => setIsCoachOpen(false)}

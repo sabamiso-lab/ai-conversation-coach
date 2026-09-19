@@ -189,7 +189,94 @@ describe('askConversationCoach', () => {
         expect.objectContaining({
           parts: expect.arrayContaining([
             expect.objectContaining({
-              text: expect.stringContaining('★重要★【直前の相手（Friendly Barista）の最新発言】:\n"Sure! What size would you like?"')
+              text: expect.stringContaining('★最重要★【直前の相手（Friendly Barista）の最新発言】:\n"Sure! What size would you like?"')
+            })
+          ])
+        })
+      ]),
+      expect.anything()
+    );
+  });
+
+  it('includes live user waiting status and typing input in conversation prompt', async () => {
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(JSON.stringify({
+      answer: 'ラージと答えたい場合は「Large, please」で通じます。',
+      suggestedPhrases: []
+    }));
+
+    await askConversationCoach({
+      apiKey: 'test-key',
+      situation: mockSituation,
+      history: [
+        { id: '1', role: 'ai', text: 'What size would you like?' }
+      ],
+      conversationContext: {
+        currentUserInput: 'large one'
+      },
+      question: 'これで合ってますか？'
+    });
+
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.anything(),
+      expect.arrayContaining([
+        expect.objectContaining({
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              text: expect.stringContaining('★ユーザーの現在の回答ステータス★: 【未回答（まだ返答していません）】')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('現在ユーザーが入力欄に打ちかけの未送信テキスト: 「large one」')
+            })
+          ])
+        })
+      ]),
+      expect.anything()
+    );
+  });
+
+  it('includes user speech and evaluation status in blitz mode prompt', async () => {
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(JSON.stringify({
+      answer: 'open the window と冠詞 the を補うとより自然です。',
+      suggestedPhrases: []
+    }));
+
+    await askConversationCoach({
+      apiKey: 'test-key',
+      mode: 'blitz',
+      blitzContext: {
+        topicTitle: '日常依頼',
+        currentIndex: 2,
+        totalQuestions: 10,
+        currentQuestion: {
+          japanese: '窓を開けていただけますか？',
+          sampleAnswer: 'Could you open the window?'
+        },
+        userSpeech: 'Could you open window?',
+        isCorrect: false,
+        aiEvaluation: {
+          feedbackJa: 'window の前に the が必要です'
+        }
+      },
+      question: '何が間違っていましたか？'
+    });
+
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.anything(),
+      expect.arrayContaining([
+        expect.objectContaining({
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              text: expect.stringContaining('トピック: 日常依頼 （第 3 問 / 全 10 問）')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('ユーザーの回答音声テキスト: "Could you open window?"')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('正誤判定: 【惜しい・不正解】')
             })
           ])
         })

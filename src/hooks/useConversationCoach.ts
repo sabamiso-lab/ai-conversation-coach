@@ -6,7 +6,8 @@ import {
   CoachMessage, 
   CoachMode, 
   CoachShadowingContext, 
-  CoachBlitzContext 
+  CoachBlitzContext,
+  CoachConversationContext
 } from '../types';
 
 interface UseConversationCoachOptions {
@@ -15,6 +16,7 @@ interface UseConversationCoachOptions {
   mode?: CoachMode;
   situation?: Situation | null;
   messages?: ChatMessage[];
+  conversationContext?: CoachConversationContext | null;
   shadowingContext?: CoachShadowingContext | null;
   blitzContext?: CoachBlitzContext | null;
 }
@@ -25,6 +27,7 @@ export function useConversationCoach({
   mode = 'conversation',
   situation,
   messages = [],
+  conversationContext,
   shadowingContext,
   blitzContext
 }: UseConversationCoachOptions) {
@@ -109,6 +112,7 @@ export function useConversationCoach({
         mode,
         situation,
         history: messages,
+        conversationContext,
         shadowingContext,
         blitzContext,
         question: q,
@@ -131,7 +135,7 @@ export function useConversationCoach({
     } finally {
       setIsLoading(false);
     }
-  }, [questionInput, isLoading, apiKey, model, mode, situation, messages, shadowingContext, blitzContext, coachMessages]);
+  }, [questionInput, isLoading, apiKey, model, mode, situation, messages, conversationContext, shadowingContext, blitzContext, coachMessages]);
 
   return {
     isOpen,

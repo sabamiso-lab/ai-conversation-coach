@@ -11,7 +11,7 @@ import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
-export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenApiKeyModal }) {
+export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenApiKeyModal, onContextChange }) {
   // Speech Playback Settings
   const [playbackSpeed, setPlaybackSpeed] = useState(0.85); // Default slightly easy
   const [isPlaying, setIsPlaying] = useState(false);
@@ -46,6 +46,29 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
     onInterimResult: handleInterimResult,
     onError: handleSpeechError
   });
+
+  // 親コンポーネント（AIコーチ）へ現在のリアルタイム状況を通知
+  useEffect(() => {
+    if (onContextChange && script) {
+      onContextChange({
+        title: script.title,
+        category: script.category,
+        fullText: script.fullText || script.text,
+        targetText: script.fullText || script.text,
+        sentences: script.sentences,
+        userSpeech: userTranscript.trim(),
+        hasRecorded: Boolean(userTranscript.trim()),
+        isRecording,
+        evalResult: evalResult ? {
+          overallScore: evalResult.overallScore,
+          accuracyScore: evalResult.accuracyScore,
+          pronunciationScore: evalResult.pronunciationScore,
+          feedbackJa: evalResult.feedbackJa || evalResult.feedback,
+          recognizedText: evalResult.recognizedText || userTranscript
+        } : null
+      });
+    }
+  }, [onContextChange, script, userTranscript, isRecording, evalResult]);
 
   useEffect(() => {
     return () => {

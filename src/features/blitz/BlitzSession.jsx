@@ -26,7 +26,8 @@ export default function BlitzSession({
   apiKey,
   model,
   onCompleteSession,
-  onExitSession
+  onExitSession,
+  onContextChange
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -52,6 +53,34 @@ export default function BlitzSession({
   const currentQuestion = questions[currentIndex];
   const recognizerRef = useRef(null);
   const timerRef = useRef(null);
+
+  // 親コンポーネント（AIコーチ）へ現在のリアルタイム状況を通知
+  useEffect(() => {
+    if (onContextChange && currentQuestion) {
+      const speech = (userTranscript || interimTranscript || editedSpeechText).trim();
+      onContextChange({
+        topicTitle: title,
+        currentIndex,
+        totalQuestions: questions.length,
+        currentQuestion: {
+          id: currentQuestion.id,
+          japanese: currentQuestion.prompt || currentQuestion.japanese,
+          sampleAnswer: currentQuestion.answer || currentQuestion.sampleAnswer,
+          keyPoints: currentQuestion.grammarPoint ? [currentQuestion.grammarPoint] : (currentQuestion.keyPoints || [])
+        },
+        userSpeech: speech,
+        hasAnswered: Boolean(speech),
+        isRevealed,
+        isCorrect: aiEvaluation ? aiEvaluation.isCorrect : null,
+        aiEvaluation: aiEvaluation ? {
+          isCorrect: aiEvaluation.isCorrect,
+          feedbackJa: aiEvaluation.feedbackJa,
+          improvedAnswer: aiEvaluation.improvedAnswer
+        } : null,
+        allQuestions: questions
+      });
+    }
+  }, [onContextChange, title, currentIndex, questions, currentQuestion, userTranscript, interimTranscript, editedSpeechText, isRevealed, aiEvaluation]);
 
   const requestAiEvaluation = useCallback(async (speechText) => {
     const textToEvaluate = (speechText !== undefined ? speechText : `${userTranscript} ${interimTranscript}`).trim();

@@ -50,22 +50,49 @@ export interface CoachShadowingContext {
   category?: string;
   fullText?: string;
   sentences?: Array<{ id?: number; text: string; translationJa?: string }>;
+  targetText?: string;
+  userSpeech?: string;
+  hasRecorded?: boolean;
+  isRecording?: boolean;
+  evalResult?: {
+    overallScore?: number;
+    accuracyScore?: number;
+    pronunciationScore?: number;
+    feedbackJa?: string;
+    recognizedText?: string;
+  } | null;
 }
 
 export interface CoachBlitzContext {
   topicTitle: string;
+  currentIndex?: number;
+  totalQuestions?: number;
   currentQuestion?: {
     id?: string;
     japanese: string;
     sampleAnswer: string;
     keyPoints?: string[];
   };
+  userSpeech?: string;
+  hasAnswered?: boolean;
+  isRevealed?: boolean;
+  isCorrect?: boolean | null;
+  aiEvaluation?: {
+    isCorrect?: boolean;
+    feedbackJa?: string;
+    improvedAnswer?: string;
+  } | null;
   allQuestions?: Array<{
     id?: string;
     japanese: string;
     sampleAnswer: string;
     keyPoints?: string[];
   }>;
+}
+
+export interface CoachConversationContext {
+  currentUserInput?: string;
+  isWaitingForUserReply?: boolean;
 }
 
 export interface CoachMessage {

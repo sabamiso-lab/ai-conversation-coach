@@ -6,12 +6,18 @@ import { useConversationCoach } from '../hooks/useConversationCoach';
 
 export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
   const [selectedScript, setSelectedScript] = useState(null);
-  const shadowingContext = selectedScript ? {
+  const [shadowingLiveContext, setShadowingLiveContext] = useState(null);
+
+  const initialShadowingContext = selectedScript ? {
     title: selectedScript.title,
     category: selectedScript.category,
     fullText: selectedScript.fullText,
     sentences: selectedScript.sentences
   } : null;
+
+  const activeShadowingContext = selectedScript 
+    ? (shadowingLiveContext || initialShadowingContext) 
+    : null;
 
   // Floating AI Shadowing Coach State
   const {
@@ -29,14 +35,22 @@ export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
     apiKey,
     model,
     mode: selectedScript ? 'shadowing' : 'general',
-    shadowingContext
+    shadowingContext: activeShadowingContext
   });
+
+  const handleBack = () => {
+    setSelectedScript(null);
+    setShadowingLiveContext(null);
+  };
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {!selectedScript ? (
         <ShadowingSelector
-          onSelectScript={(script) => setSelectedScript(script)}
+          onSelectScript={(script) => {
+            setSelectedScript(script);
+            setShadowingLiveContext(null);
+          }}
           apiKey={apiKey}
           model={model}
           onOpenApiKeyModal={onOpenApiKeyModal}
@@ -44,17 +58,18 @@ export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
       ) : (
         <ShadowingPlayer
           script={selectedScript}
-          onBack={() => setSelectedScript(null)}
+          onBack={handleBack}
           apiKey={apiKey}
           model={model}
           onOpenApiKeyModal={onOpenApiKeyModal}
+          onContextChange={setShadowingLiveContext}
         />
       )}
 
       {/* Floating AI Coach Widget */}
       <FloatingCoachWidget
         mode={selectedScript ? 'shadowing' : 'general'}
-        shadowingContext={shadowingContext}
+        shadowingContext={activeShadowingContext}
         isOpen={isCoachOpen}
         onToggle={toggleCoachOpen}
         onClose={() => setIsCoachOpen(false)}
