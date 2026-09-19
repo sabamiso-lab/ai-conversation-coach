@@ -228,40 +228,58 @@ ai-conversation-coach/
 │   │   └── speakflow-backend-stack.ts # DynamoDB, Lambda, API Gateway 定義
 │   ├── lambda/
 │   │   ├── getSituations.ts      # GET /situations Lambda ハンドラー (Origin/API Key検証)
-│   │   └── createSituation.ts    # POST /situations Lambda ハンドラー (シナリオ追加)
-│   ├── test/                     # Lambda / CDK スタック単体テスト (Vitest)
+│   │   ├── createSituation.ts    # POST /situations Lambda ハンドラー (シナリオ追加)
+│   │   └── __tests__/            # Lambda 単体テスト
+│   ├── cdk.json
+│   ├── tsconfig.json
 │   └── README.md
 ├── index.html
 ├── package.json
 ├── vite.config.js
 ├── vitest.config.js              # フロントエンド Vitest 設定
+├── .oxlintrc.json                # Oxlint 設定
 └── src/
     ├── main.jsx
     ├── App.jsx                   # ルーティング (React Router 7) & 全体レイアウト
-    ├── App.css
     ├── index.css                 # Clean & Friendly デザインシステム (CSS Vanilla / モバイル対応)
-    ├── pages/                    # メイン画面ビュー
+    ├── pages/                    # メイン画面ページ
     │   ├── ConversationPage.jsx  # AI対話・ロールプレイ画面
     │   ├── ShadowingPage.jsx     # シャドーイング特訓画面
     │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面
-    ├── features/                 # 機能別モジュール
-    │   ├── conversation/         # 会話関連コンポーネント (ChatRoom, SituationSelector, ReportModal, HintPanel etc.)
-    │   ├── shadowing/            # シャドーイング関連コンポーネント (ShadowingPlayer, ShadowingSelector etc.)
-    │   └── blitz/                # 瞬間英作文関連コンポーネント (BlitzSession, BlitzSummary, BlitzTopicSelector etc.)
-    ├── components/               # 共通コンポーネント
+    ├── features/                 # 機能別モジュール (コンポーネント・データ・テスト)
+    │   ├── conversation/         # 会話関連 (ChatRoom, SituationSelector, ReportModal, HintPanel etc.)
+    │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingSelector)
+    │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js)
+    ├── components/               # 共通 UI コンポーネント
     │   └── common/
-    │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション・APIキー/モデル設定
+    │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション
     │       └── ApiKeyModal.jsx   # Gemini API Key ＆ モデル選択モーダル
+    ├── contexts/                 # React Context
+    │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
     ├── hooks/                    # カスタムフック
-    │   └── useSpeechRecognition.js # Web Speech API 音声認識共通フック
-    ├── services/                 # 各種 サービスモジュール
-    │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ フォールバック
-    │   ├── gemini.js             # Gemini API 呼び出し (Grounding / Instant Blitz AI / Safe JSON / Chat / Report)
+    │   ├── useChatSession.ts     # 会話セッション管理フック
+    │   ├── useSettings.ts        # 設定アクセスフック
+    │   └── useSpeechRecognition.ts # Web Speech API 音声認識共通フック
+    ├── services/                 # 外部連携サービス層
+    │   ├── ai/                   # Gemini API モジュール群
+    │   │   ├── client.ts         # GoogleGenAI クライアント初期化・モデル管理
+    │   │   ├── chat.js           # 会話ロールプレイ・ヒント・診断レポート生成
+    │   │   ├── shadowing.js      # シャドーイング発話精度判定
+    │   │   ├── blitz.js          # 瞬間英作文 AI お題自動生成
+    │   │   └── news.js           # Grounding ニュースシナリオ動的生成
+    │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ ローカルフォールバック
+    │   ├── gemini.js             # Gemini AI サービス統括エントリポイント
     │   └── speech.js             # Web Speech API (音声合成・重複再生防止)
-    └── data/
-        ├── situations.js         # シチュエーションデータ＆フォールバック定義
-        ├── shadowingTopics.js    # シャドーイングテーマ・カテゴリ定義
-        └── shadowingScripts.js   # シャドーイングスクリプト定義
+    ├── data/                     # プリセットデータ・マスター定義
+    │   ├── situations.ts         # 会話シチュエーション＆フォールバック定義
+    │   ├── shadowingTopics.js    # シャドーイングテーマカテゴリ定義
+    │   └── shadowingScripts.js   # シャドーイング英文スクリプト定義
+    ├── types/                    # TypeScript 型定義
+    │   └── index.ts              # アプリ全体の型定義 (Situation, Shadowing, Blitz 等)
+    ├── utils/                    # ユーティリティ
+    │   └── jsonRepair.js         # Safe JSON Self-Healing パース関数
+    └── test/                     # テスト環境設定
+        └── setup.js              # Vitest セットアップスクリプト
 ```
 
 ---
