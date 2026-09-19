@@ -88,31 +88,6 @@ export default function BlitzSession({
     revealAnswer();
   }, [revealAnswer]);
 
-  // カウントダウンタイマー処理
-  useEffect(() => {
-    if (isRevealed) return; // 回答表示済みならタイマー停止
-
-    setQuestionStartTime(Date.now());
-    setTimeLeft(timerSeconds);
-
-    if (timerSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 0.1) {
-            clearInterval(timerRef.current);
-            handleTimeUp();
-            return 0;
-          }
-          return Math.max(0, +(prev - 0.1).toFixed(1));
-        });
-      }, 100);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentIndex, isRevealed, timerSeconds, handleTimeUp]);
-
   // 音声認識のセットアップ
   useEffect(() => {
     if (isSpeechRecognitionSupported()) {
@@ -144,15 +119,15 @@ export default function BlitzSession({
     };
   }, []);
 
-  // 新しい質問に移る際の状態クリア ＆ 音声認識スタート（オプション）
-  useEffect(() => {
+  const startSpeechForNextQuestion = () => {
     setIsRevealed(false);
     setUserTranscript('');
     setInterimTranscript('');
     setSpeechError('');
+    setQuestionStartTime(Date.now());
+    setTimeLeft(timerSeconds);
     stopSpeaking();
 
-    // 制限時間なし、またはタイマーがある場合でも自動で音声認識を開始
     if (recognizerRef.current && isSpeechRecognitionSupported()) {
       try {
         recognizerRef.current.start();
@@ -161,7 +136,29 @@ export default function BlitzSession({
         console.warn('Auto start speech failed', e);
       }
     }
-  }, [currentIndex]);
+  };
+
+  // カウントダウンタイマー処理
+  useEffect(() => {
+    if (isRevealed) return; // 回答表示済みならタイマー停止
+
+    if (timerSeconds > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 0.1) {
+            clearInterval(timerRef.current);
+            handleTimeUp();
+            return 0;
+          }
+          return Math.max(0, +(prev - 0.1).toFixed(1));
+        });
+      }, 100);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentIndex, isRevealed, timerSeconds, handleTimeUp]);
 
   const toggleMic = () => {
     if (!recognizerRef.current) return;
@@ -201,6 +198,7 @@ export default function BlitzSession({
 
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
+      startSpeechForNextQuestion();
     } else {
       // 全問終了
       const totalTimeSec = +((Date.now() - startTime) / 1000).toFixed(1);
