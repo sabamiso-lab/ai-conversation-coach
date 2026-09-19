@@ -8,6 +8,8 @@ import ReportModal from './ReportModal';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useChatSession } from '../../hooks/useChatSession';
+import { useConversationCoach } from '../../hooks/useConversationCoach';
+import FloatingCoachWidget from './FloatingCoachWidget';
 
 export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const {
@@ -30,6 +32,25 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     reportError,
     finishSession
   } = useChatSession({ situation, apiKey, model });
+
+  // Floating AI Conversation Coach State
+  const {
+    isOpen: isCoachOpen,
+    setIsOpen: setIsCoachOpen,
+    toggleOpen: toggleCoachOpen,
+    coachMessages,
+    isLoading: isCoachLoading,
+    error: coachError,
+    questionInput: coachQuestionInput,
+    setQuestionInput: setCoachQuestionInput,
+    askQuestion: askCoachQuestion,
+    clearHistory: clearCoachHistory
+  } = useConversationCoach({
+    apiKey,
+    model,
+    situation,
+    messages
+  });
 
   // Goals Modal State for Mobile
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
@@ -137,6 +158,15 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
                 style={{ fontSize: '0.85rem', padding: '6px 12px' }}
               >
                 <Lightbulb size={16} color="#F59E0B" /> <span className="btn-text-desktop">ヒント</span>
+              </button>
+
+              <button 
+                className="btn btn-secondary" 
+                onClick={toggleCoachOpen}
+                title="AIコーチに現在の会話について相談する"
+                style={{ fontSize: '0.85rem', padding: '6px 12px', background: isCoachOpen ? '#EEF2FF' : undefined, borderColor: isCoachOpen ? '#818CF8' : undefined }}
+              >
+                <Sparkles size={16} color="#6366F1" /> <span className="btn-text-desktop">AI相談</span>
               </button>
             </div>
           </div>
@@ -346,6 +376,23 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         error={reportError}
         onRestart={onBack}
         onRetry={finishSession}
+      />
+
+      {/* Floating AI Coach Assistant Widget */}
+      <FloatingCoachWidget
+        isOpen={isCoachOpen}
+        onToggle={toggleCoachOpen}
+        onClose={() => setIsCoachOpen(false)}
+        coachMessages={coachMessages}
+        isLoading={isCoachLoading}
+        error={coachError}
+        questionInput={coachQuestionInput}
+        onQuestionInputChange={setCoachQuestionInput}
+        onAskQuestion={askCoachQuestion}
+        onClearHistory={clearCoachHistory}
+        onApplyPhrase={(phrase) => {
+          setInputText(phrase);
+        }}
       />
     </div>
   );

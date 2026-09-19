@@ -38,6 +38,19 @@ export interface HintSuggestion {
   nuance?: string;
 }
 
+export interface CoachPhrase {
+  english: string;
+  japanese: string;
+}
+
+export interface CoachMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  suggestedPhrases?: CoachPhrase[];
+  timestamp: number;
+}
+
 export interface BetterExpression {
   original: string;
   better: string;

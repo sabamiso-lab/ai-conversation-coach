@@ -42,4 +42,26 @@ describe('ChatRoom component', () => {
     // Dynamic initialMessageJa should be rendered instead of hardcoded fallback
     expect(screen.getByText("いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？")).toBeInTheDocument();
   });
+
+  it('toggles floating AI coach assistant from header button and FAB', () => {
+    render(<ChatRoom situation={mockSituation} apiKey="dummy-key" model="gemini-3.5-flash-lite" onBack={() => {}} />);
+
+    // FAB should be in document
+    const fab = screen.getByRole('button', { name: /AIコーチに質問する/i });
+    expect(fab).toBeInTheDocument();
+
+    // Header "AI相談" button
+    const headerCoachBtn = screen.getByRole('button', { name: /AI相談/i });
+    expect(headerCoachBtn).toBeInTheDocument();
+
+    // Click header button to open floating panel
+    fireEvent.click(headerCoachBtn);
+    expect(screen.getByText('AI学習コーチ')).toBeInTheDocument();
+    expect(screen.getByText('現在の会話内容について何でも相談')).toBeInTheDocument();
+
+    // Close button
+    const closeBtn = screen.getByRole('button', { name: /閉じる/i });
+    fireEvent.click(closeBtn);
+    expect(screen.queryByText('AI学習コーチ')).not.toBeInTheDocument();
+  });
 });

@@ -94,3 +94,91 @@ Return strictly JSON with this structure:
     questions
   };
 }
+
+/**
+ * Evaluate user's oral blitz speech transcript against the prompt and target answer using Gemini
+ */
+export async function evaluateBlitzSpeech({
+  apiKey,
+  model,
+  prompt,
+  standardAnswer,
+  acceptedAnswers = [],
+  grammarPoint = '',
+  userSpeech
+}) {
+  if (!apiKey) throw new Error("Gemini APIキーを設定してください。");
+  if (!userSpeech || !userSpeech.trim()) {
+    throw new Error("ユーザーの発話内容がありません。");
+  }
+
+  const systemPrompt = `
+You are an expert bilingual English Conversation Coach specializing in Instant Oral Translation (瞬間英作文) and Pattern Practice.
+The user was given a Japanese prompt sentence and attempted to speak the English translation instantly.
+Analyze the user's spoken English transcript against the Japanese prompt, standard answer, accepted variations, and target grammar point.
+
+JAPANESE PROMPT: "${prompt}"
+STANDARD ANSWER: "${standardAnswer}"
+ACCEPTED ALTERNATIVES: ${JSON.stringify(acceptedAnswers)}
+TARGET GRAMMAR POINT: "${grammarPoint}"
+USER'S SPOKEN TRANSCRIPT: "${userSpeech}"
+
+EVALUATION PHILOSOPHY:
+- Prioritize COMMUNICATIVE INTENT and NATURALNESS over strict word-for-word matching.
+- If the user expressed the meaning accurately with appropriate grammar (even using different words/structure than the standard answer), consider it PASS/CORRECT.
+- Minor slips (e.g. slight article error like 'a' vs 'the', or minor preposition hesitation) that still clearly convey meaning can be rated as "ACCEPTABLE" with minor feedback.
+- If the grammar breaks down, meaning is distorted, or key elements are missing, rate as "NEEDS_WORK".
+
+RETURN STRUCTURE:
+1. "isCorrect": boolean (true for PERFECT and ACCEPTABLE, false for NEEDS_WORK)
+2. "status": "PERFECT" | "ACCEPTABLE" | "NEEDS_WORK"
+3. "statusLabelJa": "🎉 完璧！" | "👍 通じる！（惜しい）" | "💪 要復習"
+4. "score": number (0 to 100)
+5. "evaluationJa": Supportive and constructive feedback in Japanese explaining what was good and what can be improved (1-2 sentences).
+6. "improvedSpeech": A polished, natural version based on what the user said (or the best phrasing).
+7. "grammarAdviceJa": Brief point regarding the target grammar or vocabulary usage in Japanese (1 sentence, optional).
+
+Return strictly JSON matching this structure:
+{
+  "isCorrect": true,
+  "status": "PERFECT",
+  "statusLabelJa": "🎉 完璧！",
+  "score": 95,
+  "evaluationJa": "日本語での講評",
+  "improvedSpeech": "Polished English version",
+  "grammarAdviceJa": "文法や表現のアドバイス"
+}
+`;
+
+  const contents = [
+    { role: 'user', parts: [{ text: `Evaluate this spoken English: "${userSpeech}" for prompt: "${prompt}".` }] }
+  ];
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      isCorrect: { type: "BOOLEAN" },
+      status: { type: "STRING" },
+      statusLabelJa: { type: "STRING" },
+      score: { type: "INTEGER" },
+      evaluationJa: { type: "STRING" },
+      improvedSpeech: { type: "STRING" },
+      grammarAdviceJa: { type: "STRING" }
+    },
+    required: ["isCorrect", "status", "statusLabelJa", "score", "evaluationJa", "improvedSpeech"]
+  };
+
+  const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
+  const data = cleanAndParseJson(rawJson);
+
+  return {
+    isCorrect: Boolean(data.isCorrect),
+    status: data.status || (data.score >= 80 ? 'PERFECT' : data.score >= 50 ? 'ACCEPTABLE' : 'NEEDS_WORK'),
+    statusLabelJa: data.statusLabelJa || (data.isCorrect ? '👍 通じる！' : '💪 要復習'),
+    score: typeof data.score === 'number' ? data.score : (data.isCorrect ? 85 : 40),
+    evaluationJa: data.evaluationJa || '',
+    improvedSpeech: data.improvedSpeech || standardAnswer,
+    grammarAdviceJa: data.grammarAdviceJa || ''
+  };
+}
+

@@ -1,0 +1,135 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import FloatingCoachWidget from '../FloatingCoachWidget';
+
+describe('FloatingCoachWidget component', () => {
+  const defaultProps = {
+    isOpen: false,
+    onToggle: vi.fn(),
+    onClose: vi.fn(),
+    coachMessages: [
+      {
+        id: 'init-1',
+        role: 'assistant',
+        text: 'こんにちは！AIコーチです。何でも質問してください。',
+        timestamp: 0
+      }
+    ],
+    isLoading: false,
+    error: null,
+    questionInput: '',
+    onQuestionInputChange: vi.fn(),
+    onAskQuestion: vi.fn(),
+    onClearHistory: vi.fn(),
+    onApplyPhrase: vi.fn()
+  };
+
+  it('renders floating action button (FAB) by default', () => {
+    render(<FloatingCoachWidget {...defaultProps} />);
+
+    const fab = screen.getByRole('button', { name: /AIコーチに質問する/i });
+    expect(fab).toBeInTheDocument();
+    expect(screen.getByText('AIに相談')).toBeInTheDocument();
+
+    fireEvent.click(fab);
+    expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders coach panel when isOpen is true', () => {
+    render(<FloatingCoachWidget {...defaultProps} isOpen={true} />);
+
+    expect(screen.getByText('AI学習コーチ')).toBeInTheDocument();
+    expect(screen.getByText(/会話ログ連携中/i)).toBeInTheDocument();
+    expect(screen.getByText('こんにちは！AIコーチです。何でも質問してください。')).toBeInTheDocument();
+  });
+
+  it('triggers onAskQuestion when quick prompt chip is clicked', () => {
+    const onAskQuestion = vi.fn();
+    render(<FloatingCoachWidget {...defaultProps} isOpen={true} onAskQuestion={onAskQuestion} />);
+
+    const nuanceChip = screen.getByText('相手の発言のニュアンス');
+    fireEvent.click(nuanceChip);
+
+    expect(onAskQuestion).toHaveBeenCalledWith(
+      expect.stringContaining('直前の相手の発言の日本語訳とニュアンス')
+    );
+  });
+
+  it('handles question input change and form submit', () => {
+    const onQuestionInputChange = vi.fn();
+    const onAskQuestion = vi.fn();
+
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        isOpen={true}
+        questionInput="この表現は失礼ですか？"
+        onQuestionInputChange={onQuestionInputChange}
+        onAskQuestion={onAskQuestion}
+      />
+    );
+
+    const input = screen.getByPlaceholderText(/現在話している内容について質問/i);
+    fireEvent.change(input, { target: { value: '新しい質問' } });
+    expect(onQuestionInputChange).toHaveBeenCalledWith('新しい質問');
+
+    const submitBtn = screen.getByRole('button', { name: /質問を送信/i });
+    fireEvent.click(submitBtn);
+    expect(onAskQuestion).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onApplyPhrase when suggested phrase button is clicked', () => {
+    const onApplyPhrase = vi.fn();
+    const messagesWithPhrases = [
+      {
+        id: 'msg-1',
+        role: 'assistant',
+        text: '以下のフレーズがおすすめです。',
+        suggestedPhrases: [
+          { english: 'Could I have a cup of tea?', japanese: 'お茶を一杯いただけますか？' }
+        ],
+        timestamp: 0
+      }
+    ];
+
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        isOpen={true}
+        coachMessages={messagesWithPhrases}
+        onApplyPhrase={onApplyPhrase}
+      />
+    );
+
+    expect(screen.getByText('"Could I have a cup of tea?"')).toBeInTheDocument();
+    expect(screen.getByText('お茶を一杯いただけますか？')).toBeInTheDocument();
+
+    const applyBtn = screen.getByRole('button', { name: /会話入力欄にセット/i });
+    fireEvent.click(applyBtn);
+
+    expect(onApplyPhrase).toHaveBeenCalledWith('Could I have a cup of tea?');
+  });
+
+  it('calls onClearHistory and onClose when buttons are clicked', () => {
+    const onClearHistory = vi.fn();
+    const onClose = vi.fn();
+
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        isOpen={true}
+        onClearHistory={onClearHistory}
+        onClose={onClose}
+      />
+    );
+
+    const clearBtn = screen.getByRole('button', { name: /相談履歴をリセット/i });
+    fireEvent.click(clearBtn);
+    expect(onClearHistory).toHaveBeenCalledTimes(1);
+
+    const closeBtn = screen.getByRole('button', { name: /閉じる/i });
+    fireEvent.click(closeBtn);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

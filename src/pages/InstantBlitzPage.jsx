@@ -86,6 +86,8 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
           title={activeTitle}
           questions={activeQuestions}
           timerSeconds={timerSeconds}
+          apiKey={apiKey}
+          model={model}
           onCompleteSession={handleCompleteSession}
           onExitSession={handleBackToSelector}
         />
