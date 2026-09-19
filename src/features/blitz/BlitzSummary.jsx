@@ -9,21 +9,25 @@ export default function BlitzSummary({
   onRestartAll,
   onBackToSelector
 }) {
-  const { title, results, totalTimeSec } = summaryData;
+  const title = summaryData.title || '';
+  const results = summaryData.results || [];
+  const totalTime = Number(summaryData.totalDurationSec ?? summaryData.totalTimeSec ?? 0);
 
   const totalCount = results.length;
   const correctResults = results.filter((r) => r.isCorrect);
   const incorrectResults = results.filter((r) => !r.isCorrect);
   const correctCount = correctResults.length;
-  const scorePercent = Math.round((correctCount / totalCount) * 100);
+  const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
-  const avgTimePerQuestion = totalCount > 0
-    ? (totalTimeSec / totalCount).toFixed(1)
-    : 0;
+  const avgTimePerQuestion = summaryData.avgResponseTimeSec !== undefined
+    ? Number(summaryData.avgResponseTimeSec).toFixed(1)
+    : totalCount > 0
+    ? (totalTime / totalCount).toFixed(1)
+    : '0.0';
 
   const aiEvaluatedResults = results.filter((r) => r.aiEvaluation && typeof r.aiEvaluation.score === 'number');
   const avgAiScore = aiEvaluatedResults.length > 0
-    ? Math.round(aiEvaluatedResults.reduce((acc, r) => acc + r.aiEvaluation.score, 0) / aiEvaluatedResults.length)
+    ? Math.round(aiEvaluatedResults.reduce((acc, r) => acc + (r.aiEvaluation.score || 0), 0) / aiEvaluatedResults.length)
     : null;
 
   const getEvaluationMessage = (score) => {
@@ -67,7 +71,7 @@ export default function BlitzSummary({
           ) : (
             <StatCard
               icon={<Clock size={20} className="text-blue-500" />}
-              value={`${totalTimeSec}s`}
+              value={`${totalTime}s`}
               label="合計タイム"
             />
           )}
@@ -158,21 +162,24 @@ export default function BlitzSummary({
                           {item.aiEvaluation.statusLabelJa || (item.aiEvaluation.isCorrect ? '合格' : '要復習')}
                         </span>
                       </div>
-                      <span className="summary-ai-score font-mono font-bold">
-                        {item.aiEvaluation.score}点
-                      </span>
+                      {typeof item.aiEvaluation.score === 'number' && (
+                        <span className="summary-ai-score font-mono font-bold">
+                          {item.aiEvaluation.score}点
+                        </span>
+                      )}
                     </div>
 
-                    {item.aiEvaluation.evaluationJa && (
+                    {(item.aiEvaluation.evaluationJa || item.aiEvaluation.feedbackJa) && (
                       <p className="summary-ai-comment mt-1 text-xs">
-                        {item.aiEvaluation.evaluationJa}
+                        {item.aiEvaluation.evaluationJa || item.aiEvaluation.feedbackJa}
                       </p>
                     )}
 
-                    {item.aiEvaluation.improvedSpeech && item.aiEvaluation.improvedSpeech !== item.userSpeech && (
+                    {(item.aiEvaluation.improvedSpeech || item.aiEvaluation.improvedAnswer) &&
+                      (item.aiEvaluation.improvedSpeech || item.aiEvaluation.improvedAnswer) !== item.userSpeech && (
                       <div className="summary-ai-improved mt-1 text-xs">
                         <span className="font-semibold text-sub">✍️ 添削例: </span>
-                        <span className="font-mono text-primary">"{item.aiEvaluation.improvedSpeech}"</span>
+                        <span className="font-mono text-primary">"{item.aiEvaluation.improvedSpeech || item.aiEvaluation.improvedAnswer}"</span>
                       </div>
                     )}
                   </div>

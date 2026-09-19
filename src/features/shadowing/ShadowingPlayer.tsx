@@ -37,6 +37,24 @@ export default function ShadowingPlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(0.85); // Default slightly easy
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
+  const isLoopingRef = React.useRef(isLooping);
+  const loopTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handlePlayAudioRef = React.useRef<() => void>(() => {});
+
+  React.useEffect(() => {
+    isLoopingRef.current = isLooping;
+    if (!isLooping && loopTimeoutRef.current) {
+      clearTimeout(loopTimeoutRef.current);
+      loopTimeoutRef.current = null;
+    }
+  }, [isLooping]);
+
+  const clearLoopTimer = useCallback(() => {
+    if (loopTimeoutRef.current) {
+      clearTimeout(loopTimeoutRef.current);
+      loopTimeoutRef.current = null;
+    }
+  }, []);
 
   // Recording & Evaluation States
   const [userTranscript, setUserTranscript] = useState('');
@@ -90,34 +108,51 @@ export default function ShadowingPlayer({
 
   useEffect(() => {
     return () => {
+      clearLoopTimer();
       stopSpeaking();
       abortRecording();
     };
-  }, [abortRecording]);
+  }, [abortRecording, clearLoopTimer]);
+
+  const scriptText = script?.text || '';
 
   // Handle Speech Playback
-  const handlePlayAudio = () => {
+  const handlePlayAudio = useCallback(() => {
+    clearLoopTimer();
+
     if (isPlaying) {
       stopSpeaking();
       setIsPlaying(false);
       return;
     }
 
+    if (!scriptText) return;
+
     setIsPlaying(true);
-    speakText(script.text, {
+    speakText(scriptText, {
       lang: 'en-US',
       rate: playbackSpeed,
       onEnd: () => {
         setIsPlaying(false);
-        if (isLooping) {
-          setTimeout(() => handlePlayAudio(), 500);
+        if (isLoopingRef.current) {
+          clearLoopTimer();
+          loopTimeoutRef.current = setTimeout(() => {
+            if (isLoopingRef.current) {
+              handlePlayAudioRef.current();
+            }
+          }, 500);
         }
       }
     });
-  };
+  }, [isPlaying, scriptText, playbackSpeed, clearLoopTimer]);
+
+  useEffect(() => {
+    handlePlayAudioRef.current = handlePlayAudio;
+  }, [handlePlayAudio]);
 
   // Handle Recording Toggle
   const toggleRecording = () => {
+    clearLoopTimer();
     if (!isRecording) {
       setErrorMsg('');
       setUserTranscript('');

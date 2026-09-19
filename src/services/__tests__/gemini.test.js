@@ -14,6 +14,18 @@ describe('gemini service (repairJson)', () => {
     expect(result).toEqual({ title: 'Markdown JSON', active: true });
   });
 
+  it('extracts JSON when surrounded by conversational greetings and markdown code block', () => {
+    const jsonWithCommentary = `Here is the requested data for you:\n\`\`\`json\n{\n  "title": "AI Response",\n  "status": "ready"\n}\n\`\`\`\nHope this helps! Let me know if you need anything else.`;
+    const result = repairJson(jsonWithCommentary);
+    expect(result).toEqual({ title: 'AI Response', status: 'ready' });
+  });
+
+  it('extracts raw JSON object surrounded by plain text commentary without markdown blocks', () => {
+    const rawWithCommentary = `Certainly! Here is the JSON:\n{"name": "test", "score": 100}\nGood luck with your practice!`;
+    const result = repairJson(rawWithCommentary);
+    expect(result).toEqual({ name: 'test', score: 100 });
+  });
+
   it('sanitizes unescaped newlines inside JSON string literals', () => {
     const rawWithNewlines = `{\n  "title": "First Line\nSecond Line",\n  "status": "ok"\n}`;
     const result = repairJson(rawWithNewlines);

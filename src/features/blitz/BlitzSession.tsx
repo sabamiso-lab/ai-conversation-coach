@@ -21,6 +21,7 @@ export interface BlitzSessionProps {
     correctCount: number;
     results: BlitzResult[];
     totalDurationSec: number;
+    totalTimeSec?: number;
     avgResponseTimeSec: number;
   }) => void;
   onExitSession: () => void;
@@ -29,7 +30,7 @@ export interface BlitzSessionProps {
 
 export default function BlitzSession({
   title,
-  questions,
+  questions = [],
   timerSeconds = 5,
   apiKey,
   model,
@@ -232,7 +233,12 @@ export default function BlitzSession({
       matchScore,
       responseTimeSec,
       aiEvaluation: aiEvaluation ? {
-        isCorrect: aiEvaluation.isCorrect,
+        ...aiEvaluation,
+        score: aiEvaluation.score,
+        status: aiEvaluation.status,
+        statusLabelJa: aiEvaluation.statusLabelJa,
+        evaluationJa: aiEvaluation.evaluationJa,
+        improvedSpeech: aiEvaluation.improvedSpeech,
         feedbackJa: aiEvaluation.evaluationJa,
         improvedAnswer: aiEvaluation.improvedSpeech
       } : null
@@ -256,12 +262,24 @@ export default function BlitzSession({
         correctCount,
         results: nextResults,
         totalDurationSec,
+        totalTimeSec: totalDurationSec,
         avgResponseTimeSec
       });
     }
   };
 
-  const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
+  if (!questions || questions.length === 0 || !currentQuestion) {
+    return (
+      <div className="blitz-session-container animate-fade-in" style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <p style={{ color: '#64748B', marginBottom: '16px' }}>出題データがありません。</p>
+        <button type="button" className="btn btn-primary" onClick={onExitSession}>
+          お題一覧へ戻る
+        </button>
+      </div>
+    );
+  }
+
+  const progressPercent = questions.length > 0 ? Math.round(((currentIndex + 1) / questions.length) * 100) : 0;
 
   return (
     <div className="blitz-session-container animate-fade-in">

@@ -190,8 +190,14 @@ export interface BlitzResult {
   responseTimeSec: number;
   aiEvaluation?: {
     isCorrect: boolean;
-    feedbackJa: string;
+    score?: number;
+    status?: 'PERFECT' | 'ACCEPTABLE' | 'NEEDS_WORK';
+    statusLabelJa?: string;
+    evaluationJa?: string;
+    improvedSpeech?: string;
+    feedbackJa?: string;
     improvedAnswer?: string;
+    grammarAdviceJa?: string;
   } | null;
 }
 

@@ -80,7 +80,11 @@ export default function InstantBlitzPage({
         count: 10
       });
 
-      setActiveTitle(generated.title);
+      if (!generated || !Array.isArray(generated.questions) || generated.questions.length === 0) {
+        throw new Error('問題データの生成に失敗しました。もう一度お試しください。');
+      }
+
+      setActiveTitle(generated.title || 'AIおまかせ英作文セット');
       setActiveQuestions(generated.questions);
       setTimerSeconds(seconds);
       setViewState('session');

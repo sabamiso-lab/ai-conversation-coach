@@ -181,39 +181,86 @@ export function cleanPhrase(text: unknown): string | null {
 }
 
 /**
+ * Extract JSON object or array substring if surrounded by conversational filler
+ */
+export function extractJsonSubstring(str: string): string {
+  const firstBrace = str.indexOf('{');
+  const firstBracket = str.indexOf('[');
+  let startIdx = -1;
+  if (firstBrace !== -1 && firstBracket !== -1) {
+    startIdx = Math.min(firstBrace, firstBracket);
+  } else if (firstBrace !== -1) {
+    startIdx = firstBrace;
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+  }
+
+  if (startIdx === -1) return str;
+
+  const isObject = str[startIdx] === '{';
+  const lastIdx = isObject ? str.lastIndexOf('}') : str.lastIndexOf(']');
+  if (lastIdx !== -1 && lastIdx > startIdx) {
+    return str.slice(startIdx, lastIdx + 1);
+  }
+  return str.slice(startIdx);
+}
+
+/**
  * Clean raw text response from API and safely parse JSON with repair fallback
  */
 export function repairJson<T = unknown>(rawJson: string): T {
   if (!rawJson) throw new Error("Empty response from API");
 
   let cleaned = rawJson.trim();
-  if (cleaned.startsWith('```')) {
+
+  // Extract from markdown code block if present
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim();
+  } else if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   }
 
-  // Attempt 1: Direct parse
-  try {
-    return JSON.parse(cleaned) as T;
-  } catch (e1) {
-    // Attempt 2: Sanitize control characters
+  const attemptParse = (str: string): T => {
+    // Attempt 1: Direct parse
     try {
-      const sanitized = sanitizeControlChars(cleaned);
-      return JSON.parse(sanitized) as T;
-    } catch {
-      // Attempt 3: Auto-close truncated JSON
+      return JSON.parse(str) as T;
+    } catch (e1) {
+      // Attempt 2: Sanitize control characters
       try {
-        const autoClosed = autoCloseJson(cleaned);
-        return JSON.parse(autoClosed) as T;
+        const sanitized = sanitizeControlChars(str);
+        return JSON.parse(sanitized) as T;
       } catch {
-        // Attempt 4: Combination of sanitize + auto-close
+        // Attempt 3: Auto-close truncated JSON
         try {
-          const combined = autoCloseJson(sanitizeControlChars(cleaned));
-          return JSON.parse(combined) as T;
+          const autoClosed = autoCloseJson(str);
+          return JSON.parse(autoClosed) as T;
         } catch {
-          throw e1;
+          // Attempt 4: Combination of sanitize + auto-close
+          try {
+            const combined = autoCloseJson(sanitizeControlChars(str));
+            return JSON.parse(combined) as T;
+          } catch {
+            throw e1;
+          }
         }
       }
     }
+  };
+
+  try {
+    return attemptParse(cleaned);
+  } catch (primaryErr) {
+    // Attempt 5: Extract JSON substring if surrounded by commentary
+    const extracted = extractJsonSubstring(cleaned);
+    if (extracted !== cleaned) {
+      try {
+        return attemptParse(extracted);
+      } catch {
+        throw primaryErr;
+      }
+    }
+    throw primaryErr;
   }
 }
 

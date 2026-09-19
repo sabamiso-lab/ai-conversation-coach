@@ -69,13 +69,15 @@ export default function ShadowingScriptViewer({
         }}
       >
         {viewMode === 'slash' ? (
-          slashedText || text
+          slashedText || text || ''
         ) : viewMode === 'blank' ? (
-          text.split(' ').map((word, i) => (
-            i % 3 === 1 ? ' ____ ' : `${word} `
+          (text || '').split(' ').map((word, i) => (
+            <React.Fragment key={i}>
+              {i % 3 === 1 ? ' ____ ' : `${word} `}
+            </React.Fragment>
           ))
         ) : (
-          text
+          text || ''
         )}
       </div>
 

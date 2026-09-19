@@ -400,7 +400,7 @@ export default function FloatingCoachWidget({
 
                 <div className="coach-msg-content">
                   <div className="coach-bubble">
-                    {msg.text.split('\n').map((line, lIdx) => (
+                    {(msg.text || '').split('\n').map((line, lIdx) => (
                       <p key={lIdx} style={{ margin: line ? '0 0 6px 0' : '0 0 4px 0' }}>
                         {line}
                       </p>

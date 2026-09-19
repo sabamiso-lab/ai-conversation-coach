@@ -50,12 +50,7 @@ export function useChatSession({ situation, apiKey, model }: UseChatSessionOptio
       text: text.trim()
     };
 
-    let updatedMessages: ChatMessage[] = [];
-    setMessages(prev => {
-      updatedMessages = [...prev, userMessage];
-      return updatedMessages;
-    });
-
+    setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsAiThinking(true);
     setErrorMsg('');
@@ -65,7 +60,7 @@ export function useChatSession({ situation, apiKey, model }: UseChatSessionOptio
         apiKey,
         model,
         situation,
-        history: updatedMessages.slice(0, -1),
+        history: messages,
         userText: text.trim()
       });
 
@@ -102,7 +97,7 @@ export function useChatSession({ situation, apiKey, model }: UseChatSessionOptio
     } finally {
       setIsAiThinking(false);
     }
-  }, [inputText, isAiThinking, apiKey, model, situation]);
+  }, [inputText, isAiThinking, apiKey, model, situation, messages]);
 
   const fetchHints = useCallback(async () => {
     setIsHintOpen(true);
