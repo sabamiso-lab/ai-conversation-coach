@@ -3,109 +3,43 @@ import { Mic, MicOff, Send, Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, E
 import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
-import { sendChatMessage, getHintSuggestions, generateSessionReport } from '../../services/gemini';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { useChatSession } from '../../hooks/useChatSession';
 
 export default function ChatRoom({ situation, apiKey, model, onBack }) {
-  const [messages, setMessages] = useState(() => {
-    if (situation?.initialMessage) {
-      return [{
-        id: 'msg-0',
-        role: 'ai',
-        text: situation.initialMessage,
-        translation: situation.initialMessageJa || situation.initialMessageTranslation || ''
-      }];
-    }
-    return [];
-  });
-  const [inputText, setInputText] = useState('');
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const {
+    messages,
+    inputText,
+    setInputText,
+    isAiThinking,
+    errorMsg,
+    setErrorMsg,
+    sendMessage,
+    isHintOpen,
+    setIsHintOpen,
+    hints,
+    isHintLoading,
+    fetchHints,
+    isReportOpen,
+    setIsReportOpen,
+    reportData,
+    isReportLoading,
+    reportError,
+    finishSession
+  } = useChatSession({ situation, apiKey, model });
 
   // Goals Modal State for Mobile
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
 
-  // Hint Modal State
-  const [isHintOpen, setIsHintOpen] = useState(false);
-  const [hints, setHints] = useState([]);
-  const [isHintLoading, setIsHintLoading] = useState(false);
-
-  // Report Modal State
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportData, setReportData] = useState(null);
-  const [isReportLoading, setIsReportLoading] = useState(false);
-  const [reportError, setReportError] = useState('');
-
   const messagesEndRef = useRef(null);
 
-  // Handle Send Message
-  const handleSendMessage = useCallback(async (textToSend) => {
-    const text = textToSend || inputText;
-    if (!text.trim() || isAiThinking) return;
-
-    if (!apiKey) {
-      setErrorMsg("Gemini API Key が設定されていません。画面右上の [API Key 設定] から登録してください。");
-      return;
-    }
-
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      text: text.trim()
-    };
-
-    let updatedMessages = [];
-    setMessages(prev => {
-      updatedMessages = [...prev, userMessage];
-      return updatedMessages;
+  // Wrap sendMessage with TTS callback for AI response
+  const handleSendMessage = useCallback((textToSend) => {
+    sendMessage(textToSend, (aiText) => {
+      speakText(aiText);
     });
-
-    setInputText('');
-    setIsAiThinking(true);
-    setErrorMsg('');
-
-    try {
-      const aiResponse = await sendChatMessage({
-        apiKey,
-        model,
-        situation,
-        history: updatedMessages.slice(0, -1),
-        userText: text.trim()
-      });
-
-      // Update user message with translation, clarity feedback, and phrasing suggestions
-      setMessages(prev => prev.map(m => m.id === userMessage.id ? {
-        ...m,
-        userTextTranslation: aiResponse.userTextTranslation,
-        clarityStatus: aiResponse.clarityStatus,
-        clarityBadgeJa: aiResponse.clarityBadgeJa,
-        clarityFeedbackJa: aiResponse.clarityFeedbackJa,
-        simpleAlternative: aiResponse.simpleAlternative,
-        betterPhrasing: aiResponse.betterPhrasing,
-        phrasingTip: aiResponse.phrasingTip
-      } : m));
-
-      // Append AI response
-      const newAiMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'ai',
-        text: aiResponse.aiResponseText,
-        translation: aiResponse.aiResponseTranslation
-      };
-
-      setMessages(prev => [...prev, newAiMessage]);
-
-      // Speak AI response automatically
-      speakText(aiResponse.aiResponseText);
-
-    } catch (err) {
-      console.error("API error:", err);
-      setErrorMsg(err.message || "Gemini API の呼び出し中にエラーが発生しました。");
-    } finally {
-      setIsAiThinking(false);
-    }
-  }, [inputText, isAiThinking, apiKey, model, situation]);
+  }, [sendMessage]);
 
   const handleSendMessageRef = useRef(handleSendMessage);
   useEffect(() => {
@@ -117,15 +51,15 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     if (handleSendMessageRef.current) {
       handleSendMessageRef.current(finalText);
     }
-  }, []);
+  }, [setInputText]);
 
   const handleInterimResult = useCallback((interimText) => {
     setInputText(interimText);
-  }, []);
+  }, [setInputText]);
 
   const handleSpeechError = useCallback((speechErr) => {
     setErrorMsg(speechErr);
-  }, []);
+  }, [setErrorMsg]);
 
   const { isRecording, toggleRecording } = useSpeechRecognition({
     onFinalResult: handleFinalResult,
@@ -149,49 +83,6 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAiThinking]);
 
-  // Get Hint Suggestions
-  const handleFetchHints = async () => {
-    setIsHintOpen(true);
-    setIsHintLoading(true);
-    try {
-      const hintList = await getHintSuggestions({
-        apiKey,
-        model,
-        situation,
-        history: messages
-      });
-      setHints(hintList);
-    } catch (err) {
-      console.error("Hint error:", err);
-      setErrorMsg("ヒントの生成に失敗しました。APIキーを確認してください。");
-    } finally {
-      setIsHintLoading(false);
-    }
-  };
-
-  // Finish Session & Generate Report
-  const handleFinishSession = async () => {
-    setIsReportOpen(true);
-    setIsReportLoading(true);
-    setReportError('');
-    try {
-      const report = await generateSessionReport({
-        apiKey,
-        model,
-        situation,
-        history: messages
-      });
-      setReportData(report);
-    } catch (err) {
-      console.error("Report error:", err);
-      const msg = err.message || "評価レポートの作成に失敗しました。";
-      setReportError(msg);
-      setErrorMsg(msg);
-    } finally {
-      setIsReportLoading(false);
-    }
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, animation: 'fadeIn 0.3s ease-out' }}>
       {/* Top Bar inside Chat */}
@@ -202,7 +93,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span className="badge badge-indigo" style={{ fontSize: '0.85rem' }}>{situation.titleJa}</span>
-          <button className="btn btn-accent" onClick={handleFinishSession} style={{ borderRadius: '10px' }}>
+          <button className="btn btn-accent" onClick={finishSession} style={{ borderRadius: '10px' }}>
             <Flag size={16} /> <span>終了診断</span>
           </button>
         </div>
@@ -239,7 +130,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
 
               <button 
                 className="btn btn-secondary" 
-                onClick={handleFetchHints}
+                onClick={fetchHints}
                 title="ヒントを見る"
                 style={{ fontSize: '0.85rem', padding: '6px 12px' }}
               >
@@ -463,7 +354,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         loading={isReportLoading}
         error={reportError}
         onRestart={onBack}
-        onRetry={handleFinishSession}
+        onRetry={finishSession}
       />
     </div>
   );
