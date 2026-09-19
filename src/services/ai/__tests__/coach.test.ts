@@ -93,4 +93,70 @@ describe('askConversationCoach', () => {
     expect(result.answer).toBe('Plain text response without JSON');
     expect(result.suggestedPhrases).toEqual([]);
   });
+
+  it('handles shadowing mode with shadowing context', async () => {
+    const mockApiResponse = JSON.stringify({
+      answer: '「check in」は音が連結して「チェッキン」のように発音されます。',
+      suggestedPhrases: [
+        { english: 'check in', japanese: 'チェックインする' }
+      ]
+    });
+
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(mockApiResponse);
+
+    const result = await askConversationCoach({
+      apiKey: 'test-key',
+      mode: 'shadowing',
+      shadowingContext: {
+        title: 'Airport Check-in',
+        category: 'Travel',
+        fullText: 'I would like to check in for my flight.'
+      },
+      question: 'check in のリエゾンのコツを教えてください'
+    });
+
+    expect(result.answer).toContain('チェッキン');
+    expect(result.suggestedPhrases).toHaveLength(1);
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.stringContaining('Shadowing Practice'),
+      expect.anything(),
+      expect.anything()
+    );
+  });
+
+  it('handles blitz mode with blitz context', async () => {
+    const mockApiResponse = JSON.stringify({
+      answer: '「Could you」を使うことで丁寧にお願いする表現になります。',
+      suggestedPhrases: [
+        { english: 'Could you help me?', japanese: '手伝っていただけますか？' }
+      ]
+    });
+
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(mockApiResponse);
+
+    const result = await askConversationCoach({
+      apiKey: 'test-key',
+      mode: 'blitz',
+      blitzContext: {
+        topicTitle: '丁寧な依頼',
+        currentQuestion: {
+          japanese: '手伝っていただけますか？',
+          sampleAnswer: 'Could you help me?',
+          keyPoints: ['Could you + 動詞の原形']
+        }
+      },
+      question: '別の言い方はありますか？'
+    });
+
+    expect(result.answer).toContain('Could you');
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.stringContaining('Instant Oral Blitz'),
+      expect.anything(),
+      expect.anything()
+    );
+  });
 });

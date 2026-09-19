@@ -1,27 +1,59 @@
 import { useState, useCallback } from 'react';
 import { askConversationCoach } from '../services/gemini';
-import { Situation, ChatMessage, CoachMessage } from '../types';
+import { 
+  Situation, 
+  ChatMessage, 
+  CoachMessage, 
+  CoachMode, 
+  CoachShadowingContext, 
+  CoachBlitzContext 
+} from '../types';
 
 interface UseConversationCoachOptions {
   apiKey: string;
   model: string;
+  mode?: CoachMode;
   situation?: Situation | null;
   messages?: ChatMessage[];
+  shadowingContext?: CoachShadowingContext | null;
+  blitzContext?: CoachBlitzContext | null;
 }
 
 export function useConversationCoach({
   apiKey,
   model,
+  mode = 'conversation',
   situation,
-  messages = []
+  messages = [],
+  shadowingContext,
+  blitzContext
 }: UseConversationCoachOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [questionInput, setQuestionInput] = useState('');
 
-  // Initial greeting message based on situation
+  // Initial greeting message based on mode & context
   const createGreeting = useCallback((): CoachMessage => {
+    if (mode === 'shadowing' || shadowingContext) {
+      const title = shadowingContext?.title || 'シャドーイング特訓';
+      return {
+        id: 'coach-init',
+        role: 'assistant',
+        text: `こんにちは！シャドーイング専属AIコーチです🎧\n現在「${title}」の英文スクリプトを把握しています。\n\n「リエゾン・脱落など発音のコツは？」「この文の構文・意味は？」「リズムよく発話するには？」など、何でも日本語で気軽に相談してください！`,
+        timestamp: 0
+      };
+    }
+    if (mode === 'blitz' || blitzContext) {
+      const topic = blitzContext?.topicTitle || '瞬間英作文';
+      const qText = blitzContext?.currentQuestion ? `\n現在のお題: 「${blitzContext.currentQuestion.japanese}」` : '';
+      return {
+        id: 'coach-init',
+        role: 'assistant',
+        text: `こんにちは！瞬間英作文AIコーチです⚡\n「${topic}」のトレーニングをサポートします。${qText}\n\n「なぜこの語順になる？」「別の自然な言い方は？」「パターンの定着のコツは？」など、何でも日本語で気軽に質問してください！`,
+        timestamp: 0
+      };
+    }
     if (situation) {
       return {
         id: 'coach-init',
@@ -33,10 +65,10 @@ export function useConversationCoach({
     return {
       id: 'coach-init',
       role: 'assistant',
-      text: `こんにちは！バイリンガルAIコーチです👋\n英会話のシチュエーションを選択して会話をスタートすると、会話内容に応じたリアルタイム相談ができます。\n\n「初心者におすすめのトピックは？」「海外旅行でまず覚えるべきフレーズは？」など、気になることがあれば何でも日本語で質問してください！`,
+      text: `こんにちは！バイリンガルAIコーチです👋\n気になる英会話の表現やトピック選び、学習法など、何でも日本語で気軽に質問してください！`,
       timestamp: 0
     };
-  }, [situation]);
+  }, [mode, shadowingContext, blitzContext, situation]);
 
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>(() => [createGreeting()]);
 
@@ -74,8 +106,11 @@ export function useConversationCoach({
       const response = await askConversationCoach({
         apiKey,
         model,
+        mode,
         situation,
         history: messages,
+        shadowingContext,
+        blitzContext,
         question: q,
         coachHistory: coachMessages
       });
@@ -96,7 +131,7 @@ export function useConversationCoach({
     } finally {
       setIsLoading(false);
     }
-  }, [questionInput, isLoading, apiKey, model, situation, messages, coachMessages]);
+  }, [questionInput, isLoading, apiKey, model, mode, situation, messages, shadowingContext, blitzContext, coachMessages]);
 
   return {
     isOpen,

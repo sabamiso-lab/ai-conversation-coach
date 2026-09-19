@@ -1,12 +1,23 @@
 import { callGeminiApi, GeminiContent } from './client';
 import { cleanAndParseJson, cleanPhrase } from '../../utils/jsonRepair';
-import { Situation, ChatMessage, CoachMessage, CoachPhrase } from '../../types';
+import { 
+  Situation, 
+  ChatMessage, 
+  CoachMessage, 
+  CoachPhrase, 
+  CoachMode, 
+  CoachShadowingContext, 
+  CoachBlitzContext 
+} from '../../types';
 
 export interface AskConversationCoachParams {
   apiKey: string;
   model?: string;
+  mode?: CoachMode;
   situation?: Situation | null;
   history?: ChatMessage[];
+  shadowingContext?: CoachShadowingContext | null;
+  blitzContext?: CoachBlitzContext | null;
   question: string;
   coachHistory?: CoachMessage[];
 }
@@ -17,13 +28,16 @@ export interface CoachResponse {
 }
 
 /**
- * Ask Gemini as a conversation coach about the current conversation context
+ * Ask Gemini as a conversation/learning coach with mode-specific context
  */
 export async function askConversationCoach({
   apiKey,
   model,
+  mode = 'conversation',
   situation,
   history = [],
+  shadowingContext,
+  blitzContext,
   question,
   coachHistory = []
 }: AskConversationCoachParams): Promise<CoachResponse> {
@@ -31,7 +45,40 @@ export async function askConversationCoach({
     throw new Error("Gemini API key is required. Please set your API key in settings.");
   }
 
-  const scenarioContext = situation ? `
+  let contextDescription = '';
+  let coachRoleDescription = 'You are an expert bilingual English Conversation Coach & Learning Mentor (バイリンガル英会話専属コーチ).';
+
+  if (mode === 'shadowing' || shadowingContext) {
+    coachRoleDescription = 'You are an expert bilingual English Pronunciation & Shadowing Coach (シャドーイング＆発音・リスニング専属コーチ).';
+    contextDescription = `
+CURRENT LEARNING CONTEXT: Shadowing Practice (シャドーイング特訓)
+- Title: ${shadowingContext?.title || '英語シャドーイング'}
+- Category: ${shadowingContext?.category || 'General'}
+${shadowingContext?.fullText ? `- Script Text:\n"${shadowingContext.fullText}"` : ''}
+
+YOUR FOCUS AS SHADOWING COACH:
+- Explain pronunciation, connected speech (linking, reduction, flapping, elision), intonation, and rhythm.
+- Explain grammar breakdown, sentence parsing, and semantic nuances of the script.
+- Provide practical methods to shadow smoothly without getting tongue-tied.
+`;
+  } else if (mode === 'blitz' || blitzContext) {
+    coachRoleDescription = 'You are an expert bilingual Oral Translation & Pattern Practice Coach (瞬間英作文＆パターンプラクティス専属コーチ).';
+    contextDescription = `
+CURRENT LEARNING CONTEXT: Instant Oral Blitz (瞬間英作文・パターンプラクティス)
+- Topic: ${blitzContext?.topicTitle || '瞬間英作文トレーニング'}
+${blitzContext?.currentQuestion ? `
+- Current Japanese Prompt: "${blitzContext.currentQuestion.japanese}"
+- Standard English Answer: "${blitzContext.currentQuestion.sampleAnswer}"
+- Target Key Points: ${(blitzContext.currentQuestion.keyPoints || []).join(', ')}
+` : ''}
+
+YOUR FOCUS AS ORAL BLITZ COACH:
+- Explain why this grammar, word order, or phrasing is used.
+- Provide alternative natural expressions and explain subtle nuance differences between variations.
+- Share tips for outputting English patterns instantly without overthinking or word-by-word translation.
+`;
+  } else if (situation) {
+    contextDescription = `
 CURRENT SCENARIO CONTEXT:
 - Scenario Title: ${situation.title} (${situation.titleJa || ''})
 - Target Difficulty: ${situation.difficulty || 'Intermediate'}
@@ -39,46 +86,58 @@ CURRENT SCENARIO CONTEXT:
 - User's Role: ${situation.userRole || 'Learner'}
 - Scenario Description: ${situation.descriptionJa || situation.description || ''}
 - Scenario Goals: ${(situation.goals && situation.goals.length > 0) ? situation.goals.map((g, i) => `${i + 1}. ${g}`).join(', ') : 'Natural conversation'}
-` : `
-CURRENT CONTEXT:
-The user is browsing conversation topics or seeking general English conversation and learning advice.
+
+YOUR FOCUS AS CONVERSATION COACH:
+- Explain what the conversational partner meant, their nuance, and cultural etiquette.
+- Provide natural and context-appropriate reply phrases.
 `;
+  } else {
+    contextDescription = `
+CURRENT CONTEXT:
+The user is browsing topics or seeking general English learning advice.
+`;
+  }
 
   const systemPrompt = `
-You are an expert bilingual English Conversation Coach & Learning Mentor (バイリンガル英会話専属コーチ).
+${coachRoleDescription}
 The user has opened a floating assistant to ask you a question or seek advice in Japanese.
-${scenarioContext}
+${contextDescription}
+
 YOUR MISSION AS A COACH:
 1. Answer the user's question clearly, warmly, and concisely in Japanese.
-2. If in a conversation scenario, rely heavily on the provided conversation history and current scenario context to give contextualized, practical real-world advice (e.g., explaining what the AI partner meant, the nuance of a phrase, cultural etiquette/customs, or what the user can reply next).
-3. If applicable or helpful, provide practical, ready-to-use English phrases in "suggestedPhrases" that the user can immediately speak or use.
+2. Rely heavily on the provided learning context and materials to give specific, practical real-world advice.
+3. If applicable or helpful, provide practical, ready-to-use English phrases in "suggestedPhrases" that the user can immediately practice, speak, or use.
    - Each phrase must have "english" and "japanese" (translation / nuance).
-   - If no specific phrases are relevant (e.g. pure cultural or general question), "suggestedPhrases" can be an empty array [].
+   - If no specific phrases are relevant, "suggestedPhrases" can be an empty array [].
 4. Formatting:
-   - Make the "answer" easy to read with bullet points or paragraphs. Keep it encouraging, supportive, and practical for living or traveling abroad!
+   - Make the "answer" easy to read with bullet points or paragraphs. Keep it encouraging, supportive, and practical!
 
 Return your response strictly as JSON with this structure:
 {
   "answer": "親身で分かりやすい日本語での解説・アドバイス",
   "suggestedPhrases": [
     {
-      "english": "Could I get this to go, please?",
-      "japanese": "これをお持ち帰りでお願いできますか？"
+      "english": "Example phrase",
+      "japanese": "フレーズの日本語訳やニュアンス"
     }
   ]
 }
 `;
 
-  // Format conversation history
-  const formattedConversationLog = history.length > 0
-    ? history.map(item => `${item.role === 'user' ? 'User' : `AI Partner (${situation?.systemRole || 'AI'})`}: ${item.text}`).join('\n')
-    : situation?.initialMessage
-      ? `(まだ会話は始まっていません。AIの初期挨拶: "${situation.initialMessage}")`
-      : '(会話セッション開始前)';
+  // Build context log for prompt
+  let promptContext = '';
+  if (mode === 'shadowing' && shadowingContext?.fullText) {
+    promptContext = `【シャドーイング英文スクリプト】\n${shadowingContext.fullText}\n\n`;
+  } else if (mode === 'blitz' && blitzContext?.currentQuestion) {
+    promptContext = `【出題中の瞬間英作文】\n日本語: ${blitzContext.currentQuestion.japanese}\n標準英語: ${blitzContext.currentQuestion.sampleAnswer}\n\n`;
+  } else if (situation) {
+    const formattedLog = history.length > 0
+      ? history.map(item => `${item.role === 'user' ? 'User' : `AI Partner (${situation.systemRole})`}: ${item.text}`).join('\n')
+      : `(まだ会話は始まっていません。AIの初期挨拶: "${situation.initialMessage}")`;
+    promptContext = `【現在の英会話ロールプレイの会話ログ】\n${formattedLog}\n\n`;
+  }
 
-  let promptText = situation
-    ? `【現在の英会話ロールプレイの会話ログ】\n${formattedConversationLog}\n\n`
-    : `【現在の状況】シチュエーション選択画面\n\n`;
+  let promptText = promptContext;
 
   // Include recent coach conversation if any
   if (coachHistory && coachHistory.length > 0) {
@@ -89,7 +148,7 @@ Return your response strictly as JSON with this structure:
     promptText += `\n`;
   }
 
-  promptText += `【ユーザーの今回の質問・相談】\n${question}\n\n会話ログの文脈を踏まえて、親切に回答してください。`;
+  promptText += `【ユーザーの今回の質問・相談】\n${question}\n\n上記コンテキストを踏まえて、親切に回答してください。`;
 
   const contents: GeminiContent[] = [
     {

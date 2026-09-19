@@ -11,7 +11,10 @@ import {
   Globe, 
   MessageCircleQuestion,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Volume2,
+  Music,
+  Zap
 } from 'lucide-react';
 
 const CONVERSATION_QUICK_PROMPTS = [
@@ -34,6 +37,52 @@ const CONVERSATION_QUICK_PROMPTS = [
     label: '簡単・シンプルな言い回し',
     icon: <HelpCircle size={13} />,
     query: '中学英語レベルの簡単な単語を使って、言いたいことを相手に確実に伝えるシンプルな表現を教えてください。'
+  }
+];
+
+const SHADOWING_QUICK_PROMPTS = [
+  {
+    label: 'リエゾン・発音のコツ',
+    icon: <Volume2 size={13} />,
+    query: 'この英文スクリプトで、音が繋がる部分（リエゾン/リンキング）や脱落・弱形になる発音の注意点を分かりやすく解説してください。'
+  },
+  {
+    label: '構文・文法の分解解説',
+    icon: <HelpCircle size={13} />,
+    query: 'この英文の文法構造・スラッシュリーディングの区切り方と、重要な語彙のニュアンスを教えてください。'
+  },
+  {
+    label: '抑揚・リズムのポイント',
+    icon: <Music size={13} />,
+    query: 'この英文を自然な英語らしく読むための、強く読む単語（強勢）とイントネーション（上げ下げ）のポイントを教えてください。'
+  },
+  {
+    label: '舌が回らない時の練習法',
+    icon: <Lightbulb size={13} />,
+    query: 'シャドーイングでスピードについていけない、舌がもつれる時の効果的なステップ別練習法を教えてください。'
+  }
+];
+
+const BLITZ_QUICK_PROMPTS = [
+  {
+    label: '別の自然な言い回し・表現',
+    icon: <Lightbulb size={13} />,
+    query: 'この日本語のお題に対して、標準の解答以外にネイティブがよく使う自然な別表現やカジュアルな言い方を教えてください。'
+  },
+  {
+    label: 'なぜこの語順・文法になる？',
+    icon: <HelpCircle size={13} />,
+    query: 'この英文の語順や文法ルールの理由を初心者にも分かりやすく解説してください。'
+  },
+  {
+    label: '瞬時に口から出すコツ',
+    icon: <Zap size={13} />,
+    query: 'この文型・パターンを頭で考え込まず、瞬時に0.5秒で口から発話できるようになるためのパターンプラクティスのコツを教えてください。'
+  },
+  {
+    label: '日米のニュアンスの違い',
+    icon: <Globe size={13} />,
+    query: '直訳した日本語と、実際の英語表現が持つニュアンスの違いやシチュエーションでの使い分けを教えてください。'
   }
 ];
 
@@ -61,6 +110,7 @@ const GENERAL_QUICK_PROMPTS = [
 ];
 
 export default function FloatingCoachWidget({
+  mode = 'conversation',
   situation = null,
   isOpen,
   onToggle,
@@ -74,7 +124,14 @@ export default function FloatingCoachWidget({
   onClearHistory,
   onApplyPhrase
 }) {
-  const quickPrompts = situation ? CONVERSATION_QUICK_PROMPTS : GENERAL_QUICK_PROMPTS;
+  let quickPrompts = GENERAL_QUICK_PROMPTS;
+  if (mode === 'shadowing') {
+    quickPrompts = SHADOWING_QUICK_PROMPTS;
+  } else if (mode === 'blitz') {
+    quickPrompts = BLITZ_QUICK_PROMPTS;
+  } else if (situation) {
+    quickPrompts = CONVERSATION_QUICK_PROMPTS;
+  }
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -135,13 +192,19 @@ export default function FloatingCoachWidget({
               </div>
               <div>
                 <div className="coach-header-title">
-                  AI学習コーチ
-                  <span className={`coach-status-tag ${situation ? 'connected' : 'general'}`}>
-                    {situation ? '会話ログ連携中 🟢' : '英語学習相談 💡'}
+                  {mode === 'shadowing' ? 'シャドーイングAIコーチ' : mode === 'blitz' ? '瞬間英作文AIコーチ' : 'AI学習コーチ'}
+                  <span className={`coach-status-tag ${situation || mode === 'shadowing' || mode === 'blitz' ? 'connected' : 'general'}`}>
+                    {mode === 'shadowing' ? 'スクリプト連携中 🎧' : mode === 'blitz' ? 'お題連携中 ⚡' : situation ? '会話ログ連携中 🟢' : '英語学習相談 💡'}
                   </span>
                 </div>
                 <div className="coach-header-sub">
-                  {situation ? '現在の会話内容について何でも相談' : '英語表現や学習のコツを何でも相談'}
+                  {mode === 'shadowing' 
+                    ? '発音・リエゾン・構文を何でも相談' 
+                    : mode === 'blitz' 
+                    ? '語順・別表現・瞬発力のコツを相談' 
+                    : situation 
+                    ? '現在の会話内容について何でも相談' 
+                    : '英語表現や学習のコツを何でも相談'}
                 </div>
               </div>
             </div>

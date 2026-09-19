@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import BlitzTopicSelector from '../features/blitz/BlitzTopicSelector';
 import BlitzSession from '../features/blitz/BlitzSession';
 import BlitzSummary from '../features/blitz/BlitzSummary';
+import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
+import { useConversationCoach } from '../hooks/useConversationCoach';
 import { generateBlitzQuestions } from '../services/gemini';
 
 export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
@@ -13,6 +15,29 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
   const [timerSeconds, setTimerSeconds] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
+
+  const isSessionActive = viewState === 'session';
+
+  const {
+    isOpen: isCoachOpen,
+    toggleOpen: toggleCoachOpen,
+    setIsOpen: setIsCoachOpen,
+    coachMessages,
+    isLoading: isCoachLoading,
+    error: coachError,
+    questionInput: coachQuestionInput,
+    setQuestionInput: setCoachQuestionInput,
+    askQuestion: askCoachQuestion,
+    clearHistory: clearCoachHistory
+  } = useConversationCoach({
+    apiKey,
+    model,
+    mode: isSessionActive ? 'blitz' : 'general',
+    blitzContext: isSessionActive ? {
+      topicTitle: activeTitle,
+      allQuestions: activeQuestions
+    } : null
+  });
 
   // プリセットトピックでセッション開始
   const handleStartSession = (questions, title, seconds) => {
@@ -101,6 +126,21 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
           onBackToSelector={handleBackToSelector}
         />
       )}
+
+      {/* Floating AI Coach Widget */}
+      <FloatingCoachWidget
+        mode={isSessionActive ? 'blitz' : 'general'}
+        isOpen={isCoachOpen}
+        onToggle={toggleCoachOpen}
+        onClose={() => setIsCoachOpen(false)}
+        coachMessages={coachMessages}
+        isLoading={isCoachLoading}
+        error={coachError}
+        questionInput={coachQuestionInput}
+        onQuestionInputChange={setCoachQuestionInput}
+        onAskQuestion={askCoachQuestion}
+        onClearHistory={clearCoachHistory}
+      />
     </div>
   );
 }

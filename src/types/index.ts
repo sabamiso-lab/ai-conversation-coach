@@ -43,6 +43,31 @@ export interface CoachPhrase {
   japanese: string;
 }
 
+export type CoachMode = 'conversation' | 'shadowing' | 'blitz' | 'general';
+
+export interface CoachShadowingContext {
+  title: string;
+  category?: string;
+  fullText?: string;
+  sentences?: Array<{ id?: number; text: string; translationJa?: string }>;
+}
+
+export interface CoachBlitzContext {
+  topicTitle: string;
+  currentQuestion?: {
+    id?: string;
+    japanese: string;
+    sampleAnswer: string;
+    keyPoints?: string[];
+  };
+  allQuestions?: Array<{
+    id?: string;
+    japanese: string;
+    sampleAnswer: string;
+    keyPoints?: string[];
+  }>;
+}
+
 export interface CoachMessage {
   id: string;
   role: 'user' | 'assistant';

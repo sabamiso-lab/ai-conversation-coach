@@ -146,4 +146,34 @@ describe('FloatingCoachWidget component', () => {
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('renders shadowing mode title, status, and prompts', () => {
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        mode="shadowing"
+        isOpen={true}
+      />
+    );
+
+    expect(screen.getByText('シャドーイングAIコーチ')).toBeInTheDocument();
+    expect(screen.getByText(/スクリプト連携中/i)).toBeInTheDocument();
+    expect(screen.getByText('リエゾン・発音のコツ')).toBeInTheDocument();
+    expect(screen.getByText('構文・文法の分解解説')).toBeInTheDocument();
+  });
+
+  it('renders blitz mode title, status, and prompts', () => {
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        mode="blitz"
+        isOpen={true}
+      />
+    );
+
+    expect(screen.getByText('瞬間英作文AIコーチ')).toBeInTheDocument();
+    expect(screen.getByText(/お題連携中/i)).toBeInTheDocument();
+    expect(screen.getByText('別の自然な言い回し・表現')).toBeInTheDocument();
+    expect(screen.getByText('なぜこの語順・文法になる？')).toBeInTheDocument();
+  });
 });
