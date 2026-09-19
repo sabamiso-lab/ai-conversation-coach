@@ -6,11 +6,18 @@ import { useConversationCoach } from '../hooks/useConversationCoach';
 
 export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
   const [selectedScript, setSelectedScript] = useState(null);
+  const shadowingContext = selectedScript ? {
+    title: selectedScript.title,
+    category: selectedScript.category,
+    fullText: selectedScript.fullText,
+    sentences: selectedScript.sentences
+  } : null;
 
+  // Floating AI Shadowing Coach State
   const {
     isOpen: isCoachOpen,
-    toggleOpen: toggleCoachOpen,
     setIsOpen: setIsCoachOpen,
+    toggleOpen: toggleCoachOpen,
     coachMessages,
     isLoading: isCoachLoading,
     error: coachError,
@@ -22,12 +29,7 @@ export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
     apiKey,
     model,
     mode: selectedScript ? 'shadowing' : 'general',
-    shadowingContext: selectedScript ? {
-      title: selectedScript.title,
-      category: selectedScript.category,
-      fullText: selectedScript.fullText,
-      sentences: selectedScript.sentences
-    } : null
+    shadowingContext
   });
 
   return (
@@ -52,6 +54,7 @@ export default function ShadowingPage({ apiKey, model, onOpenApiKeyModal }) {
       {/* Floating AI Coach Widget */}
       <FloatingCoachWidget
         mode={selectedScript ? 'shadowing' : 'general'}
+        shadowingContext={shadowingContext}
         isOpen={isCoachOpen}
         onToggle={toggleCoachOpen}
         onClose={() => setIsCoachOpen(false)}

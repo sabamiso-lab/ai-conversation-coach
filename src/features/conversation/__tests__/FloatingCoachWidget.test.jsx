@@ -176,4 +176,73 @@ describe('FloatingCoachWidget component', () => {
     expect(screen.getByText('別の自然な言い回し・表現')).toBeInTheDocument();
     expect(screen.getByText('なぜこの語順・文法になる？')).toBeInTheDocument();
   });
+
+  it('renders active context banner with latest AI utterance and passes it to dynamic quick prompts', () => {
+    const onAskQuestion = vi.fn();
+    const conversationHistory = [
+      { id: '1', role: 'ai', text: 'Good morning! What size latte would you like?' },
+      { id: '2', role: 'user', text: 'I want a medium one.' },
+      { id: '3', role: 'ai', text: 'Would you like whole milk or oat milk?' }
+    ];
+
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        conversationHistory={conversationHistory}
+        isOpen={true}
+        onAskQuestion={onAskQuestion}
+      />
+    );
+
+    // Active context banner shows the latest AI message
+    expect(screen.getByText(/の直前の発言:/)).toBeInTheDocument();
+    expect(screen.getByText('"Would you like whole milk or oat milk?"')).toBeInTheDocument();
+
+    // Quick prompt chip includes the actual utterance
+    const nuanceChip = screen.getByText('相手の発言のニュアンス');
+    fireEvent.click(nuanceChip);
+
+    expect(onAskQuestion).toHaveBeenCalledWith(
+      expect.stringContaining('Would you like whole milk or oat milk?')
+    );
+  });
+
+  it('renders active context banner in shadowing mode', () => {
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        mode="shadowing"
+        shadowingContext={{
+          title: 'Morning Routine',
+          category: 'Daily',
+          fullText: 'First, I wake up at 7 AM and stretch.'
+        }}
+        isOpen={true}
+      />
+    );
+
+    expect(screen.getByText(/英文スクリプト: Morning Routine/)).toBeInTheDocument();
+    expect(screen.getByText('"First, I wake up at 7 AM and stretch."')).toBeInTheDocument();
+  });
+
+  it('renders active context banner in blitz mode', () => {
+    render(
+      <FloatingCoachWidget
+        {...defaultProps}
+        mode="blitz"
+        blitzContext={{
+          topicTitle: '過去進行形',
+          currentQuestion: {
+            japanese: 'その時私は本を読んでいました。',
+            sampleAnswer: 'I was reading a book at that time.'
+          }
+        }}
+        isOpen={true}
+      />
+    );
+
+    expect(screen.getByText(/出題中のお題 \(過去進行形\):/)).toBeInTheDocument();
+    expect(screen.getByText('「その時私は本を読んでいました。」')).toBeInTheDocument();
+  });
 });
+

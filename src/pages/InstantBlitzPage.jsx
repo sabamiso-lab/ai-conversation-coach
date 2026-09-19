@@ -18,6 +18,11 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
 
   const isSessionActive = viewState === 'session';
 
+  const blitzContext = isSessionActive ? {
+    topicTitle: activeTitle,
+    allQuestions: activeQuestions
+  } : null;
+
   const {
     isOpen: isCoachOpen,
     toggleOpen: toggleCoachOpen,
@@ -33,10 +38,7 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
     apiKey,
     model,
     mode: isSessionActive ? 'blitz' : 'general',
-    blitzContext: isSessionActive ? {
-      topicTitle: activeTitle,
-      allQuestions: activeQuestions
-    } : null
+    blitzContext
   });
 
   // プリセットトピックでセッション開始
@@ -130,6 +132,7 @@ export default function InstantBlitzPage({ apiKey, model, onOpenApiKeyModal }) {
       {/* Floating AI Coach Widget */}
       <FloatingCoachWidget
         mode={isSessionActive ? 'blitz' : 'general'}
+        blitzContext={blitzContext}
         isOpen={isCoachOpen}
         onToggle={toggleCoachOpen}
         onClose={() => setIsCoachOpen(false)}

@@ -159,4 +159,43 @@ describe('askConversationCoach', () => {
       expect.anything()
     );
   });
+
+  it('includes latest AI utterance as key context in conversation prompt', async () => {
+    const mockApiResponse = JSON.stringify({
+      answer: 'サイズを聞かれています。「Medium please」のように答えましょう。',
+      suggestedPhrases: [
+        { english: 'Medium, please.', japanese: 'Mサイズでお願いします。' }
+      ]
+    });
+
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(mockApiResponse);
+
+    await askConversationCoach({
+      apiKey: 'test-key',
+      situation: mockSituation,
+      history: [
+        { id: '1', role: 'ai', text: 'What can I get started for you today?' },
+        { id: '2', role: 'user', text: 'Can I have an iced coffee?' },
+        { id: '3', role: 'ai', text: 'Sure! What size would you like?' }
+      ],
+      question: '何を聞かれていますか？'
+    });
+
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.anything(),
+      expect.arrayContaining([
+        expect.objectContaining({
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              text: expect.stringContaining('★重要★【直前の相手（Friendly Barista）の最新発言】:\n"Sure! What size would you like?"')
+            })
+          ])
+        })
+      ]),
+      expect.anything()
+    );
+  });
 });
+

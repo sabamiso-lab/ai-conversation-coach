@@ -260,6 +260,47 @@ export default function FloatingCoachWidget({
             </div>
           </div>
 
+          {/* Active Context Banner */}
+          {(situation || shadowingContext || blitzContext) && (
+            <div className="coach-active-context-banner">
+              {mode === 'conversation' && situation && (
+                <div className="coach-context-item">
+                  <div className="coach-context-badge">
+                    <span className="coach-context-dot" />
+                    <span className="coach-context-label">{situation.systemRole || 'AI Partner'} の直前の発言:</span>
+                  </div>
+                  <div className="coach-context-quote" title={lastAiText || situation.initialMessage || '（会話開始待ち）'}>
+                    "{lastAiText || situation.initialMessage || '（会話開始待ち）'}"
+                  </div>
+                </div>
+              )}
+              {mode === 'shadowing' && shadowingContext && (
+                <div className="coach-context-item">
+                  <div className="coach-context-badge">
+                    <span className="coach-context-dot" />
+                    <span className="coach-context-label">英文スクリプト: {shadowingContext.title}</span>
+                  </div>
+                  {shadowingContext.fullText && (
+                    <div className="coach-context-quote" title={shadowingContext.fullText}>
+                      "{shadowingContext.fullText.length > 70 ? `${shadowingContext.fullText.slice(0, 70)}...` : shadowingContext.fullText}"
+                    </div>
+                  )}
+                </div>
+              )}
+              {mode === 'blitz' && blitzContext && (
+                <div className="coach-context-item">
+                  <div className="coach-context-badge">
+                    <span className="coach-context-dot" />
+                    <span className="coach-context-label">出題中のお題 ({blitzContext.topicTitle}):</span>
+                  </div>
+                  <div className="coach-context-quote" title={blitzContext.currentQuestion?.japanese || blitzContext.topicTitle}>
+                    {blitzContext.currentQuestion ? `「${blitzContext.currentQuestion.japanese}」` : blitzContext.topicTitle}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quick Prompts Bar */}
           <div className="coach-quick-prompts">
             {quickPrompts.map((prompt, idx) => (

@@ -2203,6 +2203,54 @@ body {
   color: var(--text-main);
 }
 
+/* Coach Active Context Banner */
+.coach-active-context-banner {
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 8px 14px;
+}
+
+.coach-context-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.coach-context-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.coach-context-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.coach-context-label {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.coach-context-quote {
+  font-size: 0.76rem;
+  color: #1E293B;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
 /* Quick Prompts */
 .coach-quick-prompts {
   display: flex;
