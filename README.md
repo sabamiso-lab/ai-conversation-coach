@@ -187,9 +187,14 @@ ai-conversation-coach/
 │   ├── tsconfig.json
 │   ├── vitest.config.ts          # CDK 単体テスト設定
 │   └── README.md
+├── docs/                         # プロジェクトドキュメント
+│   └── CODING_STANDARDS.md       # 設計方針・コーディング規約
+├── public/
+│   └── favicon.svg               # SpeakFlow ロゴ・ファビコン
 ├── index.html
 ├── package.json
-├── vite.config.js              # Vite & Vitest 設定 (jsdom / テスト自動検知)
+├── vite.config.js                # Vite & Vitest 設定 (jsdom / テスト自動検知)
+├── .env.example                  # 環境変数テンプレート
 ├── .oxlintrc.json                # Oxlint 設定
 └── src/
     ├── main.jsx
@@ -200,7 +205,7 @@ ai-conversation-coach/
     │   ├── ShadowingPage.jsx     # シャドーイング特訓画面
     │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面
     ├── features/                 # 機能別モジュール (コンポーネント・データ・テスト)
-    │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, SituationSelector, ReportModal, HintPanel etc.)
+    │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, FloatingCoachWidget, SituationSelector, ReportModal, HintPanel, MessageItem etc.)
     │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingAudioControls, ShadowingEvaluationCard, ShadowingSelector)
     │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js)
     ├── components/               # 共通 UI コンポーネント
@@ -225,24 +230,28 @@ ai-conversation-coach/
     │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
     ├── hooks/                    # カスタムフック
     │   ├── useChatSession.ts     # 会話セッション管理フック
+    │   ├── useConversationCoach.ts # リアルタイムAIコーチング・相談フック
     │   ├── useSettings.ts        # 設定アクセスフック
     │   └── useSpeechRecognition.ts # Web Speech API 音声認識共通フック
     ├── services/                 # 外部連携サービス層
     │   ├── ai/                   # Gemini API モジュール群
     │   │   ├── client.ts         # GoogleGenAI クライアント初期化・モデル管理
     │   │   ├── chat.js           # 会話ロールプレイ・ヒント・診断レポート生成
+    │   │   ├── coach.ts          # リアルタイムAIコーチ（文脈に応じた日本語質問・回答・フレーズ提案）
     │   │   ├── shadowing.js      # シャドーイング発話精度判定
     │   │   ├── blitz.js          # 瞬間英作文 AI お題自動生成
-    │   │   └── news.js           # Grounding ニュースシナリオ動的生成
+    │   │   ├── news.js           # Grounding ニュースシナリオ動的生成
+    │   │   └── __tests__/        # AI サービス単体テスト
     │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ ローカルフォールバック
     │   ├── gemini.js             # Gemini AI サービス統括エントリポイント
-    │   └── speech.js             # Web Speech API (音声合成・重複再生防止)
+    │   ├── speech.js             # Web Speech API (音声合成・重複再生防止)
+    │   └── __tests__/            # サービス層単体テスト
     ├── data/                     # プリセットデータ・マスター定義
     │   ├── situations.ts         # 会話シチュエーション＆フォールバック定義
     │   ├── shadowingTopics.js    # シャドーイングテーマカテゴリ定義
     │   └── shadowingScripts.js   # シャドーイング英文スクリプト定義
     ├── types/                    # TypeScript 型定義
-    │   └── index.ts              # アプリ全体の型定義 (Situation, Shadowing, Blitz 等)
+    │   └── index.ts              # アプリ全体の型定義 (Situation, Shadowing, Blitz, Coach 等)
     ├── utils/                    # ユーティリティ
     │   ├── jsonRepair.js         # Safe JSON Self-Healing パース関数
     │   ├── textMatcher.js        # テキスト正規化・単語一致率計算ユーティリティ
