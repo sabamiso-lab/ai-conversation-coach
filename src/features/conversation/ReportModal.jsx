@@ -3,6 +3,7 @@ import { Award, BookOpen, RotateCcw } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import LoadingState from '../../components/common/LoadingState';
 import Alert from '../../components/common/Alert';
+import FeedbackGrid from '../../components/common/FeedbackGrid';
 
 export default function ReportModal({ isOpen, onClose, report, loading, error, onRestart, onRetry }) {
   if (!isOpen) return null;
@@ -87,29 +88,13 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
             </div>
 
             {/* Strengths & Improvements */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '14px', borderRadius: '12px' }}>
-                <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#047857', marginBottom: '8px' }}>
-                  💪 良かった点
-                </div>
-                {report.strengthsJa?.map((s, i) => (
-                  <div key={i} style={{ fontSize: '0.82rem', color: '#065F46', marginTop: '4px' }}>
-                    • {s}
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '14px', borderRadius: '12px' }}>
-                <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#B45309', marginBottom: '8px' }}>
-                  🎯 次回の改善ポイント
-                </div>
-                {report.improvementsJa?.map((imp, i) => (
-                  <div key={i} style={{ fontSize: '0.82rem', color: '#92400E', marginTop: '4px' }}>
-                    • {imp}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <FeedbackGrid
+              strengths={report.strengthsJa}
+              improvements={report.improvementsJa}
+              strengthsTitle="💪 良かった点"
+              improvementsTitle="🎯 次回の改善ポイント"
+              style={{ marginBottom: '20px' }}
+            />
 
             {/* Key Phrases */}
             {report.keyPhrases?.length > 0 && (

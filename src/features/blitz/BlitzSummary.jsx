@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, Zap, Target, Clock, Sparkles } from 'lucide-react';
-import { speakText } from '../../services/speech';
+import { Trophy, RotateCcw, CheckCircle2, XCircle, Zap, Target, Clock, Sparkles } from 'lucide-react';
 import StatCard from '../../components/common/StatCard';
+import AudioPlayButton from '../../components/common/AudioPlayButton';
 
 export default function BlitzSummary({
   summaryData,
@@ -125,13 +125,13 @@ export default function BlitzSummary({
                   <span className="item-num font-mono">Q{idx + 1}</span>
                 </div>
 
-                <button
+                <AudioPlayButton
+                  text={item.question.answer}
+                  variant="icon"
                   className="btn btn-icon btn-secondary btn-xs"
-                  onClick={() => speakText(item.question.answer)}
                   title="模範音声を再生"
-                >
-                  <Volume2 size={16} />
-                </button>
+                  iconSize={16}
+                />
               </div>
 
               <div className="item-body mt-2">

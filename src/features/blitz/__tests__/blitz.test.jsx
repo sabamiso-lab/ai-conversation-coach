@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { PRESET_BLITZ_TOPICS, RANDOM_BLITZ_TOPICS, getRandomBlitzTopic } from '../blitzTopics';
 import BlitzTopicSelector from '../BlitzTopicSelector';
@@ -190,7 +190,7 @@ describe('Instant Oral Blitz Feature', () => {
 
       const handleComplete = vi.fn();
 
-      const { container } = render(
+      render(
         <BlitzSession
           title="AIテスト"
           questions={mockQuestions}

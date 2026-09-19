@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Play, Square, 
   ArrowLeft, Sparkles, Eye, EyeOff, 
-  Gauge, Repeat, Award, Lightbulb, Loader2 
+  Lightbulb, Loader2 
 } from 'lucide-react';
 import MicButton from '../../components/common/MicButton';
 import Alert from '../../components/common/Alert';
+import ShadowingAudioControls from './ShadowingAudioControls';
+import ShadowingEvaluationCard from './ShadowingEvaluationCard';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
@@ -192,74 +193,14 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
         </div>
 
         {/* Player Controls Bar */}
-        <div 
-          className="player-controls-wrap"
-          style={{
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '16px',
-            padding: '14px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-            marginBottom: '20px'
-          }}
-        >
-          {/* Play/Stop Button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              className={`btn ${isPlaying ? 'btn-accent' : 'btn-primary'}`}
-              onClick={handlePlayAudio}
-              style={{ padding: '8px 16px', borderRadius: '9999px', fontSize: '0.9rem' }}
-            >
-              {isPlaying ? <><Square size={16} /> 音声停止</> : <><Play size={16} /> お手本再生</>}
-            </button>
-
-            <button
-              className={`btn ${isLooping ? 'btn-secondary' : 'btn-ghost'}`}
-              onClick={() => setIsLooping(!isLooping)}
-              style={{
-                color: isLooping ? '#4F46E5' : '#64748B',
-                borderColor: isLooping ? '#818CF8' : 'transparent',
-                fontWeight: 600,
-                padding: '8px 12px',
-                fontSize: '0.84rem'
-              }}
-              title="リピート再生モード"
-            >
-              <Repeat size={15} /> リピート {isLooping ? 'ON' : 'OFF'}
-            </button>
-          </div>
-
-          {/* Speed Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Gauge size={14} /> 速度:
-            </span>
-            {[0.7, 0.85, 1.0, 1.2].map(speed => (
-              <button
-                key={speed}
-                onClick={() => setPlaybackSpeed(speed)}
-                style={{
-                  background: playbackSpeed === speed ? '#4F46E5' : '#FFFFFF',
-                  color: playbackSpeed === speed ? '#FFFFFF' : '#475569',
-                  border: '1px solid',
-                  borderColor: playbackSpeed === speed ? '#4F46E5' : '#CBD5E1',
-                  borderRadius: '6px',
-                  padding: '3px 8px',
-                  fontSize: '0.76rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {speed === 1.0 ? '1.0x' : `${speed}x`}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ShadowingAudioControls
+          isPlaying={isPlaying}
+          isLooping={isLooping}
+          playbackSpeed={playbackSpeed}
+          onPlayToggle={handlePlayAudio}
+          onLoopToggle={() => setIsLooping(!isLooping)}
+          onSpeedChange={setPlaybackSpeed}
+        />
 
         {/* Display Mode Toggles */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
@@ -414,46 +355,7 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
           )}
 
           {/* Evaluation Result Feedback Card */}
-          {evalResult && (
-            <div style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 100%)', border: '1px solid #C7D2FE', borderRadius: '16px', padding: '24px', animation: 'fadeIn 0.3s ease-out' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, color: '#3730A3', fontSize: '1.05rem' }}>
-                  <Award size={22} color="#4F46E5" /> AI Coach 発音・シャドーイング評価
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#4F46E5' }}>
-                  {evalResult.score}<span style={{ fontSize: '1rem', color: '#6366F1' }}>点</span>
-                </div>
-              </div>
-
-              <p style={{ fontSize: '0.92rem', color: '#1E1B4B', lineHeight: 1.6, marginBottom: '16px', background: '#FFFFFF', padding: '14px', borderRadius: '12px' }}>
-                💬 {evalResult.feedbackJa}
-              </p>
-
-              <div className="shadowing-eval-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-                <div style={{ background: '#ECFDF5', padding: '12px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#047857', marginBottom: '4px' }}>
-                    👍 良かった点
-                  </div>
-                  {evalResult.strengthsJa?.map((s, i) => (
-                    <div key={i} style={{ fontSize: '0.8rem', color: '#065F46', marginTop: '2px' }}>
-                      • {s}
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ background: '#FFFBEB', padding: '12px', borderRadius: '10px', border: '1px solid #FDE68A' }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#B45309', marginBottom: '4px' }}>
-                    🎯 さらに良くするポイント
-                  </div>
-                  {evalResult.improvementsJa?.map((imp, i) => (
-                    <div key={i} style={{ fontSize: '0.8rem', color: '#92400E', marginTop: '2px' }}>
-                      • {imp}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          <ShadowingEvaluationCard evalResult={evalResult} />
         </div>
       </div>
     </div>

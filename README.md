@@ -199,8 +199,8 @@ ai-conversation-coach/
     │   ├── ShadowingPage.jsx     # シャドーイング特訓画面
     │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面
     ├── features/                 # 機能別モジュール (コンポーネント・データ・テスト)
-    │   ├── conversation/         # 会話関連 (ChatRoom, SituationSelector, ReportModal, HintPanel etc.)
-    │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingSelector)
+    │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, SituationSelector, ReportModal, HintPanel etc.)
+    │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingAudioControls, ShadowingEvaluationCard, ShadowingSelector)
     │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js)
     ├── components/               # 共通 UI コンポーネント
     │   └── common/
@@ -216,6 +216,9 @@ ai-conversation-coach/
     │       ├── SuggestionChips.jsx # 話題例クイック選択チップス
     │       ├── Alert.jsx         # 汎用インラインアラート (error, warning, info, success)
     │       ├── StatCard.jsx      # 統計・スコア表示カード
+    │       ├── FeedbackGrid.jsx  # AI診断フィードバック表示 (良かった点・改善点グリッド)
+    │       ├── NewsCitation.jsx  # Grounding ニュース出典表示 (カード形式 / バッジ形式)
+    │       ├── AudioPlayButton.jsx # 英文音声読み上げ (TTS) 統一ボタン (ラベル付き / アイコン形式)
     │       └── __tests__/        # 共通コンポーネント単体テスト
     ├── contexts/                 # React Context
     │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理

@@ -3,7 +3,6 @@ import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported
 import {
   Mic,
   MicOff,
-  Volume2,
   CheckCircle,
   XCircle,
   RotateCcw,
@@ -16,6 +15,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
+import AudioPlayButton from '../../components/common/AudioPlayButton';
 import { calculateTextMatchScore } from '../../utils/textMatcher';
 import { evaluateBlitzSpeech } from '../../services/gemini';
 
@@ -250,10 +250,6 @@ export default function BlitzSession({
     }
   };
 
-  const handlePlaySpeech = () => {
-    speakText(currentQuestion.answer, { rate: 0.95 });
-  };
-
   const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
   const timerPercent = timerSeconds > 0 ? (timeLeft / timerSeconds) * 100 : 100;
   const fullUserText = `${userTranscript} ${interimTranscript}`.trim();
@@ -406,13 +402,14 @@ export default function BlitzSession({
             <div className="answer-card">
               <div className="answer-header">
                 <span className="answer-label">✅ 模範解答 (Target Answer)</span>
-                <button
+                <AudioPlayButton
+                  text={currentQuestion.answer}
+                  rate={0.95}
+                  variant="icon"
                   className="btn btn-icon btn-secondary"
-                  onClick={handlePlaySpeech}
                   title="ネイティブ音声再生"
-                >
-                  <Volume2 size={18} />
-                </button>
+                  iconSize={18}
+                />
               </div>
               <h3 className="answer-english-text">{currentQuestion.answer}</h3>
 

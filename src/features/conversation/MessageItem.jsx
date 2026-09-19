@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { Volume2, Languages, Sparkles, User, Bot, Zap } from 'lucide-react';
-import { speakText } from '../../services/speech';
+import { Languages, Sparkles, User, Bot, Zap } from 'lucide-react';
+import AudioPlayButton from '../../components/common/AudioPlayButton';
 
 export default function MessageItem({ message }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const isUser = message.role === 'user';
-
-  const handleSpeak = () => {
-    speakText(message.text, { lang: 'en-US' });
-  };
 
   // Determine badge style
   const getBadgeClass = (status) => {
@@ -36,26 +32,23 @@ export default function MessageItem({ message }) {
 
         {/* Translation Toggle & Audio Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-          <button
-            onClick={handleSpeak}
+          <AudioPlayButton
+            text={message.text}
+            lang="en-US"
+            iconSize={14}
+            label="聴く"
+            title="音声を聞く"
             style={{
               background: isUser ? 'rgba(255, 255, 255, 0.2)' : '#F1F5F9',
               border: 'none',
               borderRadius: '6px',
-              cursor: 'pointer',
               color: isUser ? '#FFFFFF' : '#475569',
               padding: '4px 8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
               fontSize: '0.78rem',
               fontWeight: 700,
               transition: 'all 0.2s ease'
             }}
-            title="音声を聞く"
-          >
-            <Volume2 size={14} /> 聴く
-          </button>
+          />
 
           {(message.translation || message.userTextTranslation) && (
             <button

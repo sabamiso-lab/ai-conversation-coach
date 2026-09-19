@@ -4,7 +4,7 @@ import { generateNewsSituation } from '../../services/gemini';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
   ArrowRight, Target, Loader2, Globe, 
-  ExternalLink, Zap, Newspaper
+  Zap, Newspaper
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
@@ -12,6 +12,7 @@ import LoadingState from '../../components/common/LoadingState';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
 import AiGeneratorCard from '../../components/common/AiGeneratorCard';
 import Alert from '../../components/common/Alert';
+import NewsCitation from '../../components/common/NewsCitation';
 
 const ICON_MAP = {
   Coffee,
@@ -336,31 +337,7 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
                   </p>
 
                   {/* News Citation Link if available */}
-                  {sit.newsSource && (
-                    <div style={{ marginTop: '8px', marginBottom: '12px' }}>
-                      <a
-                        href={sit.newsSource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          color: '#4F46E5',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          textDecoration: 'none',
-                          background: '#EEF2FF',
-                          padding: '4px 8px',
-                          borderRadius: '6px'
-                        }}
-                        title="元ニュース記事を読む"
-                      >
-                        <ExternalLink size={12} /> 出典: {sit.newsSource.title.slice(0, 35)}...
-                      </a>
-                    </div>
-                  )}
+                  <NewsCitation newsSource={sit.newsSource} variant="badge" />
 
                   <div className="goals-list">
                     <div className="goals-title">

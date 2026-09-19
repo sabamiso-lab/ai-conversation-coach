@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, Send, Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, ExternalLink, Globe, Target } from 'lucide-react';
+import { Lightbulb, Flag, Sparkles, AlertCircle, ArrowLeft, Target } from 'lucide-react';
 import Modal from '../../components/common/Modal';
-import MicButton from '../../components/common/MicButton';
+import NewsCitation from '../../components/common/NewsCitation';
 import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
+import ChatSidebar from './ChatSidebar';
+import ChatInputBar from './ChatInputBar';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useChatSession } from '../../hooks/useChatSession';
@@ -190,109 +192,18 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
           </div>
 
           {/* Input Controls Bar */}
-          <div className="chat-controls">
-            {/* Status indicator */}
-            <div style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', color: isRecording ? '#E11D48' : '#64748B', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isRecording ? (
-                <>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E', display: 'inline-block', flexShrink: 0, animation: 'pulseMic 1s infinite' }} />
-                  <span>🎙️ 音声認識中... 英語で発話してください</span>
-                </>
-              ) : (
-                <>
-                  <Mic size={14} style={{ flexShrink: 0 }} />
-                  <span>マイクを押すかテキストを入力してください</span>
-                </>
-              )}
-            </div>
-
-            <div className="input-row">
-              <MicButton
-                isRecording={isRecording}
-                onClick={toggleRecording}
-                iconSize={24}
-              />
-
-              <input
-                type="text"
-                className="input-field"
-                placeholder={isRecording ? "音声認識中..." : "英語でメッセージを入力..."}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                disabled={isAiThinking}
-              />
-
-              <button 
-                className="btn btn-primary btn-send-chat"
-                onClick={() => handleSendMessage()}
-                disabled={!inputText.trim() || isAiThinking}
-                style={{ borderRadius: '9999px' }}
-              >
-                <Send size={18} />
-              </button>
-            </div>
-          </div>
+          <ChatInputBar
+            inputText={inputText}
+            onInputChange={setInputText}
+            onSendMessage={handleSendMessage}
+            isRecording={isRecording}
+            onToggleRecording={toggleRecording}
+            isAiThinking={isAiThinking}
+          />
         </div>
 
         {/* Right Sidebar Info Panel */}
-        <div className="sidebar-panel">
-          {situation.newsSource && (
-            <div className="info-card" style={{ background: '#F5F3FF', borderColor: '#DDD6FE' }}>
-              <div className="info-title" style={{ color: '#5B21B6', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Globe size={16} /> 関連ニュース記事 (Grounding)
-              </div>
-              <div style={{ fontSize: '0.82rem', color: '#4C1D95', marginBottom: '8px', fontWeight: 600 }}>
-                {situation.newsSource.title}
-              </div>
-              <a
-                href={situation.newsSource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '0.78rem',
-                  color: '#4F46E5',
-                  fontWeight: 700,
-                  textDecoration: 'underline'
-                }}
-              >
-                <ExternalLink size={12} /> 元ニュース記事を開く
-              </a>
-            </div>
-          )}
-
-          <div className="info-card">
-            <div className="info-title">
-              会話シナリオ目標
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '12px' }}>
-              {situation.descriptionJa}
-            </div>
-
-            <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#64748B', uppercase: 'true', marginBottom: '8px' }}>
-              MISSION GOALS
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {situation.goals.map((g, i) => (
-                <div key={i} style={{ fontSize: '0.82rem', color: '#1E293B', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                  <span style={{ color: '#4F46E5', fontWeight: 800 }}>✓</span> {g}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="info-card" style={{ background: '#EEF2FF', borderColor: '#C7D2FE' }}>
-            <div className="info-title" style={{ color: '#3730A3' }}>
-              💡 学習アドバイス
-            </div>
-            <p style={{ fontSize: '0.82rem', color: '#4338CA', lineHeight: 1.5 }}>
-              完璧な英文を話そうと焦る必要はありません！間違えてもAIがネイティブらしい自然な言い回しをその場でアドバイスしてくれます。
-            </p>
-          </div>
-        </div>
+        <ChatSidebar situation={situation} />
       </div>
 
       {/* Hint Modal */}
@@ -321,32 +232,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {situation.newsSource && (
-            <div className="info-card" style={{ background: '#F5F3FF', borderColor: '#DDD6FE' }}>
-              <div className="info-title" style={{ color: '#5B21B6', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Globe size={16} /> 関連ニュース記事 (Grounding)
-              </div>
-              <div style={{ fontSize: '0.85rem', color: '#4C1D95', marginBottom: '8px', fontWeight: 600 }}>
-                {situation.newsSource.title}
-              </div>
-              <a
-                href={situation.newsSource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '0.8rem',
-                  color: '#4F46E5',
-                  fontWeight: 700,
-                  textDecoration: 'underline'
-                }}
-              >
-                <ExternalLink size={12} /> 元ニュース記事を開く
-              </a>
-            </div>
-          )}
+          <NewsCitation newsSource={situation.newsSource} variant="card" />
 
           <div className="info-card">
             <div style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '12px', fontWeight: 600 }}>
