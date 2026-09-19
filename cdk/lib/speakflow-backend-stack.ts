@@ -7,6 +7,7 @@ import * as apigw2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigw2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as path from 'path';
+import { SITUATIONS, Situation } from '../../src/data/situations';
 
 export interface SpeakFlowBackendStackProps extends cdk.StackProps {
   apiKeyValue?: string;
@@ -113,98 +114,21 @@ export class SpeakFlowBackendStack extends cdk.Stack {
     this.apiUrl = httpApi.apiEndpoint;
 
     // 4. Custom Resource to Seed Initial Situations into DynamoDB on deploy
-    const seedData = [
-      {
-        id: { S: 'cafe-order' },
-        title: { S: 'Cafe Coffee Order' },
-        titleJa: { S: 'カフェでの注文' },
-        category: { S: 'Daily' },
-        icon: { S: 'Coffee' },
-        difficulty: { S: 'Beginner' },
-        systemRole: { S: 'Friendly Barista at "Green Mountain Coffee"' },
-        userRole: { S: 'Customer wanting to order a coffee and a pastry' },
-        description: { S: 'Order your favorite drink, specify size/milk preference, and pay.' },
-        descriptionJa: { S: 'お気に入りのドリンクの注文、ミルクやサイズの指定、会計を行います。' },
-        initialMessage: { S: 'Hi there! Welcome to Green Mountain Coffee. What can I get started for you today?' },
-        initialMessageJa: { S: 'いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？' },
-        goals: { SS: ['Order a drink with specific modifications (e.g. oat milk, extra shot)', 'Order something to eat', 'Ask for the price and pay'] }
-      },
-      {
-        id: { S: 'airport-checkin' },
-        title: { S: 'Airport Check-In' },
-        titleJa: { S: '空港でのチェックイン' },
-        category: { S: 'Travel' },
-        icon: { S: 'Plane' },
-        difficulty: { S: 'Beginner' },
-        systemRole: { S: 'Airline Gate Agent at SkyWay Airlines' },
-        userRole: { S: 'Passenger checking in for an international flight to New York' },
-        description: { S: 'Show your passport, check your luggage, and request a window seat.' },
-        descriptionJa: { S: 'パスポートの提示、受託手荷物の預け入れ、座席（窓側など）のリクエストを行います。' },
-        initialMessage: { S: 'Good morning! Welcome to SkyWay Airlines. May I see your passport and booking reference, please?' },
-        initialMessageJa: { S: 'おはようございます！スカイウェイ航空へようこそ。パスポートと予約番号を拝見できますか？' },
-        goals: { SS: ['Present passport and booking details', 'Check in luggage', 'Request seat preference (Window or Aisle)'] }
-      },
-      {
-        id: { S: 'hotel-checkin' },
-        title: { S: 'Hotel Check-In & Request' },
-        titleJa: { S: 'ホテルチェックインと要望' },
-        category: { S: 'Travel' },
-        icon: { S: 'Building' },
-        difficulty: { S: 'Intermediate' },
-        systemRole: { S: 'Front Desk Manager at Grand Horizon Hotel' },
-        userRole: { S: 'Guest checking in and requesting a quiet high-floor room with extra towels' },
-        description: { S: 'Complete check-in process, ask about breakfast time, and make special requests.' },
-        descriptionJa: { S: 'チェックイン手続き、朝食時間・Wi-Fiパスワードの確認、高層階のリクエストを行います。' },
-        initialMessage: { S: 'Welcome to the Grand Horizon Hotel. How may I assist you this afternoon?' },
-        initialMessageJa: { S: 'グランドホライゾンホテルへようこそ。本日はどのようなご用件でしょうか？' },
-        goals: { SS: ['Give reservation name & check-in', 'Inquire about breakfast hours and Wi-Fi', 'Request a high floor or quiet room'] }
-      },
-      {
-        id: { S: 'business-meeting' },
-        title: { S: 'Project Status Update' },
-        titleJa: { S: 'ビジネスプロジェクト進捗会議' },
-        category: { S: 'Business' },
-        icon: { S: 'Briefcase' },
-        difficulty: { S: 'Intermediate' },
-        systemRole: { S: 'Project Manager (Alex) reviewing quarterly milestone progress' },
-        userRole: { S: 'Lead Developer reporting progress and raising a small budget issue' },
-        description: { S: 'Give a brief update on your tasks, discuss roadblocks, and negotiate timeline.' },
-        descriptionJa: { S: '担当タスクの進捗報告、課題・ボトルネックの共有、スケジュール交渉を行います。' },
-        initialMessage: { S: "Thanks for joining, everyone. Let's start with our tech status. Could you give us a quick update on your team's milestone?" },
-        initialMessageJa: { S: "皆さん参加ありがとうございます。それでは技術チームの進捗から始めましょう。あなたのチームのマイルストーンについて簡単な進捗報告をお願いできますか？" },
-        goals: { SS: ['Summarize recent accomplishments clearly', 'Explain a current technical issue or delay', 'Propose a practical timeline adjustment'] }
-      },
-      {
-        id: { S: 'job-interview' },
-        title: { S: 'Job Interview Simulation' },
-        titleJa: { S: '英語ジョブインタビュー（採用面接）' },
-        category: { S: 'Business' },
-        icon: { S: 'Award' },
-        difficulty: { S: 'Advanced' },
-        systemRole: { S: 'Senior Hiring Manager evaluating a candidate for a Global Marketing/Tech Role' },
-        userRole: { S: 'Job Applicant highlighting experience, strengths, and handling behavioral questions' },
-        description: { S: 'Answer background questions, explain a past challenge, and ask smart questions.' },
-        descriptionJa: { S: '自己紹介、過去の困難の克服経験（STAR法）、逆質問に応答します。' },
-        initialMessage: { S: "Thank you for coming in today. To kick things off, could you tell me a little bit about yourself and why you're interested in this position?" },
-        initialMessageJa: { S: "本日はお越しいただきありがとうございます。まずは自己紹介と、この職種に応募した理由を教えていただけますか？" },
-        goals: { SS: ['Give a concise 1-minute self-introduction', 'Describe a past challenge and how you solved it', 'Ask 1-2 insightful questions about team culture or strategy'] }
-      },
-      {
-        id: { S: 'free-talk' },
-        title: { S: 'Free Talk & Friendly Chat' },
-        titleJa: { S: '自由なフリートーク' },
-        category: { S: 'Casual' },
-        icon: { S: 'MessageSquare' },
-        difficulty: { S: 'Casual' },
-        systemRole: { S: 'Friendly, encouraging conversational partner who loves travel, technology, movies, and food' },
-        userRole: { S: 'Conversationalist sharing thoughts and asking questions' },
-        description: { S: 'Enjoy open-ended conversation about your hobbies, weekend plans, or any topic.' },
-        descriptionJa: { S: '趣味や旅行、映画、日常の出来事について自由にディスカッションします。' },
-        initialMessage: { S: 'Hey there! Great to chat with you today. How has your week been going so far?' },
-        initialMessageJa: { S: 'こんにちは！今日はお話しできて嬉しいです。今週はどのように過ごされていますか？' },
-        goals: { SS: ['Share what you did recently or your weekend plans', 'Ask the AI a question about a favorite topic', 'Keep the conversation flowing smoothly'] }
-      }
-    ];
+    const seedData = SITUATIONS.map((sit: Situation) => ({
+      id: { S: sit.id },
+      title: { S: sit.title },
+      titleJa: { S: sit.titleJa },
+      category: { S: sit.category },
+      icon: { S: sit.icon },
+      difficulty: { S: sit.difficulty },
+      systemRole: { S: sit.systemRole },
+      userRole: { S: sit.userRole },
+      description: { S: sit.description },
+      descriptionJa: { S: sit.descriptionJa },
+      initialMessage: { S: sit.initialMessage },
+      initialMessageJa: { S: sit.initialMessageJa },
+      goals: { SS: sit.goals },
+    }));
 
     const seedCustomResource = new cr.AwsCustomResource(this, 'SeedSituationsData', {
       onCreate: {

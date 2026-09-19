@@ -9,7 +9,6 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "seed": "ts-node scripts/seed.ts",
     "test": "vitest run"
   },
   "devDependencies": {

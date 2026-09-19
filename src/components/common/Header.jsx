@@ -95,5 +95,3 @@ export default function Header({ onOpenApiKeyModal, hasApiKey, selectedSituation
     </>
   );
 }
-
-

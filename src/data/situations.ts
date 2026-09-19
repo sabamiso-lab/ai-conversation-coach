@@ -1,4 +1,20 @@
-export const SITUATIONS = [
+export interface Situation {
+  id: string;
+  title: string;
+  titleJa: string;
+  category: string;
+  icon: string;
+  difficulty: string;
+  systemRole: string;
+  userRole: string;
+  description: string;
+  descriptionJa: string;
+  initialMessage: string;
+  initialMessageJa: string;
+  goals: string[];
+}
+
+export const SITUATIONS: Situation[] = [
   {
     id: 'cafe-order',
     title: 'Cafe Coffee Order',

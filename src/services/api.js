@@ -1,6 +1,17 @@
 import { SITUATIONS } from '../data/situations';
 
 /**
+ * Safely parse goals field from various DynamoDB attribute formats
+ */
+function parseGoals(goals) {
+  if (Array.isArray(goals)) return goals;
+  if (goals instanceof Set) return Array.from(goals);
+  if (goals?.SS && Array.isArray(goals.SS)) return goals.SS;
+  if (goals && typeof goals === 'object') return Object.values(goals).flat();
+  return [];
+}
+
+/**
  * Fetch list of roleplay situations from AWS DynamoDB API.
  * Automatically falls back to local SITUATIONS array if offline, API not set, or error occurs.
  */
@@ -59,17 +70,8 @@ export async function fetchSituations() {
         initialMessageJa: item.initialMessageJa,
         isNews: Boolean(item.isNews),
         expiresAt: item.expiresAt,
-        newsSource: item.newsSource || null,
         newsCategory: item.newsCategory || null,
-        goals: Array.isArray(item.goals)
-          ? item.goals
-          : item.goals instanceof Set
-          ? Array.from(item.goals)
-          : item.goals?.SS && Array.isArray(item.goals.SS)
-          ? item.goals.SS
-          : item.goals && typeof item.goals === 'object'
-          ? Object.values(item.goals).flat()
-          : [],
+        goals: parseGoals(item.goals),
       }));
 
     return { data: formattedSituations, isFallback: false };
