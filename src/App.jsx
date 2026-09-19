@@ -1,96 +1,100 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SettingsProvider } from './contexts/SettingsContext';
+import { useSettings } from './hooks/useSettings';
 import Header from './components/common/Header';
 import ApiKeyModal from './components/common/ApiKeyModal';
 import ConversationPage from './pages/ConversationPage';
 import ShadowingPage from './pages/ShadowingPage';
 import InstantBlitzPage from './pages/InstantBlitzPage';
 
-const STORAGE_KEY = 'gemini_api_key_speakflow';
-const STORAGE_MODEL_KEY = 'gemini_model_speakflow';
-
-export default function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(STORAGE_KEY) || '');
-  const [model, setModel] = useState(() => localStorage.getItem(STORAGE_MODEL_KEY) || 'gemini-3.5-flash-lite');
-  const [selectedSituation, setSelectedSituation] = useState(null);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(() => !localStorage.getItem(STORAGE_KEY));
-
-  const handleSaveApiKey = (newKey) => {
-    setApiKey(newKey);
-    localStorage.setItem(STORAGE_KEY, newKey);
-  };
-
-  const handleSaveModel = (newModel) => {
-    setModel(newModel);
-    localStorage.setItem(STORAGE_MODEL_KEY, newModel);
-  };
+function AppContent() {
+  const {
+    apiKey,
+    model,
+    selectedSituation,
+    setSelectedSituation,
+    isApiKeyModalOpen,
+    saveApiKey,
+    saveModel,
+    openApiKeyModal,
+    closeApiKeyModal
+  } = useSettings();
 
   return (
-    <HashRouter>
-      <div className="app-layout">
-        <Header
-          onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-          hasApiKey={Boolean(apiKey)}
-          selectedSituation={selectedSituation}
-          onResetSession={() => setSelectedSituation(null)}
-        />
+    <div className="app-layout">
+      <Header
+        onOpenApiKeyModal={openApiKeyModal}
+        hasApiKey={Boolean(apiKey)}
+        selectedSituation={selectedSituation}
+        onResetSession={() => setSelectedSituation(null)}
+      />
 
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <ConversationPage
-                  selectedSituation={selectedSituation}
-                  onSelectSituation={(sit) => setSelectedSituation(sit)}
-                  apiKey={apiKey}
-                  model={model}
-                  onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-                  onResetSession={() => setSelectedSituation(null)}
-                />
-              } 
-            />
-            <Route 
-              path="/conversation" 
-              element={<Navigate to="/" replace />} 
-            />
-            <Route 
-              path="/shadowing" 
-              element={
-                <ShadowingPage
-                  apiKey={apiKey}
-                  model={model}
-                  onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-                />
-              } 
-            />
-            <Route 
-              path="/blitz" 
-              element={
-                <InstantBlitzPage
-                  apiKey={apiKey}
-                  model={model}
-                  onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-                />
-              } 
-            />
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <ConversationPage
+                selectedSituation={selectedSituation}
+                onSelectSituation={(sit) => setSelectedSituation(sit)}
+                apiKey={apiKey}
+                model={model}
+                onOpenApiKeyModal={openApiKeyModal}
+                onResetSession={() => setSelectedSituation(null)}
+              />
+            } 
+          />
+          <Route 
+            path="/conversation" 
+            element={<Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/shadowing" 
+            element={
+              <ShadowingPage
+                apiKey={apiKey}
+                model={model}
+                onOpenApiKeyModal={openApiKeyModal}
+              />
+            } 
+          />
+          <Route 
+            path="/blitz" 
+            element={
+              <InstantBlitzPage
+                apiKey={apiKey}
+                model={model}
+                onOpenApiKeyModal={openApiKeyModal}
+              />
+            } 
+          />
 
-            <Route 
-              path="*" 
-              element={<Navigate to="/" replace />} 
-            />
-          </Routes>
-        </main>
+          <Route 
+            path="*" 
+            element={<Navigate to="/" replace />} 
+          />
+        </Routes>
+      </main>
 
-        <ApiKeyModal
-          isOpen={isApiKeyModalOpen}
-          onClose={() => setIsApiKeyModalOpen(false)}
-          apiKey={apiKey}
-          onSaveKey={handleSaveApiKey}
-          currentModel={model}
-          onSaveModel={handleSaveModel}
-        />
-      </div>
-    </HashRouter>
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={closeApiKeyModal}
+        apiKey={apiKey}
+        onSaveKey={saveApiKey}
+        currentModel={model}
+        onSaveModel={saveModel}
+      />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <SettingsProvider>
+      <HashRouter>
+        <AppContent />
+      </HashRouter>
+    </SettingsProvider>
   );
 }

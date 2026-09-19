@@ -1,13 +1,57 @@
 export const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
+export interface GeminiContentPart {
+  text: string;
+}
+
+export interface GeminiContent {
+  role?: 'user' | 'model';
+  parts: GeminiContentPart[];
+}
+
+export interface GeminiGroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: { renderedContent: string };
+  groundingChunks?: Array<{ web?: { uri: string; title: string } }>;
+  groundingSupports?: Array<unknown>;
+}
+
+export interface GeminiApiResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: GeminiContentPart[];
+    };
+    groundingMetadata?: GeminiGroundingMetadata;
+  }>;
+  error?: {
+    message?: string;
+    code?: number;
+  };
+}
+
 /**
  * Call Gemini API endpoint
  */
-export async function callGeminiApi(apiKey, model, systemInstruction, contents, responseSchema = null) {
+export async function callGeminiApi(
+  apiKey: string,
+  model: string | undefined,
+  systemInstruction: string,
+  contents: GeminiContent[],
+  responseSchema: object | null = null
+): Promise<string> {
   const modelName = model || DEFAULT_MODEL;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-  const payload = {
+  const payload: {
+    contents: GeminiContent[];
+    systemInstruction: { parts: GeminiContentPart[] };
+    generationConfig: {
+      temperature: number;
+      maxOutputTokens: number;
+      responseMimeType?: string;
+      responseSchema?: object;
+    };
+  } = {
     contents: contents,
     systemInstruction: {
       parts: [{ text: systemInstruction }]
@@ -30,12 +74,12 @@ export async function callGeminiApi(apiKey, model, systemInstruction, contents, 
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: GeminiApiResponse = await response.json().catch(() => ({}));
     const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
     throw new Error(message);
   }
 
-  const data = await response.json();
+  const data: GeminiApiResponse = await response.json();
   const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!textResponse) {
     throw new Error("No response received from Gemini API.");
@@ -47,7 +91,11 @@ export async function callGeminiApi(apiKey, model, systemInstruction, contents, 
 /**
  * Call Gemini API with Google Search Grounding enabled
  */
-export async function callGeminiApiWithGrounding(apiKey, model, prompt) {
+export async function callGeminiApiWithGrounding(
+  apiKey: string,
+  model: string | undefined,
+  prompt: string
+): Promise<{ text: string; groundingMetadata: GeminiGroundingMetadata | null }> {
   const modelName = model || DEFAULT_MODEL;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
@@ -73,12 +121,12 @@ export async function callGeminiApiWithGrounding(apiKey, model, prompt) {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: GeminiApiResponse = await response.json().catch(() => ({}));
     const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
     throw new Error(message);
   }
 
-  const data = await response.json();
+  const data: GeminiApiResponse = await response.json();
   const candidate = data.candidates?.[0];
   const textResponse = candidate?.content?.parts?.[0]?.text;
 

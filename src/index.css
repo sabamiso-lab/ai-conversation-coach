@@ -1697,4 +1697,23 @@ body {
   }
 }
 
+/* ==========================================================================
+   Utility Helpers
+   ========================================================================== */
+.flex-1 { flex: 1; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-row { display: flex; flex-direction: row; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.gap-xs { gap: 4px; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 12px; }
+.gap-lg { gap: 16px; }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--primary); }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+
+
 

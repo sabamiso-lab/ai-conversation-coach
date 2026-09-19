@@ -1,8 +1,15 @@
 import { useState, useCallback } from 'react';
 import { sendChatMessage, getHintSuggestions, generateSessionReport } from '../services/gemini';
+import { Situation, ChatMessage, HintSuggestion, SessionReport } from '../types';
 
-export function useChatSession({ situation, apiKey, model }) {
-  const [messages, setMessages] = useState(() => {
+interface UseChatSessionOptions {
+  situation: Situation;
+  apiKey: string;
+  model: string;
+}
+
+export function useChatSession({ situation, apiKey, model }: UseChatSessionOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (situation?.initialMessage) {
       return [{
         id: 'msg-0',
@@ -19,16 +26,16 @@ export function useChatSession({ situation, apiKey, model }) {
 
   // Hint State
   const [isHintOpen, setIsHintOpen] = useState(false);
-  const [hints, setHints] = useState([]);
+  const [hints, setHints] = useState<HintSuggestion[]>([]);
   const [isHintLoading, setIsHintLoading] = useState(false);
 
   // Report State
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportData, setReportData] = useState(null);
+  const [reportData, setReportData] = useState<SessionReport | null>(null);
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [reportError, setReportError] = useState('');
 
-  const sendMessage = useCallback(async (textToSend, onSuccessAiText) => {
+  const sendMessage = useCallback(async (textToSend?: string, onSuccessAiText?: (aiText: string) => void) => {
     const text = textToSend || inputText;
     if (!text.trim() || isAiThinking) return;
 
@@ -37,13 +44,13 @@ export function useChatSession({ situation, apiKey, model }) {
       return;
     }
 
-    const userMessage = {
+    const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       text: text.trim()
     };
 
-    let updatedMessages = [];
+    let updatedMessages: ChatMessage[] = [];
     setMessages(prev => {
       updatedMessages = [...prev, userMessage];
       return updatedMessages;
@@ -75,7 +82,7 @@ export function useChatSession({ situation, apiKey, model }) {
       } : m));
 
       // Append AI response
-      const newAiMessage = {
+      const newAiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'ai',
         text: aiResponse.aiResponseText,
@@ -88,9 +95,10 @@ export function useChatSession({ situation, apiKey, model }) {
         onSuccessAiText(aiResponse.aiResponseText);
       }
 
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("API error:", err);
-      setErrorMsg(err.message || "Gemini API の呼び出し中にエラーが発生しました。");
+      const message = err instanceof Error ? err.message : "Gemini API の呼び出し中にエラーが発生しました。";
+      setErrorMsg(message);
     } finally {
       setIsAiThinking(false);
     }
@@ -127,9 +135,9 @@ export function useChatSession({ situation, apiKey, model }) {
         history: messages
       });
       setReportData(report);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Report error:", err);
-      const msg = err.message || "評価レポートの作成に失敗しました。";
+      const msg = err instanceof Error ? err.message : "評価レポートの作成に失敗しました。";
       setReportError(msg);
       setErrorMsg(msg);
     } finally {

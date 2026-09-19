@@ -1,19 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SpeechRecognizer, isSpeechRecognitionSupported } from '../services/speech';
 
-/**
- * Web Speech API による音声認識を管理するカスタムフック
- *
- * @param {Object} options
- * @param {Function} options.onFinalResult - 最終的な認識テキストが得られた際のコールバック (finalText: string) => void
- * @param {Function} [options.onInterimResult] - 中間経過のテキストが得られた際のコールバック (interimText: string) => void
- * @param {Function} [options.onError] - エラー発生時のコールバック (errorMessage: string) => void
- * @param {string} [options.lang='en-US'] - 認識言語
- */
-export function useSpeechRecognition({ onFinalResult, onInterimResult, onError, lang = 'en-US' } = {}) {
+interface UseSpeechRecognitionOptions {
+  onFinalResult: (finalText: string) => void;
+  onInterimResult?: (interimText: string) => void;
+  onError?: (errorMessage: string) => void;
+  lang?: string;
+}
+
+export function useSpeechRecognition({
+  onFinalResult,
+  onInterimResult,
+  onError,
+  lang = 'en-US'
+}: UseSpeechRecognitionOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState('');
-  const recognizerRef = useRef(null);
+  const recognizerRef = useRef<SpeechRecognizer | null>(null);
 
   const onFinalResultRef = useRef(onFinalResult);
   const onInterimResultRef = useRef(onInterimResult);
