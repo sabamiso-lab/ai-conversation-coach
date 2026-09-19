@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, Zap, Target, Clock } from 'lucide-react';
+import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, Zap, Target, Clock, Sparkles } from 'lucide-react';
 import { speakText } from '../../services/speech';
 import StatCard from '../../components/common/StatCard';
 
@@ -20,6 +20,11 @@ export default function BlitzSummary({
   const avgTimePerQuestion = totalCount > 0
     ? (totalTimeSec / totalCount).toFixed(1)
     : 0;
+
+  const aiEvaluatedResults = results.filter((r) => r.aiEvaluation && typeof r.aiEvaluation.score === 'number');
+  const avgAiScore = aiEvaluatedResults.length > 0
+    ? Math.round(aiEvaluatedResults.reduce((acc, r) => acc + r.aiEvaluation.score, 0) / aiEvaluatedResults.length)
+    : null;
 
   const getEvaluationMessage = (score) => {
     if (score === 100) return '🎉 素晴らしい！全問即答クリアです！構文が頭にしっかり定着しています。';
@@ -53,11 +58,19 @@ export default function BlitzSummary({
             value={`${correctCount} / ${totalCount}`}
             label="正解 (言えた)"
           />
-          <StatCard
-            icon={<Clock size={20} className="text-blue-500" />}
-            value={`${totalTimeSec}s`}
-            label="合計タイム"
-          />
+          {avgAiScore !== null ? (
+            <StatCard
+              icon={<Sparkles size={20} className="text-indigo-500" />}
+              value={`${avgAiScore}点`}
+              label={`AI平均スコア (${aiEvaluatedResults.length}問)`}
+            />
+          ) : (
+            <StatCard
+              icon={<Clock size={20} className="text-blue-500" />}
+              value={`${totalTimeSec}s`}
+              label="合計タイム"
+            />
+          )}
           <StatCard
             icon={<Zap size={20} className="text-yellow-500" />}
             value={`${avgTimePerQuestion}s`}
@@ -130,6 +143,37 @@ export default function BlitzSummary({
                     🗣️ あなたの発話: <span className="font-mono">"{item.userSpeech}"</span>
                     {item.matchScore > 0 && (
                       <span className="match-score-tag ml-2 font-mono">({item.matchScore}% 一致)</span>
+                    )}
+                  </div>
+                )}
+
+                {/* AI 評価詳細 */}
+                {item.aiEvaluation && (
+                  <div className={`summary-ai-eval-box mt-3 status-${(item.aiEvaluation.status || '').toLowerCase()}`}>
+                    <div className="summary-ai-header">
+                      <div className="summary-ai-badge-group">
+                        <Sparkles size={14} className="text-indigo-600" />
+                        <span className="summary-ai-label font-bold">AI発話判定:</span>
+                        <span className={`ai-status-badge badge-${(item.aiEvaluation.status || '').toLowerCase()}`}>
+                          {item.aiEvaluation.statusLabelJa || (item.aiEvaluation.isCorrect ? '合格' : '要復習')}
+                        </span>
+                      </div>
+                      <span className="summary-ai-score font-mono font-bold">
+                        {item.aiEvaluation.score}点
+                      </span>
+                    </div>
+
+                    {item.aiEvaluation.evaluationJa && (
+                      <p className="summary-ai-comment mt-1 text-xs">
+                        {item.aiEvaluation.evaluationJa}
+                      </p>
+                    )}
+
+                    {item.aiEvaluation.improvedSpeech && item.aiEvaluation.improvedSpeech !== item.userSpeech && (
+                      <div className="summary-ai-improved mt-1 text-xs">
+                        <span className="font-semibold text-sub">✍️ 添削例: </span>
+                        <span className="font-mono text-primary">"{item.aiEvaluation.improvedSpeech}"</span>
+                      </div>
                     )}
                   </div>
                 )}

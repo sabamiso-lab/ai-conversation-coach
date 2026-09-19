@@ -1712,6 +1712,301 @@ body {
 }
 
 /* ==========================================================================
+   Blitz AI Speech Evaluation Styles
+   ========================================================================== */
+
+/* AI Auto-Evaluation Toggle */
+.ai-eval-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F1F5F9;
+  border: 1px solid var(--border-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.ai-eval-toggle-label:hover {
+  background: #E2E8F0;
+}
+
+.ai-eval-checkbox {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* Edit Speech Button & Input Form */
+.btn-edit-speech {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F1F5F9;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-edit-speech:hover {
+  background: #E2E8F0;
+  color: var(--text-main);
+}
+
+.speech-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.speech-edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border: 2px solid var(--border-focus);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: inherit;
+}
+
+.speech-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Blitz AI Evaluation Cards */
+.blitz-ai-eval-wrapper {
+  margin-top: 14px;
+}
+
+.ai-eval-loading-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: #EEF2FF;
+  border: 1px dashed #A5B4FC;
+  border-radius: var(--radius-md);
+  color: #4338CA;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.ai-eval-result-card {
+  padding: 14px 18px;
+  background: #FAF5FF;
+  border: 1.5px solid #E9D5FF;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.06);
+}
+
+.ai-eval-result-card.status-perfect {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.ai-eval-result-card.status-acceptable {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.ai-eval-result-card.status-needs_work {
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.ai-eval-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-eval-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.ai-eval-score {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.score-unit-sm {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.ai-status-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.badge-perfect {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+}
+
+.badge-acceptable {
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badge-needs_work {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+.ai-eval-comment {
+  font-size: 0.86rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.ai-improved-speech {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+
+.improved-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.improved-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #4F46E5;
+}
+
+.ai-grammar-advice {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.ai-eval-error-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #FFF1F2;
+  color: #BE123C;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-light);
+}
+
+.judgment-ai-hint {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btn.ai-recommended {
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.45);
+  transform: scale(1.02);
+}
+
+.ai-chip {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Summary AI Evaluation Box */
+.summary-ai-eval-box {
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+
+.summary-ai-eval-box.status-perfect {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+.summary-ai-eval-box.status-needs_work {
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.summary-ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-ai-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-ai-label {
+  font-size: 0.76rem;
+  color: var(--text-main);
+}
+
+.summary-ai-score {
+  font-size: 0.88rem;
+  color: var(--primary);
+}
+
+.summary-ai-comment {
+  color: #475569;
+  line-height: 1.4;
+}
+
+.summary-ai-improved {
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-light);
+}
+
+/* ==========================================================================
    Utility Helpers
    ========================================================================== */
 .flex-1 { flex: 1; }

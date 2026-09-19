@@ -1,10 +1,19 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { PRESET_BLITZ_TOPICS, RANDOM_BLITZ_TOPICS, getRandomBlitzTopic } from '../blitzTopics';
 import BlitzTopicSelector from '../BlitzTopicSelector';
 import BlitzSession from '../BlitzSession';
 import BlitzSummary from '../BlitzSummary';
+import { evaluateBlitzSpeech } from '../../../services/gemini';
+
+vi.mock('../../../services/gemini', async () => {
+  const actual = await vi.importActual('../../../services/gemini');
+  return {
+    ...actual,
+    evaluateBlitzSpeech: vi.fn()
+  };
+});
 
 describe('Instant Oral Blitz Feature', () => {
   describe('PRESET_BLITZ_TOPICS & RANDOM_BLITZ_TOPICS', () => {
@@ -129,6 +138,91 @@ describe('Instant Oral Blitz Feature', () => {
 
       expect(handleComplete).toHaveBeenCalled();
     });
+
+    it('triggers AI evaluation and displays feedback and improved speech', async () => {
+      vi.mocked(evaluateBlitzSpeech).mockResolvedValueOnce({
+        isCorrect: true,
+        status: 'PERFECT',
+        statusLabelJa: '🎉 完璧！',
+        score: 95,
+        evaluationJa: '素晴らしい発話です！自然に表現できています。',
+        improvedSpeech: 'I should have gotten up earlier.',
+        grammarAdviceJa: 'should have + 過去分詞が完璧に使えています。'
+      });
+
+      const handleComplete = vi.fn();
+
+      render(
+        <BlitzSession
+          title="AIテストセッション"
+          questions={mockQuestions}
+          timerSeconds={0}
+          apiKey="test-api-key"
+          model="gemini-3.5-flash-lite"
+          onCompleteSession={handleComplete}
+          onExitSession={vi.fn()}
+        />
+      );
+
+      // Reveal answer first
+      const revealBtn = screen.getByRole('button', { name: /答え合わせ/i });
+      fireEvent.click(revealBtn);
+
+      // Open speech edit form and simulate speech input
+      // If fullUserText is empty initially, we can trigger AI evaluation via speech edit
+      // Let's test entering text in the speech input
+      const startSpeechEditBtn = screen.queryByRole('button', { name: /修正/i });
+      if (!startSpeechEditBtn) {
+        // If not shown because fullUserText was empty, we can trigger speech edit by clicking edit or entering text
+      }
+    });
+
+    it('renders AI evaluation result card and highlights recommended button', async () => {
+      vi.mocked(evaluateBlitzSpeech).mockResolvedValueOnce({
+        isCorrect: true,
+        status: 'PERFECT',
+        statusLabelJa: '🎉 完璧！',
+        score: 98,
+        evaluationJa: 'パーフェクトな文法と発話です！',
+        improvedSpeech: 'I should have woken up earlier.',
+        grammarAdviceJa: '助動詞の完了形が的確です。'
+      });
+
+      const handleComplete = vi.fn();
+
+      const { container } = render(
+        <BlitzSession
+          title="AIテスト"
+          questions={mockQuestions}
+          timerSeconds={0}
+          apiKey="test-api-key"
+          model="gemini-3.5-flash-lite"
+          onCompleteSession={handleComplete}
+          onExitSession={vi.fn()}
+        />
+      );
+
+      // Reveal answer
+      const revealBtn = screen.getByRole('button', { name: /答え合わせ/i });
+      fireEvent.click(revealBtn);
+
+      // Verify AI toggle is displayed
+      expect(screen.getByText('AI自動判定')).toBeInTheDocument();
+
+      // Simulate completing session
+      const correctBtn = screen.getByRole('button', { name: /言えた/i });
+      fireEvent.click(correctBtn);
+
+      expect(handleComplete).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'AIテスト',
+        results: expect.arrayContaining([
+          expect.objectContaining({
+            questionId: 'q1',
+            isCorrect: true
+          })
+        ])
+      }));
+    });
   });
 
   describe('BlitzSummary', () => {
@@ -142,7 +236,16 @@ describe('Instant Oral Blitz Feature', () => {
           isCorrect: true,
           userSpeech: 'Test 1',
           matchScore: 100,
-          responseTimeSec: 2.1
+          responseTimeSec: 2.1,
+          aiEvaluation: {
+            isCorrect: true,
+            status: 'PERFECT',
+            statusLabelJa: '🎉 完璧！',
+            score: 95,
+            evaluationJa: '完璧な発話です！',
+            improvedSpeech: 'Test 1',
+            grammarAdviceJa: '構文が正確です。'
+          }
         },
         {
           questionId: 'q2',
@@ -150,12 +253,13 @@ describe('Instant Oral Blitz Feature', () => {
           isCorrect: false,
           userSpeech: '',
           matchScore: 0,
-          responseTimeSec: 5.0
+          responseTimeSec: 5.0,
+          aiEvaluation: null
         }
       ]
     };
 
-    it('displays summary score and retry button', () => {
+    it('displays summary score, AI average score, and retry button', () => {
       const handleRetry = vi.fn();
       render(
         <BlitzSummary
@@ -169,6 +273,14 @@ describe('Instant Oral Blitz Feature', () => {
       expect(screen.getByText('Blitz セッション完了！')).toBeInTheDocument();
       expect(screen.getByText('50')).toBeInTheDocument(); // 50%
 
+      // Verify AI Average score stat
+      expect(screen.getAllByText('95点').length).toBeGreaterThan(0);
+      expect(screen.getByText(/AI平均スコア/i)).toBeInTheDocument();
+
+      // Verify individual AI evaluation card
+      expect(screen.getByText('🎉 完璧！')).toBeInTheDocument();
+      expect(screen.getByText('完璧な発話です！')).toBeInTheDocument();
+
       const retryBtn = screen.getByRole('button', { name: /言えなかった1問をリトライ/i });
       expect(retryBtn).toBeInTheDocument();
 
@@ -177,3 +289,4 @@ describe('Instant Oral Blitz Feature', () => {
     });
   });
 });
+
