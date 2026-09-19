@@ -42,35 +42,52 @@
 ## 2. アーキテクチャとディレクトリ構成 (Architecture & Directory Structure)
 
 ```
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # CI 4段階品質ゲート (Lint, Typecheck, Test, Build) & 自動デプロイ
 ├── cdk/                    # AWS CDK インフラコード & Lambda バックエンド
 │   ├── bin/                # CDK エントリーポイント
 │   ├── lambda/             # Lambda ハンドラー関数 & 単体テスト
 │   └── lib/                # CDK スタック定義 (DynamoDB, API Gateway等)
 ├── docs/                   # プロジェクト各種ドキュメント
 ├── public/                 # 静的アセット (favicon, アイコン等)
+├── tsconfig.json           # ルート TypeScript 設定 (strict, bundler module resolution)
 ├── src/                    # フロントエンド アプリケーションコード
 │   ├── components/
 │   │   └── common/         # プロジェクト共通の UI コンポーネント
-│   ├── contexts/           # React Context (SettingsContext など広域状態)
+│   ├── contexts/           # React Context (SettingsContext.tsx など広域状態)
 │   ├── data/               # 静的データ・デフォルトシナリオ・フォールバック
-│   ├── features/           # 機能ドメイン別のコード (UI + ロジック)
-│   │   ├── blitz/          # 瞬間英作文 (Instant Oral Blitz)
-│   │   ├── conversation/   # 会話ロールプレイ (Conversation Coach)
-│   │   └── shadowing/      # シャドーイング (Shadowing Studio)
-│   ├── hooks/              # 再利用可能なカスタムフック
-│   ├── pages/              # 画面ルーティング単位のトップレベルページ
-│   ├── services/           # 外部通信・AI・API クライアント
-│   │   └── ai/             # Gemini API 呼び出しモジュール
-│   ├── types/              # TypeScript 型定義 (ドメインモデル等)
-│   └── utils/              # 汎用ヘルパー・修復関数
+│   ├── features/           # 機能ドメイン別のコード (UI + ロジック + テスト)
+│   │   ├── blitz/          # 瞬間英作文 (Session, AnswerPanel, EvalPanel, SpeechBox, useBlitzTimer)
+│   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, CoachWidget)
+│   │   └── shadowing/      # シャドーイング (Player, ScriptViewer, AudioControls, EvalCard)
+│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useBlitzTimer 等)
+│   ├── pages/              # 画面ルーティング単位のトップレベルページ (TSX)
+│   ├── services/           # 外部通信・AI・API クライアント (完全 TypeScript 化)
+│   │   └── ai/             # Gemini API 呼び出しモジュール (client, chat, coach, blitz, shadowing, news)
+│   ├── styles/             # モジュラー CSS アーキテクチャ
+│   │   ├── tokens.css      # デザイントークン (色、余白、タイポグラフィ、シャドウ)
+│   │   ├── base.css        # リセット・レイアウト・共通アニメーション・ユーティリティ
+│   │   ├── components.css  # 共通 UI コンポーネントスタイル
+│   │   ├── responsive.css  # モバイル固定ボトムナビ・メディアクエリ
+│   │   └── features/       # 各機能ドメイン固有スタイル (*.css)
+│   ├── types/              # TypeScript 型定義 (ドメインモデル等 index.ts)
+│   ├── utils/              # 汎用ヘルパー・修復関数 (TypeScript)
+│   ├── index.css           # スタイル統合エントリポイント (@import 集約)
+│   ├── main.tsx            # アプリケーションエントリポイント
+│   ├── App.tsx             # ルーティング & 全体レイアウト
+│   └── vite-env.d.ts       # Vite クライアント型定義
 └── index.html              # HTML テンプレート
 ```
 
 ### ディレクトリ別の責務ルール
-- **`components/common/`**: ドメイン知識を持たない純粋なUI部品（`Button`, `Modal`, `LoadingState`, `DifficultyBadge` など）。
-- **`features/<domain>/`**: その機能に特化したコンポーネント、ローカルヘルパー、およびテストを配置。他の feature に依存しない独立性を保ちます。
-- **`services/`**: ビジネスロジックや外部通信（HTTP fetch、Gemini SDK、Web Speech API）をカプセル化。React の状態（`useState` 等）を持たず、純粋な非同期関数として実装します。
+- **`components/common/`**: ドメイン知識を持たない純粋なUI部品（`Header`, `Button`, `Modal`, `LoadingState`, `DifficultyBadge` など）。
+- **`features/<domain>/`**: その機能に特化したコンポーネント、サブコンポーネント、専用カスタムフック、およびテストを配置。他の feature に依存しない独立性を保ちます。
+- **`styles/`**: CSS を責務別に分割（Tokens, Base, Components, Features, Responsive）。巨大な単一ファイルを避け、保守性を向上させます。
+- **`services/`**: ビジネスロジックや外部通信（HTTP fetch、Gemini SDK、Web Speech API）をカプセル化。React の状態（`useState` 等）を持たず、純粋な非同期関数として TypeScript で実装します。
 - **`hooks/`**: UIとサービスの橋渡しを行い、状態管理や副作用ライフサイクルをカプセル化します。
+- **`contexts/`**: 広域で共有する状態（API Key、選択モデルなど）を保持。カスタムフック経由（`useSettings()`）で安全にアクセスし、不要なバケツリレー（Prop Drilling）を防ぎます。
+
 
 ---
 
@@ -119,24 +136,60 @@ const click = () => {}; // 動詞単体で不明瞭
 
 ### 4.1. 型安全性の確保
 - **`any` の原則禁止**: 型が不明な場合は `unknown` を使用し、Type Guard や Zod/型絞り込みを活用してください。
-- **オブジェクトや配列の型指定**: インラインでの複雑な型指定は避け、`interface` または `type` を定義します。
+- **オブジェクトや配列の型指定**: インラインでの複雑な型指定は避け、`interface` または `type` を `src/types/index.ts` に定義します。
+- **マスターデータとの型整合**: `src/data/` の静的データは `src/types/` の型定義に準拠させ、二重定義や不整合を排除します。
 
 ```typescript
-// ✅ Good
+// ✅ Good: ドメイン型の定義 (src/types/index.ts)
 export interface Situation {
   id: string;
   title: string;
-  titleJa?: string;
+  titleJa: string;
   category: 'daily' | 'business' | 'travel' | 'casual';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  icon: string;
+  description: string;
+  initialMessage: string;
+  initialMessageJa: string;
   goals: string[];
 }
 
-// ❌ Bad
+export interface BlitzQuestion {
+  id: string;
+  japanese: string;
+  english: string;
+  grammarPoint: string;
+  explanation?: string;
+  topicCategory: string;
+}
+
+// ❌ Bad: any の安易な使用やアドホックな型定義
 export function processSituation(data: any) { ... }
 ```
 
-### 4.2. 不変性 (Immutability) の徹底
+### 4.2. Prop Drilling の排除と Context 活用
+- 複数階層にわたる `apiKey`, `model`, `onOpenApiKeyModal` などのバケツリレー（Prop Drilling）は行いません。
+- `useSettings()` カスタムフックを使用し、コンポーネント自身が必要な設定を取得します。
+- **Provider 外フォールバック設計**: テストコード等で `SettingsProvider` のツリー外でコンポーネントがレンダリングされた場合でもクラッシュしないよう、`useSettings()` は安全なデフォルトフォールバックを返す規約とします。
+
+```typescript
+// ✅ Good: コンポーネント内で直接 useSettings を利用
+export default function InstantBlitzPage() {
+  const settings = useSettings();
+  const apiKey = settings.apiKey;
+  // ...
+}
+
+// ❌ Bad: 親から何階層も props をリレー
+<Parent apiKey={apiKey} model={model}>
+  <Child apiKey={apiKey} model={model}>
+    <GrandChild apiKey={apiKey} model={model} />
+  </Child>
+</Parent>
+```
+
+
+### 4.3. 不変性 (Immutability) の徹底
 - React の State や配列、オブジェクトのプロパティを直接変更（破壊的操作）してはいけません。スプレッド構文や `map`, `filter` を使用します。
 
 ```typescript
@@ -148,7 +201,7 @@ messages.push(newMessage);
 setMessages(messages);
 ```
 
-### 4.3. Modern Syntax の活用
+### 4.4. Modern Syntax の活用
 - Null チェックには **Optional Chaining (`?.`)** および **Nullish Coalescing (`??`)** を使用します。
 - `var` の使用は全面禁止。再代入を行わない変数はすべて `const` とし、必要な場合のみ `let` を使用します。
 
@@ -157,7 +210,8 @@ setMessages(messages);
 const initialJa = situation?.initialMessageJa ?? situation?.initialMessageTranslation ?? '';
 ```
 
-### 4.4. 非同期処理とエラーハンドリング
+### 4.5. 非同期処理とエラーハンドリング
+
 - `Promise.then()` のネストは避け、**`async / await`** で統一します。
 - 外部通信には必ず `try-catch` を配置し、握りつぶさずにログ出力やフォールバック処理を行います。
 
@@ -229,25 +283,40 @@ if (!data) return <EmptyState />;
 return <DataView data={data} />;
 ```
 
+### 5.5. 巨大コンポーネントの責任分離とカスタムフック抽出
+- 300行を超える巨大コンポーネントは、以下の観点で分割を検討します：
+  1. **複雑なタイマーやステートマシンのフック化**: `useBlitzTimer` のように、カウントダウン・タイムアウト・リセットなどの副作用ロジックを独立したカスタムフックに抽出して単体テスト可能にします。
+  2. **関心ごとの UI サブコンポーネント化**: 音声入力（`BlitzSpeechBox`）、模範解答・判定（`BlitzAnswerPanel`）、AI自動評価結果（`BlitzEvaluationPanel`）、スクリプト表示（`ShadowingScriptViewer`）のように、特定の表示・操作に集中したコンポーネントへ分割します。
+  3. **親コンポーネントのオーケストレーター化**: 最上位のコンポーネントは状態の配線と子コンポーネントの合成に専念させ、肥大化を防ぎます。
+
 ---
 
 ## 6. スタイリング規約 (CSS)
 
-### 6.1. CSS クラスの命名と配置
-- グローバルスタイルおよび共通コンポーネントスタイルは `src/index.css` に定義します。
-- クラス名は小文字ハイフン区切り（**`kebab-case`**）とし、意味を持った構造的な命名（BEMに準拠した命名）を採用します。
-  - Block: `.chat-room`, `.blitz-card`
-  - Element: `.chat-room-header`, `.blitz-card-timer`
-  - Modifier: `.btn-primary`, `.is-active`, `.badge-beginner`
+### 6.1. モジュラー CSS アーキテクチャ
+- 単一の巨大な CSS ファイルへの集約を廃止し、**`src/styles/`** 配下に責務別のモジュールとして分割管理します：
+  1. **`tokens.css`**: カラーパレット、フォント、余白、角丸、シャドウなどの CSS 変数（Design Tokens）。
+  2. **`base.css`**: ボックスサイジング、リセット、ルートレイアウト、共通キーフレームアニメーション、ユーティリティクラス。
+  3. **`components.css`**: アプリケーション共通のヘッダー、ナビゲーション、ボタン（`.btn`）、モーダル、入力フィールド。
+  4. **`features/*.css`**: 各機能ドメイン固有のスタイル（`conversation.css`, `blitz.css`, `shadowing.css`, `coach.css`）。
+  5. **`responsive.css`**: モバイル固定ボトムナビゲーション、ブレークポイント（`768px`, `640px`, `480px`）のメディアクエリ。
+- **`src/index.css`** は上記モジュールを `@import` で取り込むエントリポイントとしてのみ機能させます。
 
-### 6.2. インラインスタイルの制限
-- レイアウトや装飾のスタイルは原則として CSS クラスに記述します。
+### 6.2. CSS クラスの命名規則
+- クラス名は小文字ハイフン区切り（**`kebab-case`**）とし、意味を持った構造的な命名を採用します。
+  - Block: `.chat-room`, `.blitz-card`, `.floating-coach-panel`
+  - Element: `.chat-header`, `.timer-bar-fill`, `.phrase-text-col`
+  - Modifier: `.btn-primary`, `.is-active`, `.badge-perfect`, `.status-needs_work`
+
+### 6.3. インラインスタイルの制限
+- レイアウトや静的装飾のスタイルは原則として CSS クラスに記述します。
 - 動的に値が変わるもの（タイマーの進捗率 `width: ${progress}%`、位置計算など）に限り、`style={{ ... }}` のインラインスタイルを許容します。
 
-### 6.3. レスポンシブ設計
-- モバイルファーストまたは PC/モバイル双方での操作性を重視します。
+### 6.4. レスポンシブ設計
+- モバイルファーストおよび PC/モバイル双方での快適な操作性を重視します。
 - スマートフォン表示時の主要ブレークポイント:
   - `@media (max-width: 768px)`: モバイル向け縦積みレイアウト、固定ボトムナビゲーション、タッチフレンドリーなボタンサイズ（最小 `44px x 44px`）。
+
 
 ---
 
@@ -322,22 +391,38 @@ describe('fetchSituations', () => {
 - `.oxlintrc.json` にて React のフックルール（`react/rules-of-hooks`）等が有効化されています。
 - CI およびローカルにおいて、**リントエラー（Error / Warning）はゼロ**を維持します。
 
-### 9.3. 開発・コミット前チェックフロー
-コミットやプルリクエスト作成前に、以下のコマンドが正常にパスすることを確認してください：
+### 9.3. 型検査規約 (`tsc --noEmit`)
+- フロントエンド全体の厳格な型チェックを実施するため、`package.json` に `"typecheck": "tsc --noEmit"` を整備しています。
+- 型定義の矛盾や未定義プロパティの参照による実行時例外を完全に防ぐため、型エラーは常に 0 件を維持します。
+
+### 9.4. 開発・コミット前チェックフロー
+コミットやプルリクエスト作成前に、以下のローカルコマンドがすべて正常にパス（エラー・警告 0）することを確認してください：
 
 ```bash
-# 1. リントチェックの実行
+# 1. 高速静的解析 (Oxlint)
 npm run lint
 
-# 2. フロントエンド単体テストの実行
+# 2. TypeScript 型検査 (tsc)
+npm run typecheck
+
+# 3. フロントエンド全単体テストの実行 (Vitest)
 npm test
 
-# 3. ビルドの検証
+# 4. プロダクションビルドの検証 (Vite)
 npm run build
 
-# (CDK/Lambda 変更時) バックエンドテストの実行
+# 5. (CDK/Lambda 変更時) バックエンドテストの実行
 cd cdk && npm test && cd ..
 ```
+
+### 9.5. CI/CD 品質ゲート (GitHub Actions)
+`.github/workflows/deploy.yml` において、`main` ブランチへのプッシュ時に以下の 4 段階ゲートが自動実行されます：
+1. **Lint Check**: `npm run lint`
+2. **Type Check**: `npm run typecheck`
+3. **Unit Tests**: `npm test`
+4. **Production Build**: `npm run build`
+いずれか 1 つでも失敗した場合はデプロイが自動中断され、本番環境の品質が保証されます。
+
 
 ---
 

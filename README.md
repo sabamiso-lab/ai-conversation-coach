@@ -16,15 +16,17 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-blue.svg?logo=react" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6.svg?logo=typescript" alt="TypeScript 5.9" />
   <img src="https://img.shields.io/badge/React%20Router-7-CA4245.svg?logo=reactrouter" alt="React Router 7" />
   <img src="https://img.shields.io/badge/Vite-8-646CFF.svg?logo=vite" alt="Vite 8" />
   <img src="https://img.shields.io/badge/AI%20Engine-Gemini%203.5%20Flash--Lite-8E44AD.svg?logo=google" alt="Gemini 3.5 Flash-Lite" />
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
-  <img src="https://img.shields.io/badge/Testing-120%2B%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 120+ Tests" />
+  <img src="https://img.shields.io/badge/Testing-144%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 144 Tests" />
   <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
+
 
 ---
 
@@ -113,16 +115,21 @@ npm run dev
 ```
 ブラウザで [http://localhost:5173/ai-conversation-coach/](http://localhost:5173/ai-conversation-coach/) を開きます。
 
-### 5. 単体テストの実行 (Vitest)
+### 5. 型チェックの実行 (TypeScript)
 ```bash
-# 全単体テストの実行 (全30テストファイル / 120+ テスト)
+npm run typecheck
+```
+
+### 6. 単体テストの実行 (Vitest)
+```bash
+# 全単体テストの実行 (全32テストファイル / 144 テスト)
 npm test
 
 # ウォッチモードでのテスト実行
 npm run test:watch
 ```
 
-### 6. リンターの実行 (Oxlint)
+### 7. リンターの実行 (Oxlint)
 ```bash
 npm run lint
 ```
@@ -175,7 +182,7 @@ SpeakFlow は **Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)** を標�
 
 GitHub Actions を利用した GitHub Pages への自動デプロイが構築されています。
 
-- `.github/workflows/deploy.yml` により、`main` ブランチへ `push` されると自動でテスト (`npm test`) ＆ビルド (`npm run build`) が実行され、`GitHub Pages` へデプロイされます。
+- `.github/workflows/deploy.yml` により、`main` ブランチへ `push` されると、**4段階の品質ゲート（Lint → Typecheck → Test → Build）** が自動実行され、すべてパスした場合のみ `GitHub Pages` へ安全に自動デプロイされます。
 
 ---
 
@@ -185,7 +192,7 @@ GitHub Actions を利用した GitHub Pages への自動デプロイが構築さ
 ai-conversation-coach/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml            # GitHub Pages 自動デプロイワークフロー
+│       └── deploy.yml            # CI 品質ゲート (Lint, Typecheck, Test, Build) & Pages 自動デプロイ
 ├── cdk/                          # AWS CDK バックエンドインフラ (TypeScript)
 │   ├── bin/cdk.ts                # CDK エントリポイント
 │   ├── lib/
@@ -204,58 +211,70 @@ ai-conversation-coach/
 │   └── favicon.svg               # SpeakFlow ロゴ・ファビコン
 ├── index.html
 ├── package.json
+├── tsconfig.json                 # TypeScript 設定 (strict, bundler module resolution)
 ├── vite.config.js                # Vite & Vitest 設定 (jsdom / テスト自動検知)
 ├── .env.example                  # 環境変数テンプレート
 ├── .oxlintrc.json                # Oxlint 設定
 └── src/
-    ├── main.jsx
-    ├── App.jsx                   # ルーティング (React Router 7) & 全体レイアウト
-    ├── index.css                 # デザインシステム (CSS Vanilla / モバイル対応)
-    ├── pages/                    # メイン画面ページ
-    │   ├── ConversationPage.jsx  # AI対話・ロールプレイ画面 (常駐AIコーチ対応)
-    │   ├── ShadowingPage.jsx     # シャドーイング特訓画面 (常駐AIコーチ対応)
-    │   └── InstantBlitzPage.jsx  # 瞬間英作文＆パターンプラクティス画面 (常駐AIコーチ対応)
-    ├── features/                 # 機能別モジュール (コンポーネント・データ・テスト)
-    │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, FloatingCoachWidget, SituationSelector, ReportModal, HintPanel, MessageItem etc.)
-    │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingAudioControls, ShadowingEvaluationCard, ShadowingSelector)
-    │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzSummary, BlitzTopicSelector, blitzTopics.js / AI発話添削内蔵)
+    ├── main.tsx                  # アプリケーションエントリポイント
+    ├── App.tsx                   # ルーティング (React Router 7) & 全体レイアウト
+    ├── vite-env.d.ts             # Vite 環境変数・クライアント型定義
+    ├── index.css                 # スタイル統合エントリポイント (@import 集約)
+    ├── styles/                   # モジュラー CSS アーキテクチャ
+    │   ├── tokens.css            # デザイントークン (色・フォント・シャドウ・角丸)
+    │   ├── base.css              # リセット・基本レイアウト・共通アニメーション・ユーティリティ
+    │   ├── components.css        # 共通 UI スタイル (ヘッダー、ナビ、ボタン、モーダル、フォーム)
+    │   ├── responsive.css        # モバイル固定ボトムナビ・メディアクエリ
+    │   └── features/             # 各機能ドメイン固有スタイル
+    │       ├── conversation.css  # 会話ロールプレイ・チャットルーム・バブル・レポート
+    │       ├── blitz.css         # 瞬間英作文・タイマー・発話・AI自動添削カード
+    │       ├── shadowing.css     # シャドーイングプレイヤー・評価グリッド
+    │       └── coach.css         # フローティング AI コーチ (FAB・パネル・フレーズ)
+    ├── pages/                    # メイン画面ページ (TSX)
+    │   ├── ConversationPage.tsx  # AI対話・ロールプレイ画面
+    │   ├── ShadowingPage.tsx     # シャドーイング特訓画面
+    │   └── InstantBlitzPage.tsx  # 瞬間英作文＆パターンプラクティス画面
+    ├── features/                 # 機能別モジュール (UI + ロジック + テスト)
+    │   ├── conversation/         # 会話関連 (ChatRoom, ChatSidebar, ChatInputBar, FloatingCoachWidget, etc.)
+    │   ├── shadowing/            # シャドーイング関連 (ShadowingPlayer, ShadowingScriptViewer, ShadowingAudioControls, etc.)
+    │   └── blitz/                # 瞬間英作文関連 (BlitzSession, BlitzTopicSelector, BlitzSpeechBox, BlitzAnswerPanel, BlitzEvaluationPanel, useBlitzTimer, etc.)
     ├── components/               # 共通 UI コンポーネント
     │   └── common/
-    │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション
-    │       ├── Modal.jsx         # 汎用モーダル (Overlay, Header, ESCキー検知, アクセシビリティ対応)
+    │       ├── Header.tsx        # ヘッダー・ナビゲーション・ボトムナビ
+    │       ├── Modal.jsx         # 汎用モーダル
     │       ├── ApiKeyModal.jsx   # Gemini API Key 設定モーダル
-    │       ├── DifficultyBadge.jsx # 難易度バッジ (Beginner / Intermediate / Advanced カラー自動判定)
-    │       ├── CategoryFilter.jsx # カテゴリ切り替えピル型フィルターボタングループ
-    │       ├── LoadingState.jsx  # 統一ローディングインジケーター (スピナー & メッセージ)
-    │       ├── PageHeader.jsx    # ページ上部タイトルバナー (スタジオバッジ, 見出し, 説明文)
-    │       ├── MicButton.jsx     # 音声認識 (マイク) トグルボタン (録音中アニメーション対応)
-    │       ├── AiGeneratorCard.jsx # AI生成アコーディオンカード枠組み (グラデーション, Key警告, 開閉)
-    │       ├── SuggestionChips.jsx # 話題例クイック選択チップス
-    │       ├── Alert.jsx         # 汎用インラインアラート (error, warning, info, success)
-    │       ├── StatCard.jsx      # 統計・スコア表示カード
-    │       ├── FeedbackGrid.jsx  # AI診断フィードバック表示 (良かった点・改善点グリッド)
-    │       ├── NewsCitation.jsx  # Grounding ニュース出典表示 (カード形式 / バッジ形式)
-    │       ├── AudioPlayButton.jsx # 英文音声読み上げ (TTS) 統一ボタン (ラベル付き / アイコン形式)
+    │       ├── DifficultyBadge.jsx
+    │       ├── CategoryFilter.jsx
+    │       ├── LoadingState.jsx
+    │       ├── PageHeader.jsx
+    │       ├── MicButton.jsx
+    │       ├── AiGeneratorCard.jsx
+    │       ├── SuggestionChips.jsx
+    │       ├── Alert.jsx
+    │       ├── StatCard.jsx
+    │       ├── FeedbackGrid.jsx
+    │       ├── NewsCitation.jsx
+    │       ├── AudioPlayButton.jsx
     │       └── __tests__/        # 共通コンポーネント単体テスト群
     ├── contexts/                 # React Context
-    │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
+    │   └── SettingsContext.tsx   # アプリ設定 (API Key, 選択モデル) 状態管理
     ├── hooks/                    # カスタムフック
     │   ├── useChatSession.ts     # 会話セッション管理フック
-    │   ├── useConversationCoach.ts # 全画面対応リアルタイムAIコーチング・相談フック
-    │   ├── useSettings.ts        # 設定アクセスフック
-    │   └── useSpeechRecognition.ts # Web Speech API 音声認識共通フック
-    ├── services/                 # 外部連携サービス層
+    │   ├── useConversationCoach.ts # 全画面常駐 AI コーチ相談フック
+    │   ├── useSettings.ts        # 設定アクセスフック (Provider 外安全フォールバック内蔵)
+    │   └── useSpeechRecognition.ts # Web Speech API 音声認識フック
+    ├── services/                 # 外部連携サービス層 (完全 TypeScript 化)
     │   ├── ai/                   # Gemini API モジュール群
-    │   │   ├── client.ts         # GoogleGenAI クライアント初期化・モデル管理
-    │   │   ├── chat.js           # 会話ロールプレイ・ヒント・診断レポート生成
-    │   │   ├── coach.ts          # 全画面対応AIコーチ（文脈に応じた日本語質問・回答・フレーズ提案）
-    │   │   ├── shadowing.js      # シャドーイング発話精度判定
-    │   │   ├── blitz.js          # 瞬間英作文 AI お題自動生成 ＆ 発話自動添削・評価
-    │   │   ├── news.js           # Grounding ニュースシナリオ動的生成
+    │   │   ├── client.ts         # GoogleGenAI クライアント初期化
+    │   │   ├── chat.ts           # 会話ロールプレイ・ヒント・診断レポート生成
+    │   │   ├── coach.ts          # 常駐 AI コーチ（質問・回答・フレーズ提案）
+    │   │   ├── shadowing.ts      # シャドーイング発話精度判定
+    │   │   ├── blitz.ts          # 瞬間英作文 AI お題自動生成 ＆ 発話自動添削
+    │   │   ├── news.ts           # Grounding ニュースシナリオ動的生成
     │   │   └── __tests__/        # AI サービス単体テスト
-    │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ ローカルフォールバック
-    │   ├── gemini.js             # Gemini AI サービス統括エントリポイント
-    │   ├── speech.js             # Web Speech API (音声合成・重複再生防止)
+    │   ├── api.ts                # DynamoDB API 通信 (GET/POST) ＆ ローカルフォールバック
+    │   ├── gemini.ts             # Gemini AI サービス統括エントリポイント
+    │   ├── speech.ts             # Web Speech API (音声合成・認識)
     │   └── __tests__/            # サービス層単体テスト
     ├── data/                     # プリセットデータ・マスター定義
     │   ├── situations.ts         # 会話シチュエーション＆フォールバック定義
@@ -263,9 +282,9 @@ ai-conversation-coach/
     │   └── shadowingScripts.js   # シャドーイング英文スクリプト定義
     ├── types/                    # TypeScript 型定義
     │   └── index.ts              # アプリ全体の型定義 (Situation, Shadowing, Blitz, Coach 等)
-    ├── utils/                    # ユーティリティ
-    │   ├── jsonRepair.js         # Safe JSON Self-Healing パース関数
-    │   ├── textMatcher.js        # テキスト正規化・単語一致率計算ユーティリティ
+    ├── utils/                    # ユーティリティ (TypeScript)
+    │   ├── jsonRepair.ts         # Safe JSON Self-Healing パース関数
+    │   ├── textMatcher.ts        # テキスト正規化・単語一致率計算ユーティリティ
     │   └── __tests__/            # ユーティリティ単体テスト
     └── test/                     # テスト環境設定
         └── setup.js              # Vitest セットアップスクリプト
@@ -275,15 +294,16 @@ ai-conversation-coach/
 
 ## 🛠️ 技術スタック (Tech Stack)
 
-- **Frontend Core**: React 19, React Router 7, Vite 8
-- **Styling / Layout**: Vanilla CSS (CSS Variables, Glassmorphism, Mobile Responsive, Fixed Bottom Navigation)
+- **Frontend Core**: React 19, TypeScript 5.9, React Router 7, Vite 8
+- **Styling / Layout**: Modular Vanilla CSS (Design Tokens, Base, Components, Features, Responsive Media Queries)
 - **AI / LLM Engine**: Google Gemini API (`gemini-3.5-flash-lite`, Google Search Grounding)
 - **Speech Engine**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`)
 - **Backend / Infra**: AWS CDK, AWS Lambda, Amazon DynamoDB (TTL 有効), Amazon API Gateway (HTTP API)
-- **Testing**: Vitest (120+ Tests passing), React Testing Library
-- **Linting**: Oxlint
+- **Testing**: Vitest (32 Test Files / 144 Tests passing), React Testing Library
+- **Linting & Type Checking**: Oxlint, TypeScript (`tsc --noEmit`)
 - **Icons**: Lucide React
-- **CI/CD & Hosting**: GitHub Actions, GitHub Pages
+- **CI/CD & Hosting**: GitHub Actions (4-stage Quality Gate), GitHub Pages
+
 
 ---
 

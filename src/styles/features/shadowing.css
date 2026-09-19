@@ -1,0 +1,33 @@
+/* ==========================================================================
+   Shadowing Feature Styles
+   ========================================================================== */
+
+.shadowing-container {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.player-controls-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+}
+
+.shadowing-eval-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.shadowing-recording-section {
+  border-top: 1px solid var(--border-light);
+  padding-top: 20px;
+  text-align: center;
+}
