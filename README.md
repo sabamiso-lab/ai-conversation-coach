@@ -257,6 +257,14 @@ ai-conversation-coach/
 
 ---
 
+## 📐 コーディング規約 (Coding Standards)
+
+プロジェクトの設計方針、コード品質、命名規則、TypeScript/React 規約、AI連携、テスト方針などの詳細は、以下のコーディング規約ドキュメントを参照してください：
+
+👉 **[コーディング規約 (docs/CODING_STANDARDS.md)](docs/CODING_STANDARDS.md)**
+
+---
+
 ## 📜 ライセンス (License)
 
 このプロジェクトは [MIT License](LICENSE) のもとで公開されています。自由にご利用・カスタマイズいただけます。
