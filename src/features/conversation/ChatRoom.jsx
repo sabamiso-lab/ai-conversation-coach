@@ -4,7 +4,8 @@ import MessageItem from './MessageItem';
 import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
 import { sendChatMessage, getHintSuggestions, generateSessionReport } from '../../services/gemini';
-import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported } from '../../services/speech';
+import { speakText, stopSpeaking } from '../../services/speech';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
 export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const [messages, setMessages] = useState(() => {
@@ -19,7 +20,6 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     return [];
   });
   const [inputText, setInputText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -38,7 +38,6 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   const [reportError, setReportError] = useState('');
 
   const messagesEndRef = useRef(null);
-  const recognizerRef = useRef(null);
 
   // Handle Send Message
   const handleSendMessage = useCallback(async (textToSend) => {
@@ -113,40 +112,35 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
     handleSendMessageRef.current = handleSendMessage;
   }, [handleSendMessage]);
 
-  // Initialize Speech Recognizer & Initial Speech
-  useEffect(() => {
-    if (isSpeechRecognitionSupported()) {
-      recognizerRef.current = new SpeechRecognizer({
-        onResult: ({ final, interim }) => {
-          if (final) {
-            setInputText(final);
-            if (handleSendMessageRef.current) {
-              handleSendMessageRef.current(final);
-            }
-          } else if (interim) {
-            setInputText(interim);
-          }
-        },
-        onError: (userFriendlyError) => {
-          console.warn("Speech Rec Error:", userFriendlyError);
-          setErrorMsg(userFriendlyError);
-          setIsRecording(false);
-        },
-        onEnd: () => {
-          setIsRecording(false);
-        }
-      });
+  const handleFinalResult = useCallback((finalText) => {
+    setInputText(finalText);
+    if (handleSendMessageRef.current) {
+      handleSendMessageRef.current(finalText);
     }
+  }, []);
 
+  const handleInterimResult = useCallback((interimText) => {
+    setInputText(interimText);
+  }, []);
+
+  const handleSpeechError = useCallback((speechErr) => {
+    setErrorMsg(speechErr);
+  }, []);
+
+  const { isRecording, toggleRecording } = useSpeechRecognition({
+    onFinalResult: handleFinalResult,
+    onInterimResult: handleInterimResult,
+    onError: handleSpeechError
+  });
+
+  // Initial Speech & Cleanup
+  useEffect(() => {
     if (situation.initialMessage) {
       speakText(situation.initialMessage);
     }
 
     return () => {
       stopSpeaking();
-      if (recognizerRef.current) {
-        recognizerRef.current.stop();
-      }
     };
   }, [situation]);
 
@@ -154,23 +148,6 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAiThinking]);
-
-  // Handle Mic Toggle
-  const toggleRecording = () => {
-    if (!recognizerRef.current) {
-      setErrorMsg("お使いのブラウザは音声認識(Web Speech API)に対応していません。テキスト入力をご利用ください。");
-      return;
-    }
-
-    if (isRecording) {
-      recognizerRef.current.stop();
-      setIsRecording(false);
-    } else {
-      setErrorMsg('');
-      setIsRecording(true);
-      recognizerRef.current.start();
-    }
-  };
 
   // Get Hint Suggestions
   const handleFetchHints = async () => {

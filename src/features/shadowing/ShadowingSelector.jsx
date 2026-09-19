@@ -3,8 +3,8 @@ import { SHADOWING_SCRIPTS } from '../../data/shadowingScripts';
 import { generateShadowingScript } from '../../services/gemini';
 import { getRandomShadowingTopic, POPULAR_TOPIC_CHIPS } from '../../data/shadowingTopics';
 import { 
-  Headphones, Sparkles, BookOpen, Play, Loader2, 
-  Zap, Layers, PlusCircle, CheckCircle2, Dices, RefreshCw 
+  Headphones, Sparkles, Play, Loader2, 
+  Zap, PlusCircle, Dices 
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Daily', 'Travel', 'Business', 'Tech & Trends', 'Custom AI'];

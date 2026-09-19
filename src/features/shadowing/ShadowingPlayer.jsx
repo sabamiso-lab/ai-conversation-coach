@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Play, Square, Volume2, Mic, MicOff, RotateCcw, 
-  ArrowLeft, Sparkles, Check, AlertCircle, Eye, EyeOff, 
+  Play, Square, Mic, MicOff, 
+  ArrowLeft, Sparkles, AlertCircle, Eye, EyeOff, 
   Gauge, Repeat, Award, Lightbulb, Loader2 
 } from 'lucide-react';
-import { speakText, stopSpeaking, SpeechRecognizer, isSpeechRecognitionSupported } from '../../services/speech';
+import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
 export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenApiKeyModal }) {
   // Speech Playback Settings
@@ -18,7 +19,6 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
   const [showTranslation, setShowTranslation] = useState(true);
 
   // Recording & Evaluation States
-  const [isRecording, setIsRecording] = useState(false);
   const [userTranscript, setUserTranscript] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   
@@ -26,35 +26,27 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evalResult, setEvalResult] = useState(null);
 
-  const recognizerRef = useRef(null);
+  const handleFinalResult = useCallback((finalText) => {
+    setUserTranscript(finalText);
+  }, []);
 
-  // Initialize Speech Recognizer
+  const handleInterimResult = useCallback((interimText) => {
+    setUserTranscript(interimText);
+  }, []);
+
+  const handleSpeechError = useCallback((speechErr) => {
+    setErrorMsg(speechErr);
+  }, []);
+
+  const { isRecording, toggleRecording: rawToggleRecording } = useSpeechRecognition({
+    onFinalResult: handleFinalResult,
+    onInterimResult: handleInterimResult,
+    onError: handleSpeechError
+  });
+
   useEffect(() => {
-    if (isSpeechRecognitionSupported()) {
-      recognizerRef.current = new SpeechRecognizer({
-        onResult: ({ final, interim }) => {
-          if (final) {
-            setUserTranscript(final);
-          } else if (interim) {
-            setUserTranscript(interim);
-          }
-        },
-        onError: (err) => {
-          console.warn("Speech Rec Error:", err);
-          setErrorMsg(err);
-          setIsRecording(false);
-        },
-        onEnd: () => {
-          setIsRecording(false);
-        }
-      });
-    }
-
     return () => {
       stopSpeaking();
-      if (recognizerRef.current) {
-        recognizerRef.current.stop();
-      }
     };
   }, []);
 
@@ -81,27 +73,17 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
 
   // Handle Recording Toggle
   const toggleRecording = () => {
-    if (!recognizerRef.current) {
-      setErrorMsg("お使いのブラウザは音声認識(Web Speech API)に対応していません。");
-      return;
-    }
-
-    if (isRecording) {
-      recognizerRef.current.stop();
-      setIsRecording(false);
-    } else {
+    if (!isRecording) {
       setErrorMsg('');
       setUserTranscript('');
       setEvalResult(null);
-      setIsRecording(true);
-      
+
       // Auto play audio if not playing when user starts recording
       if (!isPlaying) {
         handlePlayAudio();
       }
-      
-      recognizerRef.current.start();
     }
+    rawToggleRecording();
   };
 
   // Handle Evaluation via Gemini API

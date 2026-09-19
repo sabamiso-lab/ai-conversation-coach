@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { DIFFICULTY_COLORS } from '../../data/situations';
 import { fetchSituations, createSituation } from '../../services/api';
 import { generateNewsSituation } from '../../services/gemini';
 import { 

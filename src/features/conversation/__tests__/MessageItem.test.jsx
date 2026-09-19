@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import MessageItem from '../MessageItem';
 
 // Mock speech service
-vi.mock('../../services/speech', () => ({
+vi.mock('../../../services/speech', () => ({
   speakText: vi.fn(),
 }));
 
