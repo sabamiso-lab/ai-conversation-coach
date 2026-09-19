@@ -277,3 +277,34 @@ export const PRESET_BLITZ_TOPICS = [
     ]
   }
 ];
+
+// Preset topic lists for random Instant Oral Translation scenario generation
+export const RANDOM_BLITZ_TOPICS = [
+  'カフェでのカスタム注文と支払交渉 (Custom coffee orders and payment)',
+  '海外ホテルの部屋変更とトラブル依頼 (Requesting hotel room changes & troubleshooting)',
+  'ITスクラム・デイリースタンドアップでの進捗報告 (Daily standup meeting & status updates in IT)',
+  '空港での荷物遅延問い合わせ (Inquiring about delayed baggage at the airport)',
+  'レストラン予約とアレルギーの確認 (Restaurant booking & dietary requirement check)',
+  '同僚と週末の予定や趣味について語る (Discussing weekend plans & hobbies with coworkers)',
+  '海外のクリニックで体調不良症状を伝える (Describing health symptoms at a clinic)',
+  'タクシーで行き先とルートを指定する (Giving routing directions to a taxi driver)',
+  '購入した不良品の返品・返金交渉 (Requesting a refund or exchange for a item)',
+  'オンライン会議での音声・通信トラブル対応 (Handling audio and connection issues in online meetings)',
+  'AIがもたらす将来の働き方の変化 (Discussing how AI changes future work styles)',
+  '新しい同僚へのオフィス案内と挨拶 (Welcoming a new colleague and giving an office tour)'
+];
+
+export const POPULAR_BLITZ_TOPIC_CHIPS = [
+  { label: '☕ カフェ注文', topic: 'カフェでのカスタム注文と支払い' },
+  { label: '💻 ITスクラム', topic: 'ITスクラムでの進捗報告' },
+  { label: '🏨 ホテル変更', topic: '海外ホテルの部屋変更とトラブル依頼' },
+  { label: '✈️ 空港・トラブル', topic: '空港での荷物遅延問い合わせ' },
+  { label: '🩺 病院受診', topic: '海外のクリニックで体調不良症状を伝える' },
+  { label: '🤖 AIと働き方', topic: 'AIがもたらす将来の働き方の変化' }
+];
+
+export function getRandomBlitzTopic() {
+  const randomIndex = Math.floor(Math.random() * RANDOM_BLITZ_TOPICS.length);
+  return RANDOM_BLITZ_TOPICS[randomIndex];
+}
+

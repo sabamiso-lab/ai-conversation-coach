@@ -1,13 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { PRESET_BLITZ_TOPICS } from '../blitzTopics';
+import { PRESET_BLITZ_TOPICS, RANDOM_BLITZ_TOPICS, getRandomBlitzTopic } from '../blitzTopics';
 import BlitzTopicSelector from '../BlitzTopicSelector';
 import BlitzSession from '../BlitzSession';
 import BlitzSummary from '../BlitzSummary';
 
 describe('Instant Oral Blitz Feature', () => {
-  describe('PRESET_BLITZ_TOPICS', () => {
+  describe('PRESET_BLITZ_TOPICS & RANDOM_BLITZ_TOPICS', () => {
     it('contains preset topics with valid questions', () => {
       expect(PRESET_BLITZ_TOPICS.length).toBeGreaterThan(0);
       PRESET_BLITZ_TOPICS.forEach((topic) => {
@@ -20,6 +20,12 @@ describe('Instant Oral Blitz Feature', () => {
           expect(q.answer).toBeTruthy();
         });
       });
+    });
+
+    it('returns a valid random topic from RANDOM_BLITZ_TOPICS', () => {
+      expect(RANDOM_BLITZ_TOPICS.length).toBeGreaterThan(0);
+      const randomTopic = getRandomBlitzTopic();
+      expect(RANDOM_BLITZ_TOPICS).toContain(randomTopic);
     });
   });
 
@@ -45,6 +51,42 @@ describe('Instant Oral Blitz Feature', () => {
 
       fireEvent.click(startButtons[0]);
       expect(handleStart).toHaveBeenCalled();
+    });
+
+    it('handles AI custom form toggle, random topic button, and omakase submission', () => {
+      const handleGenerateCustom = vi.fn();
+      render(
+        <BlitzTopicSelector
+          onStartSession={vi.fn()}
+          onGenerateCustom={handleGenerateCustom}
+          isGenerating={false}
+          hasApiKey={true}
+          onOpenApiKeyModal={vi.fn()}
+        />
+      );
+
+      // Open AI form
+      const openFormBtn = screen.getByRole('button', { name: /AIで作成する/i });
+      fireEvent.click(openFormBtn);
+
+      expect(screen.getByPlaceholderText(/空欄でおまかせ/i)).toBeInTheDocument();
+
+      // Click random topic button
+      const randomBtn = screen.getByRole('button', { name: /ランダムに選ぶ/i });
+      fireEvent.click(randomBtn);
+
+      const input = screen.getByPlaceholderText(/空欄でおまかせ/i);
+      expect(input.value).toBeTruthy();
+
+      // Submit form
+      const submitBtn = screen.getByRole('button', { name: /AI英作文セットを生成/i });
+      fireEvent.click(submitBtn);
+
+      expect(handleGenerateCustom).toHaveBeenCalledWith({
+        topicPrompt: input.value,
+        difficulty: 'Intermediate',
+        timerSeconds: 5
+      });
     });
   });
 

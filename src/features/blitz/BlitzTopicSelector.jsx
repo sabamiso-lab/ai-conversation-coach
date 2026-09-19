@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { PRESET_BLITZ_TOPICS } from './blitzTopics';
+import { PRESET_BLITZ_TOPICS, getRandomBlitzTopic, POPULAR_BLITZ_TOPIC_CHIPS } from './blitzTopics';
 import { 
   Zap, Briefcase, Smile, Sparkles, Clock, Loader2, 
-  PlusCircle
+  PlusCircle, Dices
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Grammar', 'Business', 'Daily'];
@@ -36,16 +36,20 @@ export default function BlitzTopicSelector({
   const [customTopic, setCustomTopic] = useState('');
   const [customDifficulty, setCustomDifficulty] = useState('Intermediate');
 
+  const handleRandomizeTopic = () => {
+    const randomTopic = getRandomBlitzTopic();
+    setCustomTopic(randomTopic);
+  };
+
   const handleCustomSubmit = (e) => {
     e.preventDefault();
-    if (!customTopic.trim()) return;
     if (!hasApiKey) {
       if (onOpenApiKeyModal) onOpenApiKeyModal();
       return;
     }
 
     onGenerateCustom({
-      topicPrompt: customTopic.trim(),
+      topicPrompt: customTopic.trim() || 'おまかせ',
       difficulty: customDifficulty,
       timerSeconds
     });
@@ -97,7 +101,7 @@ export default function BlitzTopicSelector({
               自由なお題でオリジナル瞬間英作文10問セットを生成
             </h2>
             <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
-              「ITエンジニアのスクラム」「海外ホテルのトラブル」「レストラン予約」など自分のシチュエーションに特化して作成できます。
+              「ITエンジニアのスクラム」「海外ホテルのトラブル」など自由入力または🎲ランダム設定で作成できます。
             </p>
           </div>
 
@@ -115,18 +119,65 @@ export default function BlitzTopicSelector({
           <form onSubmit={handleCustomSubmit} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  生成したいトピック / シチュエーション
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1' }}>
+                    生成したいトピック / シチュエーション
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleRandomizeTopic}
+                    style={{
+                      background: 'rgba(99, 102, 241, 0.3)',
+                      color: '#E0E7FF',
+                      border: '1px solid rgba(165, 180, 252, 0.4)',
+                      borderRadius: '8px',
+                      padding: '3px 9px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="おすすめトピックをランダムにセット"
+                  >
+                    <Dices size={14} /> 🎲 ランダムに選ぶ
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="例: ITスクラム、海外旅行のトラブル... (自由入力)"
+                  placeholder="例: ITスクラム、海外旅行のトラブル... (空欄でおまかせ)"
                   value={customTopic}
                   onChange={(e) => setCustomTopic(e.target.value)}
                   disabled={isGenerating}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#FFF', borderColor: 'rgba(255,255,255,0.2)', width: '100%' }}
                 />
+
+                {/* Popular Topic Chips */}
+                <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.74rem', color: '#94A3B8', fontWeight: 600 }}>話題例:</span>
+                  {POPULAR_BLITZ_TOPIC_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCustomTopic(chip.topic)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.07)',
+                        color: '#CBD5E1',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        fontSize: '0.74rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -151,12 +202,16 @@ export default function BlitzTopicSelector({
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={isGenerating || !customTopic.trim()}
+                disabled={isGenerating}
                 style={{ padding: '9px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
               >
                 {isGenerating ? (
                   <>
                     <Loader2 size={16} className="animate-spin" /> 10問セット作成中...
+                  </>
+                ) : !customTopic.trim() ? (
+                  <>
+                    <Dices size={16} /> 🎲 おまかせで10問セット生成
                   </>
                 ) : (
                   <>
