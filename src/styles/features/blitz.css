@@ -220,11 +220,34 @@
 }
 
 /* Session UI */
-.blitz-header-bar {
+.blitz-header-bar,
+.session-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-exit-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px 6px 0;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.btn-exit-session:hover {
+  color: var(--text-main);
+  background: transparent;
 }
 
 .session-title-badge {
@@ -233,6 +256,13 @@
   gap: 6px;
   font-weight: 800;
   font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.session-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .session-counter {

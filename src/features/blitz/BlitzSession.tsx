@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RotateCcw, Zap, Eye, Timer, Sparkles } from 'lucide-react';
+import { ArrowLeft, Zap, Eye, Timer, Sparkles } from 'lucide-react';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { calculateTextMatchScore } from '../../utils/textMatcher';
 import { evaluateBlitzSpeech, BlitzSpeechEvaluationResult } from '../../services/ai/blitz';
@@ -233,14 +233,15 @@ export default function BlitzSession({
   return (
     <div className="blitz-session-container animate-fade-in">
       {/* 上部ヘッダー */}
-      <div className="session-header-row">
+      <div className="blitz-header-bar session-header-row">
         <button
           type="button"
-          className="btn-exit-session"
+          className="btn btn-ghost btn-exit-session"
           onClick={onExitSession}
-          title="セッションを中断して戻る"
+          style={{ paddingLeft: 0 }}
+          title="お題一覧に戻る"
         >
-          <RotateCcw size={16} /> 中断する
+          <ArrowLeft size={18} /> お題一覧に戻る
         </button>
         <div className="session-title-badge">
           <Zap size={15} /> {title}

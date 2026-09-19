@@ -156,6 +156,25 @@ describe('Instant Oral Blitz Feature', () => {
       expect(handleComplete).toHaveBeenCalled();
     });
 
+    it('calls onExitSession when back button is clicked', () => {
+      const handleExit = vi.fn();
+
+      render(
+        <BlitzSession
+          title="テストセッション"
+          questions={mockQuestions}
+          timerSeconds={0}
+          onCompleteSession={vi.fn()}
+          onExitSession={handleExit}
+        />
+      );
+
+      const backBtn = screen.getByRole('button', { name: /お題一覧に戻る/i });
+      expect(backBtn).toBeInTheDocument();
+      fireEvent.click(backBtn);
+      expect(handleExit).toHaveBeenCalledTimes(1);
+    });
+
     it('triggers AI evaluation and displays feedback and improved speech', async () => {
       vi.mocked(evaluateBlitzSpeech).mockResolvedValueOnce({
         isCorrect: true,
