@@ -5,8 +5,8 @@ import { Situation, ChatMessage, CoachMessage, CoachPhrase } from '../../types';
 export interface AskConversationCoachParams {
   apiKey: string;
   model?: string;
-  situation: Situation;
-  history: ChatMessage[];
+  situation?: Situation | null;
+  history?: ChatMessage[];
   question: string;
   coachHistory?: CoachMessage[];
 }
@@ -23,7 +23,7 @@ export async function askConversationCoach({
   apiKey,
   model,
   situation,
-  history,
+  history = [],
   question,
   coachHistory = []
 }: AskConversationCoachParams): Promise<CoachResponse> {
@@ -31,10 +31,7 @@ export async function askConversationCoach({
     throw new Error("Gemini API key is required. Please set your API key in settings.");
   }
 
-  const systemPrompt = `
-You are an expert bilingual English Conversation Coach & Learning Mentor (バイリンガル英会話専属コーチ).
-The user is currently participating in an English conversation roleplay scenario, and has opened a floating assistant to ask you a question or seek advice in Japanese.
-
+  const scenarioContext = situation ? `
 CURRENT SCENARIO CONTEXT:
 - Scenario Title: ${situation.title} (${situation.titleJa || ''})
 - Target Difficulty: ${situation.difficulty || 'Intermediate'}
@@ -42,13 +39,21 @@ CURRENT SCENARIO CONTEXT:
 - User's Role: ${situation.userRole || 'Learner'}
 - Scenario Description: ${situation.descriptionJa || situation.description || ''}
 - Scenario Goals: ${(situation.goals && situation.goals.length > 0) ? situation.goals.map((g, i) => `${i + 1}. ${g}`).join(', ') : 'Natural conversation'}
+` : `
+CURRENT CONTEXT:
+The user is browsing conversation topics or seeking general English conversation and learning advice.
+`;
 
+  const systemPrompt = `
+You are an expert bilingual English Conversation Coach & Learning Mentor (バイリンガル英会話専属コーチ).
+The user has opened a floating assistant to ask you a question or seek advice in Japanese.
+${scenarioContext}
 YOUR MISSION AS A COACH:
 1. Answer the user's question clearly, warmly, and concisely in Japanese.
-2. Rely heavily on the provided conversation history and current scenario context to give contextualized, practical real-world advice (e.g., explaining what the AI partner meant, the nuance of a phrase, cultural etiquette/customs, or what the user can reply next).
-3. If applicable or helpful, provide practical, ready-to-use English phrases in "suggestedPhrases" that the user can immediately speak or send back to their conversation partner.
+2. If in a conversation scenario, rely heavily on the provided conversation history and current scenario context to give contextualized, practical real-world advice (e.g., explaining what the AI partner meant, the nuance of a phrase, cultural etiquette/customs, or what the user can reply next).
+3. If applicable or helpful, provide practical, ready-to-use English phrases in "suggestedPhrases" that the user can immediately speak or use.
    - Each phrase must have "english" and "japanese" (translation / nuance).
-   - If no specific phrases are relevant (e.g. pure cultural or grammatical question without direct reply phrases), "suggestedPhrases" can be an empty array [].
+   - If no specific phrases are relevant (e.g. pure cultural or general question), "suggestedPhrases" can be an empty array [].
 4. Formatting:
    - Make the "answer" easy to read with bullet points or paragraphs. Keep it encouraging, supportive, and practical for living or traveling abroad!
 
@@ -66,10 +71,14 @@ Return your response strictly as JSON with this structure:
 
   // Format conversation history
   const formattedConversationLog = history.length > 0
-    ? history.map(item => `${item.role === 'user' ? 'User' : `AI Partner (${situation.systemRole})`}: ${item.text}`).join('\n')
-    : `(まだ会話は始まっていません。AIの初期挨拶: "${situation.initialMessage}")`;
+    ? history.map(item => `${item.role === 'user' ? 'User' : `AI Partner (${situation?.systemRole || 'AI'})`}: ${item.text}`).join('\n')
+    : situation?.initialMessage
+      ? `(まだ会話は始まっていません。AIの初期挨拶: "${situation.initialMessage}")`
+      : '(会話セッション開始前)';
 
-  let promptText = `【現在の英会話ロールプレイの会話ログ】\n${formattedConversationLog}\n\n`;
+  let promptText = situation
+    ? `【現在の英会話ロールプレイの会話ログ】\n${formattedConversationLog}\n\n`
+    : `【現在の状況】シチュエーション選択画面\n\n`;
 
   // Include recent coach conversation if any
   if (coachHistory && coachHistory.length > 0) {

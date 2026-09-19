@@ -266,6 +266,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
 
       {/* Floating AI Coach Assistant Widget */}
       <FloatingCoachWidget
+        situation={situation}
         isOpen={isCoachOpen}
         onToggle={toggleCoachOpen}
         onClose={() => setIsCoachOpen(false)}

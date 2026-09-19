@@ -4,7 +4,14 @@ import { describe, it, expect, vi } from 'vitest';
 import FloatingCoachWidget from '../FloatingCoachWidget';
 
 describe('FloatingCoachWidget component', () => {
+  const mockSituation = {
+    id: 'cafe-order',
+    title: 'Cafe Order',
+    titleJa: 'カフェでの注文'
+  };
+
   const defaultProps = {
+    situation: mockSituation,
     isOpen: false,
     onToggle: vi.fn(),
     onClose: vi.fn(),
@@ -36,12 +43,19 @@ describe('FloatingCoachWidget component', () => {
     expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('renders coach panel when isOpen is true', () => {
+  it('renders coach panel when isOpen is true in conversation mode', () => {
     render(<FloatingCoachWidget {...defaultProps} isOpen={true} />);
 
     expect(screen.getByText('AI学習コーチ')).toBeInTheDocument();
     expect(screen.getByText(/会話ログ連携中/i)).toBeInTheDocument();
     expect(screen.getByText('こんにちは！AIコーチです。何でも質問してください。')).toBeInTheDocument();
+  });
+
+  it('renders general prompts when situation is null', () => {
+    render(<FloatingCoachWidget {...defaultProps} situation={null} isOpen={true} />);
+
+    expect(screen.getByText(/英語学習相談/i)).toBeInTheDocument();
+    expect(screen.getByText('初心者におすすめの会話は？')).toBeInTheDocument();
   });
 
   it('triggers onAskQuestion when quick prompt chip is clicked', () => {

@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const QUICK_PROMPTS = [
+const CONVERSATION_QUICK_PROMPTS = [
   {
     label: '相手の発言のニュアンス',
     icon: <MessageCircleQuestion size={13} />,
@@ -37,7 +37,31 @@ const QUICK_PROMPTS = [
   }
 ];
 
+const GENERAL_QUICK_PROMPTS = [
+  {
+    label: '初心者におすすめの会話は？',
+    icon: <Lightbulb size={13} />,
+    query: '英会話初心者ですが、まずはどのシチュエーションから練習するのがおすすめですか？効果的な練習手順も教えてください。'
+  },
+  {
+    label: '海外旅行で役立つ定番フレーズ',
+    icon: <Globe size={13} />,
+    query: '海外旅行（カフェ、空港、ホテル、タクシーなど）で絶対に役立つ重要フレーズを5つ教えてください。'
+  },
+  {
+    label: '英会話が続く相槌のコツ',
+    icon: <MessageCircleQuestion size={13} />,
+    query: 'ネイティブとの会話で自然にリアクションできる「相槌（あいづち）」や繋ぎ言葉の使い分けを教えてください。'
+  },
+  {
+    label: '言いたい言葉が出ないときの対処法',
+    icon: <HelpCircle size={13} />,
+    query: '英語を話す時に言いたい単語や表現が出てこない時、どう言い換えたり切り抜ければいいですか？'
+  }
+];
+
 export default function FloatingCoachWidget({
+  situation = null,
   isOpen,
   onToggle,
   onClose,
@@ -50,6 +74,7 @@ export default function FloatingCoachWidget({
   onClearHistory,
   onApplyPhrase
 }) {
+  const quickPrompts = situation ? CONVERSATION_QUICK_PROMPTS : GENERAL_QUICK_PROMPTS;
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -111,9 +136,13 @@ export default function FloatingCoachWidget({
               <div>
                 <div className="coach-header-title">
                   AI学習コーチ
-                  <span className="coach-status-tag">会話ログ連携中 🟢</span>
+                  <span className={`coach-status-tag ${situation ? 'connected' : 'general'}`}>
+                    {situation ? '会話ログ連携中 🟢' : '英語学習相談 💡'}
+                  </span>
                 </div>
-                <div className="coach-header-sub">現在の会話内容について何でも相談</div>
+                <div className="coach-header-sub">
+                  {situation ? '現在の会話内容について何でも相談' : '英語表現や学習のコツを何でも相談'}
+                </div>
               </div>
             </div>
 
@@ -141,7 +170,7 @@ export default function FloatingCoachWidget({
 
           {/* Quick Prompts Bar */}
           <div className="coach-quick-prompts">
-            {QUICK_PROMPTS.map((prompt, idx) => (
+            {quickPrompts.map((prompt, idx) => (
               <button
                 key={idx}
                 type="button"

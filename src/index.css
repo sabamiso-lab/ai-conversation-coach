@@ -2159,10 +2159,18 @@ body {
 .coach-status-tag {
   font-size: 0.68rem;
   font-weight: 700;
-  background: #DCFCE7;
-  color: #15803D;
   padding: 1px 6px;
   border-radius: var(--radius-full);
+}
+
+.coach-status-tag.connected {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.coach-status-tag.general {
+  background: #FEF3C7;
+  color: #B45309;
 }
 
 .coach-header-sub {

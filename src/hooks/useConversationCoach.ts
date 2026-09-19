@@ -5,15 +5,15 @@ import { Situation, ChatMessage, CoachMessage } from '../types';
 interface UseConversationCoachOptions {
   apiKey: string;
   model: string;
-  situation: Situation;
-  messages: ChatMessage[];
+  situation?: Situation | null;
+  messages?: ChatMessage[];
 }
 
 export function useConversationCoach({
   apiKey,
   model,
   situation,
-  messages
+  messages = []
 }: UseConversationCoachOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,12 +21,22 @@ export function useConversationCoach({
   const [questionInput, setQuestionInput] = useState('');
 
   // Initial greeting message based on situation
-  const createGreeting = useCallback((): CoachMessage => ({
-    id: 'coach-init',
-    role: 'assistant',
-    text: `こんにちは！バイリンガルAIコーチです👋\n現在進行中の「${situation.titleJa || situation.title}」の会話ログを把握しています。\n\n「相手の発言のニュアンスは？」「ここで何て返せばいい？」「この場面のマナーは？」など、何でも日本語で気軽に質問してください！`,
-    timestamp: 0
-  }), [situation.title, situation.titleJa]);
+  const createGreeting = useCallback((): CoachMessage => {
+    if (situation) {
+      return {
+        id: 'coach-init',
+        role: 'assistant',
+        text: `こんにちは！バイリンガルAIコーチです👋\n現在進行中の「${situation.titleJa || situation.title}」の会話ログを把握しています。\n\n「相手の発言のニュアンスは？」「ここで何て返せばいい？」「この場面のマナーは？」など、何でも日本語で気軽に質問してください！`,
+        timestamp: 0
+      };
+    }
+    return {
+      id: 'coach-init',
+      role: 'assistant',
+      text: `こんにちは！バイリンガルAIコーチです👋\n英会話のシチュエーションを選択して会話をスタートすると、会話内容に応じたリアルタイム相談ができます。\n\n「初心者におすすめのトピックは？」「海外旅行でまず覚えるべきフレーズは？」など、気になることがあれば何でも日本語で質問してください！`,
+      timestamp: 0
+    };
+  }, [situation]);
 
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>(() => [createGreeting()]);
 
