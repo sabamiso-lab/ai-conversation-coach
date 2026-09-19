@@ -20,6 +20,7 @@
   <img src="https://img.shields.io/badge/Vite-8.x-646CFF.svg?logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/AI Engine-Gemini 3.5 Flash--Lite-8E44AD.svg?logo=google" alt="Gemini 3.5 Flash-Lite" />
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
+  <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
   <img src="https://img.shields.io/badge/Testing-Vitest-6E9F18.svg?logo=vitest" alt="Vitest" />
   <img src="https://img.shields.io/badge/Deployment-GitHub Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
@@ -39,56 +40,63 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 
 ## 🌟 主な機能 (Key Features)
 
-### 🎧 1. 【シャドーイング・スタジオ】 (Shadowing Studio)
+### 📱 1. モバイル・レスポンシブ UI ＆ ボトムナビゲーション (Mobile Layout)
+- **スマートフォン最適化**: PC・タブレット・モバイル各種画面サイズに対応したフルレスポンシブデザイン。
+- **ボトムナビゲーションバー**: モバイル表示時には直感的に切り替え可能な固定ボトムナビゲーション（会話対話 ⇆ シャドーイング）を提供。
+- **モバイル向け会話目標モーダル**: 省スペースなモバイル画面でもタップ一つでシナリオのミッション目標を確認可能。
+
+### 🎧 2. 【シャドーイング・スタジオ】 (Shadowing Studio)
 - **リスニング ＆ 音読追随トレーニング**: ネイティブの音声再生に合わせて同時に発話（シャドーイング）するリスニング・スピーキング特訓機能。
+- **テーマ別トピック選択**: ビジネス、日常会話、ニュース、旅・スピーチなど豊富なカテゴリからスクリプトを選択可能。
 - **再生速度コントロール**: 0.5x, 0.75x, 1.0x, 1.25x, 1.5x の柔軟な再生スピード調整に対応。
 - **音声認識による精度比較**: マイクに向かって音読した発話内容をリアルタイム認識し、元のスクリプトと照合。
 - **単語レベルの精度判定 ＆ スコアリング**: テキストの類似度・単語一致率を自動計算し、精度スコア（%）を出力。
 - **カスタムスクリプト機能**: ニュース記事やオリジナルの英文テキストを自由に貼り付けて専用のシャドーイング教材を即時生成。
 
-### 📰 2. 【最新ニュース AI シナリオ生成】 (Google Search Grounding)
+### 📰 3. 【最新ニュース AI シナリオ生成】 (Google Search Grounding)
 - **ワンタップ最新ニュース検索**: テクノロジー、ビジネス、サイエンス、ワールドニュースなどの最新トレンドを AI が Google 検索経由でリアルタイム取得。
 - **アコーディオン式 UI**: ニュース選択とカスタム入力がアコーディオン UI でスムーズに切り替え可能。
 - **難易度別シナリオ動的生成**: `Beginner` / `Intermediate` / `Advanced` から難易度を選択でき、選択レベルに応じた語彙・構文・会話目標・要約を自動生成。
 - **DynamoDB 自動同期 ＆ TTL**: 生成されたニュースシナリオはバックエンド API を通じて DynamoDB に自動保存され、TTL (Time To Live) 機能により一定期間後に自動クリーニングされます。
 
-### 🎭 3. シチュエーション別ロールプレイ & DynamoDB 動的配信
+### 🎭 4. シチュエーション別ロールプレイ & DynamoDB 動的配信
 - **多様な実用シーン**: カフェでの注文、空港チェックイン、ホテル予約、ビジネス進捗ミーティング、英語ジョブインタビュー、フリートークなど。
 - **Amazon DynamoDB 連携**: シチュエーションデータは AWS DynamoDB から安全に動的配信されます。アプリの再ビルドなしで新しいシナリオを自由に追加・管理可能です。（※オフライン時は自動でローカルデータへフォールバックする安全設計）
 - **難易度フィルター**: `Beginner` / `Intermediate` / `Advanced` / `Casual` の4段階でレベル指定が可能。
 - **ミッション目標 (Goals)**: 各シナリオに明確な会話達成目標が設定されています。
 
-### 🎙️ 4. 音声認識 ＆ 自動テキスト読み上げ (Speech-to-Text & TTS)
+### 🎙️ 5. 音声認識 ＆ 自動テキスト読み上げ (Speech-to-Text & TTS)
 - **Web Speech API 連携**: マイクボタンを押して話しかけるだけで、リアルタイムで正確に音声認識＆文字起こし。
-- **自然な発話再生**: AIの応答メッセージをクリアな英語音声（Text-to-Speech）で自動再生。
+- **自然な発話再生**: AIの応答メッセージをクリアな英語音声（Text-to-Speech）で自動再生。タイマーやイベントハンドラのクリーンアップにより重複再生を防止。
 
-### ✨ 5. 「より自然なネイティブ表現 (Better Phrasing)」のリアルタイムアドバイス
+### ✨ 6. 「より自然なネイティブ表現 (Better Phrasing)」のリアルタイムアドバイス
 - ユーザーの発言に対し、文法エラーや不自然な箇所をAIが即座に分析。
-- 「こう言ったほうがよりネイティブらしく聞こえるよ！」という自然な表現提案と簡単なワンポイント解説をリアルタイム表示。
+- 「こう言ったほうがよりネイティブらしく聞こえるよ！」という自然な表現提案と簡単なワンポイント解説をリアルタイム表示。自動サニタイズ処理により品質と視認性を向上。
 
-### 💬 6. 日本語訳トグル ＆ 音声聞き直し
+### 💬 7. 日本語訳トグル ＆ 音声聞き直し
 - ユーザー発話とAI応答（初期メッセージ含む）の両方に、ワンタップで切り替え可能な「日本語訳」を自動付与。
 - いつでも発話内容を何度でも音声再生してリスニング学習が可能。
 
-### 💡 7. 次に応答に困った時の「AIヒント提案」
+### 💡 8. 次に応答に困った時の「AIヒント提案」
 - 会話中「次になんと言えばいいか分からない」ときにヒントボタンをタップ。
 - AIが現在の会話文脈に合わせた3つの回答フレーズ（`Easy` / `Medium` / `Advanced`）を自動生成。
 
-### 📊 8. 会話セッション総合診断レポート
+### 📊 9. 会話セッション総合診断レポート
 - 会話を「終了して診断」すると、AIがセッション全体を総合分析。
 - **スコア表示 (100点満点)**: 総合スコア + `Grammar (文法)` / `Vocabulary (語彙)` / `Fluency (会話の流れ)`
 - **詳細フィードバック**: 良かった点・次回への改善ポイント。
 - **今回学んだキーフレーズ集**: 実用的なフレーズと日本語訳の復習カードを出力。
 - **目標達成チェック**: 設定されたシナリオ目標を達成できたかを自動判定。
 
-### 🛡️ 9. 3重の API セキュリティ防護 & AWS バックエンド
+### 🛡️ 10. 3重の API セキュリティ防護 & AWS バックエンド
 - **CORS 制限**: 許可されたドメイン（`https://sabamiso-lab.github.io` および `localhost`）からのみアクセスを許可。
 - **Origin / Referer ドメイン検証**: Lambda ハンドラー内でドメインを厳密判定し、直叩きや未許可サイトを排除。
 - **x-speakflow-api-key カスタムヘッダー**: API Key 照合を行い、不正な呼び出しを防止。
 - **POST API (シナリオ登録)**: クライアントやAIから動的シナリオを安全にDynamoDBへ追加保存。
 
-### ⚡ 10. 高速 AI エンジン (Gemini 3.5 Flash-Lite) ＆ JSON Self-Healing Parser
+### ⚡ 11. 高速 AI エンジン (Gemini 3.5 Flash-Lite) ＆ ループ防止 / JSON Self-Healing Parser
 - 超高速応答の `gemini-3.5-flash-lite` を標準採用。API Key はブラウザの `LocalStorage` に安全に保管されます。
+- **繰り返し会話ループ防止**: AIが同じ応答を繰り返さないようプロンプト制約および会話履歴制御を強化。
 - 不完全な JSON レスポンスやトークン上限切れが発生しても、安全に修復・パースする Self-Healing ロジックを標準搭載。
 
 ---
@@ -101,7 +109,7 @@ SpeakFlow は GitHub Pages にて自動公開されています。以下のリ�
 
 | 3. シャドーイング・スタジオ | 4. セッション診断レポート |
 |:---:|:---:|
-| スピード変更・音声認識・精度スコア計算 | 総合スコア・アドバイス・キーフレーズ復習 |
+| テーマ別スクリプト・スピード変更・精度スコア | 総合スコア・アドバイス・キーフレーズ復習 |
 
 ---
 
@@ -139,6 +147,11 @@ npm test
 
 # UIモードでのテスト実行
 npm run test:ui
+```
+
+### 6. リンターの実行 (Oxlint)
+```bash
+npm run lint
 ```
 
 ---
@@ -217,22 +230,25 @@ ai-conversation-coach/
     ├── main.jsx
     ├── App.jsx                   # ルーティング (React Router) & 全体レイアウト
     ├── App.css
-    ├── index.css                 # Clean & Friendly デザインシステム (CSS Vanilla)
+    ├── index.css                 # Clean & Friendly デザインシステム (CSS Vanilla / モバイル対応)
     ├── pages/                    # メイン画面ビュー
     │   ├── ConversationPage.jsx  # AI対話・ロールプレイ画面
     │   └── ShadowingPage.jsx     # シャドーイング特訓画面
     ├── features/                 # 機能別モジュール
-    │   ├── conversation/         # 会話関連コンポーネント (ChatRoom, SituationSelector, ReportModal etc.)
-    │   └── shadowing/            # シャドーイング関連コンポーネント (ShadowingStudio etc.)
+    │   ├── conversation/         # 会話関連コンポーネント (ChatRoom, SituationSelector, ReportModal, HintPanel etc.)
+    │   └── shadowing/            # シャドーイング関連コンポーネント (ShadowingPlayer, ShadowingSelector etc.)
     ├── components/               # 共通コンポーネント
-    │   ├── Header.jsx            # ヘッダー・ページ切替ナビ・APIキー/モデル設定
-    │   └── ApiKeyModal.jsx       # Gemini API Key ＆ モデル選択モーダル
+    │   └── common/
+    │       ├── Header.jsx        # ヘッダー・ナビゲーション・ボトムナビゲーション・APIキー/モデル設定
+    │       └── ApiKeyModal.jsx   # Gemini API Key ＆ モデル選択モーダル
     ├── services/                 # 各種 サービスモジュール
     │   ├── api.js                # DynamoDB API 通信 (GET/POST) ＆ フォールバック
-    │   ├── gemini.js             # Gemini API 呼び出し (Grounding / Safe JSON / Chat / Report)
-    │   └── speech.js             # Web Speech API (音声認識・音声合成)
+    │   ├── gemini.js             # Gemini API 呼び出し (Grounding / Safe JSON / Chat / Report / Sanitize)
+    │   └── speech.js             # Web Speech API (音声認識・音声合成・重複再生防止)
     └── data/
-        └── situations.js         # シチュエーションデータ＆フォールバック定義
+        ├── situations.js         # シチュエーションデータ＆フォールバック定義
+        ├── shadowingTopics.js    # シャドーイングテーマ・カテゴリ定義
+        └── shadowingScripts.js   # シャドーイングスクリプト定義
 ```
 
 ---
@@ -240,6 +256,7 @@ ai-conversation-coach/
 ## 🛠️ 技術スタック (Tech Stack)
 
 - **Frontend Core**: React 19, React Router 7, Vite 8
+- **UI / Responsive**: Mobile First Layout, Fixed Bottom Navigation, Custom CSS Tokens
 - **Backend / Infrastructure**: AWS CDK, AWS Lambda, Amazon DynamoDB (TTL有効), Amazon API Gateway (HTTP API)
 - **AI / LLM Engine**: Google Gemini API (`gemini-3.5-flash-lite` デフォルト, Google Search Grounding)
 - **Speech Engine**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`)
