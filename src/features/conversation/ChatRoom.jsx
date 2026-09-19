@@ -269,15 +269,16 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
           {/* Input Controls Bar */}
           <div className="chat-controls">
             {/* Status indicator */}
-            <div style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', color: isRecording ? '#E11D48' : '#64748B', fontWeight: 600 }}>
+            <div style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', color: isRecording ? '#E11D48' : '#64748B', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isRecording ? (
                 <>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E', display: 'inline-block', animation: 'pulseMic 1s infinite' }} />
-                  🎙️ 音声認識中... マイクに向かって英語で話してください
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E', display: 'inline-block', flexShrink: 0, animation: 'pulseMic 1s infinite' }} />
+                  <span>🎙️ 音声認識中... 英語で発話してください</span>
                 </>
               ) : (
                 <>
-                  <Mic size={14} /> マイクボタンを押すか、直接テキストを入力してください
+                  <Mic size={14} style={{ flexShrink: 0 }} />
+                  <span>マイクを押すかテキストを入力してください</span>
                 </>
               )}
             </div>
@@ -294,7 +295,7 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
               <input
                 type="text"
                 className="input-field"
-                placeholder={isRecording ? "話している内容を音声認識中..." : "英語でメッセージを入力するか、マイクボタンを押してください..."}
+                placeholder={isRecording ? "音声認識中..." : "英語でメッセージを入力..."}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -302,10 +303,10 @@ export default function ChatRoom({ situation, apiKey, model, onBack }) {
               />
 
               <button 
-                className="btn btn-primary"
+                className="btn btn-primary btn-send-chat"
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isAiThinking}
-                style={{ padding: '12px 20px', borderRadius: '9999px' }}
+                style={{ borderRadius: '9999px' }}
               >
                 <Send size={18} />
               </button>

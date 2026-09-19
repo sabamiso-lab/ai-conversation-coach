@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported } from '../../services/speech';
-import { Mic, MicOff, Volume2, CheckCircle, XCircle, ArrowRight, RotateCcw, Zap, HelpCircle, Eye, Timer } from 'lucide-react';
+import { Mic, MicOff, Volume2, CheckCircle, XCircle, RotateCcw, Zap, Eye, Timer } from 'lucide-react';
 
 /**
  * テキスト一致率（単語レベルの簡易類似度 %）を計算
@@ -59,37 +59,34 @@ export default function BlitzSession({
   const [interimTranscript, setInterimTranscript] = useState('');
   const [speechError, setSpeechError] = useState('');
   const [userResults, setUserResults] = useState([]); // [{ questionId, question, isCorrect, userSpeech, matchScore, responseTimeSec }]
-  const [startTime, setStartTime] = useState(Date.now());
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [startTime] = useState(() => Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState(() => Date.now());
 
   const currentQuestion = questions[currentIndex];
   const recognizerRef = useRef(null);
   const timerRef = useRef(null);
 
-  // カウントダウンタイマー処理
-  useEffect(() => {
-    if (isRevealed) return; // 回答表示済みならタイマー停止
-
-    setQuestionStartTime(Date.now());
-    setTimeLeft(timerSeconds);
-
-    if (timerSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 0.1) {
-            clearInterval(timerRef.current);
-            handleTimeUp();
-            return 0;
-          }
-          return Math.max(0, +(prev - 0.1).toFixed(1));
-        });
-      }, 100);
+  const revealAnswer = useCallback(() => {
+    if (isRevealed) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (recognizerRef.current) {
+      recognizerRef.current.stop();
+      setIsListening(false);
     }
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentIndex, isRevealed, timerSeconds]);
+    setIsRevealed(true);
+
+    // ネイティブ模範音声の自動再生
+    speakText(currentQuestion.answer, { rate: 0.95 });
+  }, [isRevealed, currentQuestion]);
+
+  const handleTimeUp = useCallback(() => {
+    if (recognizerRef.current) {
+      recognizerRef.current.stop();
+      setIsListening(false);
+    }
+    revealAnswer();
+  }, [revealAnswer]);
 
   // 音声認識のセットアップ
   useEffect(() => {
@@ -122,15 +119,15 @@ export default function BlitzSession({
     };
   }, []);
 
-  // 新しい質問に移る際の状態クリア ＆ 音声認識スタート（オプション）
-  useEffect(() => {
+  const startSpeechForNextQuestion = () => {
     setIsRevealed(false);
     setUserTranscript('');
     setInterimTranscript('');
     setSpeechError('');
+    setQuestionStartTime(Date.now());
+    setTimeLeft(timerSeconds);
     stopSpeaking();
 
-    // 制限時間なし、またはタイマーがある場合でも自動で音声認識を開始
     if (recognizerRef.current && isSpeechRecognitionSupported()) {
       try {
         recognizerRef.current.start();
@@ -139,7 +136,29 @@ export default function BlitzSession({
         console.warn('Auto start speech failed', e);
       }
     }
-  }, [currentIndex]);
+  };
+
+  // カウントダウンタイマー処理
+  useEffect(() => {
+    if (isRevealed) return; // 回答表示済みならタイマー停止
+
+    if (timerSeconds > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 0.1) {
+            clearInterval(timerRef.current);
+            handleTimeUp();
+            return 0;
+          }
+          return Math.max(0, +(prev - 0.1).toFixed(1));
+        });
+      }, 100);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentIndex, isRevealed, timerSeconds, handleTimeUp]);
 
   const toggleMic = () => {
     if (!recognizerRef.current) return;
@@ -152,28 +171,6 @@ export default function BlitzSession({
       recognizerRef.current.start();
       setIsListening(true);
     }
-  };
-
-  const handleTimeUp = () => {
-    if (recognizerRef.current) {
-      recognizerRef.current.stop();
-      setIsListening(false);
-    }
-    revealAnswer();
-  };
-
-  const revealAnswer = () => {
-    if (isRevealed) return;
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (recognizerRef.current) {
-      recognizerRef.current.stop();
-      setIsListening(false);
-    }
-
-    setIsRevealed(true);
-
-    // ネイティブ模範音声の自動再生
-    speakText(currentQuestion.answer, { rate: 0.95 });
   };
 
   const handleJudge = (isCorrect) => {
@@ -201,6 +198,7 @@ export default function BlitzSession({
 
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
+      startSpeechForNextQuestion();
     } else {
       // 全問終了
       const totalTimeSec = +((Date.now() - startTime) / 1000).toFixed(1);
