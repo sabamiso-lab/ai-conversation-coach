@@ -1,48 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SpeechRecognizer, speakText, stopSpeaking, isSpeechRecognitionSupported } from '../../services/speech';
 import { Mic, MicOff, Volume2, CheckCircle, XCircle, RotateCcw, Zap, Eye, Timer } from 'lucide-react';
-
-/**
- * テキスト一致率（単語レベルの簡易類似度 %）を計算
- */
-function calculateTextMatchScore(userText, targetAnswer, acceptedAnswers = []) {
-  if (!userText) return 0;
-  
-  const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-  const userNorm = normalize(userText);
-  if (!userNorm) return 0;
-
-  const targets = [targetAnswer, ...acceptedAnswers].map(normalize);
-
-  let maxScore = 0;
-
-  for (const target of targets) {
-    if (userNorm === target) return 100;
-
-    const targetWords = target.split(/\s+/);
-    const userWords = userNorm.split(/\s+/);
-
-    if (targetWords.length === 0) continue;
-
-    let matchedCount = 0;
-    const targetWordsCopy = [...targetWords];
-
-    for (const uWord of userWords) {
-      const foundIdx = targetWordsCopy.indexOf(uWord);
-      if (foundIdx !== -1) {
-        matchedCount++;
-        targetWordsCopy.splice(foundIdx, 1);
-      }
-    }
-
-    const score = Math.round((matchedCount / targetWords.length) * 100);
-    if (score > maxScore) {
-      maxScore = score;
-    }
-  }
-
-  return Math.min(100, maxScore);
-}
+import { calculateTextMatchScore } from '../../utils/textMatcher';
 
 export default function BlitzSession({
   title,

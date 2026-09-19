@@ -3,13 +3,15 @@ import { fetchSituations, createSituation } from '../../services/api';
 import { generateNewsSituation } from '../../services/gemini';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
-  ArrowRight, Target, Loader2, Globe, Sparkles, 
-  ExternalLink, Zap, Newspaper, PlusCircle
+  ArrowRight, Target, Loader2, Globe, 
+  ExternalLink, Zap, Newspaper
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
 import LoadingState from '../../components/common/LoadingState';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
+import AiGeneratorCard from '../../components/common/AiGeneratorCard';
+import Alert from '../../components/common/Alert';
 
 const ICON_MAP = {
   Coffee,
@@ -132,56 +134,22 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
       />
 
       {/* --- Dynamic News Grounding Generator Section --- */}
-      <div 
-        style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
-          borderRadius: '16px',
-          padding: '20px',
-          color: '#FFFFFF',
-          marginBottom: '28px',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
+      <AiGeneratorCard
+        badgeText="Google Search Grounding"
+        hasApiKey={Boolean(apiKey)}
+        title="📰 本日のトレンドニュースからシチュエーションをAI生成"
+        description="Google検索で最新ニュースを取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。"
+        isOpen={isFormOpen}
+        onToggle={() => setIsFormOpen(!isFormOpen)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
-              <Sparkles size={13} /> Google Search Grounding
-              {!apiKey && (
-                <span style={{ background: '#F59E0B', color: '#FFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', marginLeft: '4px' }}>
-                  ⚠️ Key未設定
-                </span>
-              )}
-            </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
-              📰 本日のトレンドニュースからシチュエーションをAI生成
-            </h2>
-            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0, maxWidth: '680px' }}>
-              Google検索で最新ニュースを取得し、その話題について語り合う実践的なロールプレイをAIがその場で構築します。
-            </p>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setIsFormOpen(!isFormOpen)}
-            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
-          >
-            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
-          </button>
-        </div>
-
-        {/* Custom AI Form Collapse */}
-        {isFormOpen && (
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (customNewsTopic.trim()) {
-                handleGenerateNews('custom', customNewsTopic);
-              }
-            }} 
-            style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
-          >
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (customNewsTopic.trim()) {
+              handleGenerateNews('custom', customNewsTopic);
+            }
+          }}
+        >
             {/* Difficulty Selection */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px' }}>
@@ -311,13 +279,12 @@ export default function SituationSelector({ onSelectSituation, apiKey, model, on
 
             {/* Error message */}
             {newsError && (
-              <div style={{ marginTop: '16px', background: '#FFE4E6', color: '#E11D48', padding: '10px 16px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600 }}>
+              <Alert variant="error" style={{ marginTop: '16px', marginBottom: 0 }}>
                 {newsError}
-              </div>
+              </Alert>
             )}
           </form>
-        )}
-      </div>
+      </AiGeneratorCard>
 
       {/* Category Tabs */}
       <CategoryFilter

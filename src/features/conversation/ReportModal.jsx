@@ -1,7 +1,8 @@
 import React from 'react';
-import { Award, BookOpen, RotateCcw, AlertCircle } from 'lucide-react';
+import { Award, BookOpen, RotateCcw } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import LoadingState from '../../components/common/LoadingState';
+import Alert from '../../components/common/Alert';
 
 export default function ReportModal({ isOpen, onClose, report, loading, error, onRestart, onRetry }) {
   if (!isOpen) return null;
@@ -23,13 +24,13 @@ export default function ReportModal({ isOpen, onClose, report, loading, error, o
         />
       ) : error ? (
           <div style={{ padding: '24px 12px' }}>
-            <div style={{ background: '#FFE4E6', border: '1px solid #FECDD3', color: '#E11D48', padding: '16px', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '0.9rem' }}>
-              <AlertCircle size={22} style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>評価レポートの作成に失敗しました</div>
-                <div style={{ fontSize: '0.85rem', lineHeight: 1.5 }}>{error}</div>
-              </div>
-            </div>
+            <Alert
+              variant="error"
+              title="評価レポートの作成に失敗しました"
+              style={{ marginBottom: '20px' }}
+            >
+              {error}
+            </Alert>
             <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '24px', lineHeight: 1.6, textAlign: 'center' }}>
               画面右上の <strong>「API Key 設定」</strong> から Gemini API Key やモデル設定が正しいかご確認ください。
             </p>

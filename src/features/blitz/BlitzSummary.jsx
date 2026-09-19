@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trophy, RotateCcw, CheckCircle2, XCircle, Volume2, Zap, Target, Clock } from 'lucide-react';
 import { speakText } from '../../services/speech';
+import StatCard from '../../components/common/StatCard';
 
 export default function BlitzSummary({
   summaryData,
@@ -47,23 +48,21 @@ export default function BlitzSummary({
 
         {/* スタッツグリッド */}
         <div className="summary-stats-grid mt-6">
-          <div className="stat-card">
-            <Target size={20} className="text-green-500" />
-            <div className="stat-val font-mono">{correctCount} / {totalCount}</div>
-            <div className="stat-lbl">正解 (言えた)</div>
-          </div>
-
-          <div className="stat-card">
-            <Clock size={20} className="text-blue-500" />
-            <div className="stat-val font-mono">{totalTimeSec}s</div>
-            <div className="stat-lbl">合計タイム</div>
-          </div>
-
-          <div className="stat-card">
-            <Zap size={20} className="text-yellow-500" />
-            <div className="stat-val font-mono">{avgTimePerQuestion}s</div>
-            <div className="stat-lbl">平均応答速度 / 問</div>
-          </div>
+          <StatCard
+            icon={<Target size={20} className="text-green-500" />}
+            value={`${correctCount} / ${totalCount}`}
+            label="正解 (言えた)"
+          />
+          <StatCard
+            icon={<Clock size={20} className="text-blue-500" />}
+            value={`${totalTimeSec}s`}
+            label="合計タイム"
+          />
+          <StatCard
+            icon={<Zap size={20} className="text-yellow-500" />}
+            value={`${avgTimePerQuestion}s`}
+            label="平均応答速度 / 問"
+          />
         </div>
 
         {/* アクションボタン */}

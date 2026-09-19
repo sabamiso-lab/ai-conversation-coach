@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Play, Square, 
-  ArrowLeft, Sparkles, AlertCircle, Eye, EyeOff, 
+  ArrowLeft, Sparkles, Eye, EyeOff, 
   Gauge, Repeat, Award, Lightbulb, Loader2 
 } from 'lucide-react';
 import MicButton from '../../components/common/MicButton';
+import Alert from '../../components/common/Alert';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { evaluateShadowingPerformance } from '../../services/gemini';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
@@ -174,10 +175,9 @@ export default function ShadowingPlayer({ script, onBack, apiKey, model, onOpenA
       </div>
 
       {errorMsg && (
-        <div style={{ background: '#FFE4E6', border: '1px solid #FECDD3', color: '#E11D48', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
-          <AlertCircle size={18} />
+        <Alert variant="error" style={{ marginBottom: '16px' }}>
           {errorMsg}
-        </div>
+        </Alert>
       )}
 
       {/* Main Practice Card */}

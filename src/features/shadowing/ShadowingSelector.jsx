@@ -3,12 +3,15 @@ import { SHADOWING_SCRIPTS } from '../../data/shadowingScripts';
 import { generateShadowingScript } from '../../services/gemini';
 import { getRandomShadowingTopic, POPULAR_TOPIC_CHIPS } from '../../data/shadowingTopics';
 import { 
-  Headphones, Sparkles, Play, Loader2, 
-  Zap, PlusCircle, Dices 
+  Headphones, Play, Loader2, 
+  Zap, Dices 
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
+import AiGeneratorCard from '../../components/common/AiGeneratorCard';
+import SuggestionChips from '../../components/common/SuggestionChips';
+import Alert from '../../components/common/Alert';
 
 const CATEGORIES = ['All', 'Daily', 'Travel', 'Business', 'Tech & Trends', 'Custom AI'];
 
@@ -80,43 +83,15 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
       />
 
       {/* AI Custom Script Generator Card */}
-      <div 
-        style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
-          borderRadius: '16px',
-          padding: '20px',
-          color: '#FFFFFF',
-          marginBottom: '28px',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
+      <AiGeneratorCard
+        badgeText="Gemini AI カスタム作成"
+        hasApiKey={Boolean(apiKey)}
+        title="好きなトピックで自分だけのシャドーイング文章を生成"
+        description="「海外での家探し」「IT業界のプレゼン」「空港でのトラブル」など、自由入力または🎲ランダム設定で作成できます。"
+        isOpen={isFormOpen}
+        onToggle={() => setIsFormOpen(!isFormOpen)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
-              <Sparkles size={13} /> Gemini AI カスタム作成
-            </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0' }}>
-              好きなトピックで自分だけのシャドーイング文章を生成
-            </h2>
-            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
-              「海外での家探し」「IT業界のプレゼン」「空港でのトラブル」など、自由入力または🎲ランダム設定で作成できます。
-            </p>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setIsFormOpen(!isFormOpen)}
-            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
-          >
-            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
-          </button>
-        </div>
-
-        {/* Custom AI Form Collapse */}
-        {isFormOpen && (
-          <form onSubmit={handleGenerateCustomScript} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <form onSubmit={handleGenerateCustomScript}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -155,28 +130,10 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
                 />
 
                 {/* Popular Topic Chips */}
-                <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.74rem', color: '#94A3B8', fontWeight: 600 }}>話題例:</span>
-                  {POPULAR_TOPIC_CHIPS.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setTopicInput(chip.topic)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.07)',
-                        color: '#CBD5E1',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '6px',
-                        padding: '2px 8px',
-                        fontSize: '0.74rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
+                <SuggestionChips
+                  chips={POPULAR_TOPIC_CHIPS}
+                  onSelect={setTopicInput}
+                />
               </div>
 
               <div>
@@ -197,9 +154,9 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
             </div>
 
             {errorMsg && (
-              <div style={{ color: '#F43F5E', fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>
+              <Alert variant="error" style={{ marginBottom: '16px' }}>
                 {errorMsg}
-              </div>
+              </Alert>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -225,8 +182,7 @@ export default function ShadowingSelector({ onSelectScript, apiKey, model, onOpe
               </button>
             </div>
           </form>
-        )}
-      </div>
+      </AiGeneratorCard>
 
       {/* Category Tabs */}
       <CategoryFilter

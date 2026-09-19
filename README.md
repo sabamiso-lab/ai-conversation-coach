@@ -212,6 +212,10 @@ ai-conversation-coach/
     │       ├── LoadingState.jsx  # 統一ローディングインジケーター (スピナー & メッセージ)
     │       ├── PageHeader.jsx    # ページ上部タイトルバナー (スタジオバッジ, 見出し, 説明文)
     │       ├── MicButton.jsx     # 音声認識 (マイク) トグルボタン (録音中アニメーション対応)
+    │       ├── AiGeneratorCard.jsx # AI生成アコーディオンカード枠組み (グラデーション, Key警告, 開閉)
+    │       ├── SuggestionChips.jsx # 話題例クイック選択チップス
+    │       ├── Alert.jsx         # 汎用インラインアラート (error, warning, info, success)
+    │       ├── StatCard.jsx      # 統計・スコア表示カード
     │       └── __tests__/        # 共通コンポーネント単体テスト
     ├── contexts/                 # React Context
     │   └── SettingsContext.jsx   # アプリ設定 (API Key, 選択モデル等) 状態管理
@@ -236,7 +240,9 @@ ai-conversation-coach/
     ├── types/                    # TypeScript 型定義
     │   └── index.ts              # アプリ全体の型定義 (Situation, Shadowing, Blitz 等)
     ├── utils/                    # ユーティリティ
-    │   └── jsonRepair.js         # Safe JSON Self-Healing パース関数
+    │   ├── jsonRepair.js         # Safe JSON Self-Healing パース関数
+    │   ├── textMatcher.js        # テキスト正規化・単語一致率計算ユーティリティ
+    │   └── __tests__/            # ユーティリティ単体テスト
     └── test/                     # テスト環境設定
         └── setup.js              # Vitest セットアップスクリプト
 ```

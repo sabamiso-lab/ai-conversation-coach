@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { PRESET_BLITZ_TOPICS, getRandomBlitzTopic, POPULAR_BLITZ_TOPIC_CHIPS } from './blitzTopics';
 import { 
-  Zap, Briefcase, Smile, Sparkles, Clock, Loader2, 
-  PlusCircle, Dices
+  Zap, Briefcase, Smile, Clock, Loader2, 
+  Dices
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
+import AiGeneratorCard from '../../components/common/AiGeneratorCard';
+import SuggestionChips from '../../components/common/SuggestionChips';
 
 const CATEGORIES = ['All', 'Grammar', 'Business', 'Daily'];
 
@@ -73,48 +75,15 @@ export default function BlitzTopicSelector({
       />
 
       {/* AI Custom Script Generator Card */}
-      <div 
-        style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
-          borderRadius: '16px',
-          padding: '20px',
-          color: '#FFFFFF',
-          marginBottom: '28px',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
+      <AiGeneratorCard
+        badgeText="Gemini AI カスタム作成"
+        hasApiKey={hasApiKey}
+        title="自由なお題でオリジナル瞬間英作文10問セットを生成"
+        description="「ITエンジニアのスクラム」「海外ホテルのトラブル」など自由入力または🎲ランダム設定で作成できます。"
+        isOpen={isFormOpen}
+        onToggle={() => setIsFormOpen(!isFormOpen)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.25)', color: '#A5B4FC', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '6px' }}>
-              <Sparkles size={13} /> Gemini AI カスタム作成
-              {!hasApiKey && (
-                <span style={{ background: '#F59E0B', color: '#FFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', marginLeft: '4px' }}>
-                  ⚠️ Key未設定
-                </span>
-              )}
-            </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 4px 0' }}>
-              自由なお題でオリジナル瞬間英作文10問セットを生成
-            </h2>
-            <p style={{ fontSize: '0.84rem', color: '#94A3B8', margin: 0 }}>
-              「ITエンジニアのスクラム」「海外ホテルのトラブル」など自由入力または🎲ランダム設定で作成できます。
-            </p>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setIsFormOpen(!isFormOpen)}
-            style={{ borderRadius: '12px', padding: '9px 16px', fontSize: '0.88rem', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
-          >
-            <PlusCircle size={18} /> {isFormOpen ? '閉じる' : 'AIで作成する'}
-          </button>
-        </div>
-
-        {/* Custom AI Form Collapse */}
-        {isFormOpen && (
-          <form onSubmit={handleCustomSubmit} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <form onSubmit={handleCustomSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -154,28 +123,10 @@ export default function BlitzTopicSelector({
                 />
 
                 {/* Popular Topic Chips */}
-                <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.74rem', color: '#94A3B8', fontWeight: 600 }}>話題例:</span>
-                  {POPULAR_BLITZ_TOPIC_CHIPS.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setCustomTopic(chip.topic)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.07)',
-                        color: '#CBD5E1',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '6px',
-                        padding: '2px 8px',
-                        fontSize: '0.74rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
+                <SuggestionChips
+                  chips={POPULAR_BLITZ_TOPIC_CHIPS}
+                  onSelect={setCustomTopic}
+                />
               </div>
 
               <div>
@@ -219,8 +170,7 @@ export default function BlitzTopicSelector({
               </button>
             </div>
           </form>
-        )}
-      </div>
+      </AiGeneratorCard>
 
       {/* Timer Bar / Configuration Section */}
       <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '16px 20px', border: '1px solid #E2E8F0', marginBottom: '24px', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
