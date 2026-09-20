@@ -284,5 +284,55 @@ describe('askConversationCoach', () => {
       expect.anything()
     );
   });
+
+  it('filters out coach-init from coachHistory and includes flexible response guidelines', async () => {
+    vi.mocked(clientModule.callGeminiApi).mockResolvedValue(JSON.stringify({
+      answer: 'カジュアルな店ではチップは不要です。',
+      suggestedPhrases: []
+    }));
+
+    await askConversationCoach({
+      apiKey: 'test-key',
+      situation: mockSituation,
+      history: [
+        { id: '1', role: 'ai', text: 'What can I get started for you today?' }
+      ],
+      coachHistory: [
+        { id: 'coach-init', role: 'assistant', text: 'こんにちは！バイリンガルAIコーチです', timestamp: 0 },
+        { id: 'u-1', role: 'user', text: 'チップは必要？', timestamp: 1 },
+        { id: 'a-1', role: 'assistant', text: '通常不要です。', timestamp: 2 }
+      ],
+      question: 'カードは使える？'
+    });
+
+    expect(clientModule.callGeminiApi).toHaveBeenCalledWith(
+      'test-key',
+      undefined,
+      expect.anything(),
+      expect.arrayContaining([
+        expect.objectContaining({
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              text: expect.not.stringContaining('coach-init')
+            }),
+            expect.objectContaining({
+              text: expect.not.stringContaining('こんにちは！バイリンガルAIコーチです')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('ユーザー: チップは必要？')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('最優先事項: ユーザーの「今回の質問・相談・コメント」に対して、正面から直接的・具体的に回答してください。')
+            }),
+            expect.objectContaining({
+              text: expect.stringContaining('【ユーザーの今回の質問・相談】\nカードは使える？')
+            })
+          ])
+        })
+      ]),
+      expect.anything()
+    );
+  });
 });
+
 

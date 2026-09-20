@@ -151,7 +151,9 @@ Return your response strictly as JSON with this structure:
       promptContext += `- 発話状況: 【未録音（まだ発話練習を行っていません）】\n` +
         `※ユーザーはこれから練習を始めるところか、発音のコツや意味を事前に確認したい状態です。\n`;
     }
-    promptContext += `\n※重要指示: ユーザーの練習対象の英文と、実際の発話録音状況（未発話か、どのような認識結果やスコアだったか）を完全に踏まえて解説してください。\n\n`;
+    promptContext += `\n【回答指針】\n` +
+      `- ユーザーの「今回の質問・相談・コメント」に正面から直接回答してください。\n` +
+      `- 練習対象の英文や実際の発話録音状況（録音テキストやスコア）は背景情報として活用し、質問内容に応じた実践的なアドバイスを行ってください。\n\n`;
 
   } else if (mode === 'blitz' && blitzContext) {
     const qIndexStr = blitzContext.currentIndex !== undefined && blitzContext.totalQuestions 
@@ -181,7 +183,9 @@ Return your response strictly as JSON with this structure:
         `※ユーザーはお題を見て、どう英語に組み立てればよいか考えている最中です。\n`;
     }
     promptContext += `- 模範解答の表示状態: ${blitzContext.isRevealed ? '模範解答確認済み' : '未表示（自力で考え中）'}\n\n`;
-    promptContext += `※重要指示: ユーザーが現在直面している上記のお題と、ユーザーの回答状況（未発話なのか、どのような回答をして合否がどうだったのか）を完全に踏まえてアドバイスしてください。ユーザーが未回答ならヒントや考え方を、回答済みなら改善点や別の自然な言い回しを解説してください。\n\n`;
+    promptContext += `【回答指針】\n` +
+      `- ユーザーの「今回の質問・相談・コメント」に正面から直接回答してください。\n` +
+      `- お題やユーザーの回答・判定結果は背景情報として活用し、質問内容に応じたアドバイスを行ってください。\n\n`;
 
   } else if (situation) {
     const reversedHistory = [...history].reverse();
@@ -223,16 +227,27 @@ Return your response strictly as JSON with this structure:
       promptContext += `【直前のユーザーの最新発言】:\n"${latestUserMessage.text}"\n\n`;
     }
 
-    promptContext += `※重要指示: ユーザーは上記の会話の真っ最中で、現在の回答ステータス（未回答で返答に悩んでいるか、返答済みか）を踏まえて質問しています。回答する際は、必ず上記の会話ログおよび直前の相手の発言（"${latestAiMessage?.text || ''}"）を明確に踏まえ、その発言の意図や具体的な返答の選択肢を親切に解説してください。一般的な定型文ではなく、この会話の現在の状況に直結したアドバイスをしてください。\n\n`;
+    promptContext += `【重要：回答の柔軟性と優先順位】\n` +
+      `1. 最優先事項: ユーザーの「今回の質問・相談・コメント」に対して、正面から直接的・具体的に回答してください。\n` +
+      `   - ユーザーが特定の単語の意味、文法、文化・マナー、雑談、あるいは別の言いたいことを聞いてきた場合は、その質問に対して明確かつ親身に答えてください。\n` +
+      `   - ユーザーからのコメントが短い相槌や感想（例:「わかった」「ありがとう」「難しい」など）の場合も、定型文を繰り返さず、前向きな励ましや次のステップを自然な日本語で返してください。\n` +
+      `2. 背景情報の参照: 直前の相手の発言（"${latestAiMessage?.text || ''}"）やロールプレイの状況は、ユーザーの質問を理解するための「背景」として活用してください。\n` +
+      `   - 「相手の発言の意図を教えて」や「何て返せばいい？」と聞かれた時のみ、相手の発言の解説や返答選択肢を提供してください。\n` +
+      `   - ユーザーが質問していないのに、毎回同じように「相手は〜〜と言っています」「返答としては〜〜です」と決まり文句で前置きしたり、定型的な説明を繰り返すことは【厳禁】です。\n` +
+      `3. バリエーションと自然な対話:\n` +
+      `   - 過去の相談履歴とまったく同じ言い回しや定型文の繰り返しを避け、ユーザーの今回のコメントに応じた新鮮で役立つアドバイスをしてください。\n` +
+      `   - "suggestedPhrases" は、ユーザーの今回の質問・意図に真に関連するフレーズのみを提供してください（関連フレーズがない場合は空配列 []）。\n\n`;
   }
 
   let promptText = promptContext;
 
-  // Include recent coach conversation if any
-  if (coachHistory && coachHistory.length > 0) {
+  // Include recent coach conversation if any (filter out greeting and truncate to prevent echo loops)
+  const meaningfulHistory = (coachHistory || []).filter(ch => ch.id !== 'coach-init');
+  if (meaningfulHistory.length > 0) {
     promptText += `【これまでのコーチへの相談履歴】\n`;
-    coachHistory.slice(-4).forEach(ch => {
-      promptText += `${ch.role === 'user' ? 'ユーザー' : 'コーチ'}: ${ch.text}\n`;
+    meaningfulHistory.slice(-4).forEach(ch => {
+      const truncatedText = ch.text.length > 120 ? `${ch.text.slice(0, 120)}...` : ch.text;
+      promptText += `${ch.role === 'user' ? 'ユーザー' : 'コーチ'}: ${truncatedText}\n`;
     });
     promptText += `\n`;
   }

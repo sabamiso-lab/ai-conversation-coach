@@ -95,8 +95,9 @@ export default function FloatingCoachWidget({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questionInput.trim() || isLoading) return;
-    onAskQuestion();
+    const q = questionInput.trim();
+    if (!q || isLoading) return;
+    onAskQuestion(q);
   };
 
   return (

@@ -44,13 +44,62 @@ const defaultContextState: CoachContextState = {
   blitzContext: null
 };
 
+function isContextEqual(prev: CoachContextState, updates: Partial<CoachContextState>): boolean {
+  if (updates.mode !== undefined && updates.mode !== prev.mode) return false;
+  if (updates.situation !== undefined && updates.situation?.id !== prev.situation?.id) return false;
+  if (updates.conversationHistory !== undefined && updates.conversationHistory !== prev.conversationHistory) {
+    if (updates.conversationHistory.length !== prev.conversationHistory.length) return false;
+    for (let i = 0; i < updates.conversationHistory.length; i++) {
+      const u = updates.conversationHistory[i];
+      const p = prev.conversationHistory[i];
+      if (u.id !== p.id || u.text !== p.text || u.translation !== p.translation || u.clarityStatus !== p.clarityStatus) {
+        return false;
+      }
+    }
+  }
+  if (updates.conversationContext !== undefined) {
+    if (updates.conversationContext?.currentUserInput !== prev.conversationContext?.currentUserInput) return false;
+  }
+  if (updates.shadowingContext !== undefined) {
+    const p = prev.shadowingContext;
+    const u = updates.shadowingContext;
+    if (p !== u) {
+      if (!p || !u) return false;
+      if (p.title !== u.title) return false;
+      if (p.targetText !== u.targetText) return false;
+      if (p.fullText !== u.fullText) return false;
+      if (p.userSpeech !== u.userSpeech) return false;
+      if (p.isRecording !== u.isRecording) return false;
+      if (p.evalResult?.overallScore !== u.evalResult?.overallScore) return false;
+      if (p.evalResult?.feedbackJa !== u.evalResult?.feedbackJa) return false;
+    }
+  }
+  if (updates.blitzContext !== undefined) {
+    const p = prev.blitzContext;
+    const u = updates.blitzContext;
+    if (p !== u) {
+      if (!p || !u) return false;
+      if (p.topicTitle !== u.topicTitle) return false;
+      if (p.currentIndex !== u.currentIndex) return false;
+      if (p.totalQuestions !== u.totalQuestions) return false;
+      if (p.currentQuestion?.japanese !== u.currentQuestion?.japanese) return false;
+      if (p.currentQuestion?.sampleAnswer !== u.currentQuestion?.sampleAnswer) return false;
+      if (p.userSpeech !== u.userSpeech) return false;
+      if (p.isCorrect !== u.isCorrect) return false;
+      if (p.isRevealed !== u.isRevealed) return false;
+      if (p.aiEvaluation?.feedbackJa !== u.aiEvaluation?.feedbackJa) return false;
+    }
+  }
+  return true;
+}
+
 function createGreetingMessage(
   mode: CoachMode,
   situation?: Situation | null,
   shadowingContext?: CoachShadowingContext | null,
   blitzContext?: CoachBlitzContext | null
 ): CoachMessage {
-  if (mode === 'shadowing' || shadowingContext) {
+  if (mode === 'shadowing' || (mode === 'general' && shadowingContext)) {
     const title = shadowingContext?.title || 'シャドーイング特訓';
     return {
       id: 'coach-init',
@@ -59,7 +108,7 @@ function createGreetingMessage(
       timestamp: 0
     };
   }
-  if (mode === 'blitz' || blitzContext) {
+  if (mode === 'blitz' || (mode === 'general' && blitzContext)) {
     const topic = blitzContext?.topicTitle || '瞬間英作文';
     const qText = blitzContext?.currentQuestion ? `\n現在のお題: 「${blitzContext.currentQuestion.japanese || blitzContext.currentQuestion.prompt}」` : '';
     return {
@@ -106,29 +155,26 @@ export function CoachProvider({ children }: { children: ReactNode }) {
 
   const updateCoachContext = useCallback((updates: Partial<CoachContextState>) => {
     setContextState(prev => {
-      const hasModeChanged = updates.mode !== undefined && updates.mode !== prev.mode;
-      const hasSituationChanged = updates.situation !== undefined && updates.situation?.id !== prev.situation?.id;
-      const hasHistoryChanged = updates.conversationHistory !== undefined && (
-        updates.conversationHistory.length !== prev.conversationHistory.length ||
-        (updates.conversationHistory.length > 0 && updates.conversationHistory[updates.conversationHistory.length - 1].id !== prev.conversationHistory[prev.conversationHistory.length - 1]?.id)
-      );
-      const hasContextChanged = updates.conversationContext !== undefined && updates.conversationContext?.currentUserInput !== prev.conversationContext?.currentUserInput;
-      const hasShadowingChanged = updates.shadowingContext !== undefined && updates.shadowingContext?.title !== prev.shadowingContext?.title;
-      const hasBlitzChanged = updates.blitzContext !== undefined && updates.blitzContext?.topicTitle !== prev.blitzContext?.topicTitle;
+      const modeChanged = updates.mode !== undefined && updates.mode !== prev.mode;
+      const situationChanged = updates.situation !== undefined && updates.situation?.id !== prev.situation?.id;
+      const scriptChanged = updates.shadowingContext !== undefined && updates.shadowingContext?.title !== prev.shadowingContext?.title;
+      const blitzTopicChanged = updates.blitzContext !== undefined && updates.blitzContext?.topicTitle !== prev.blitzContext?.topicTitle;
 
-      if (!hasModeChanged && !hasSituationChanged && !hasHistoryChanged && !hasContextChanged && !hasShadowingChanged && !hasBlitzChanged) {
+      const sessionChanged = modeChanged || situationChanged || scriptChanged || blitzTopicChanged;
+
+      if (!sessionChanged && isContextEqual(prev, updates)) {
         return prev;
       }
 
       const next = { ...prev, ...updates };
-      if (hasModeChanged || hasSituationChanged || hasShadowingChanged || hasBlitzChanged) {
-        setCoachMessages(msgs => {
-          if (msgs.length <= 1) {
-            return [createGreetingMessage(next.mode, next.situation, next.shadowingContext, next.blitzContext)];
-          }
-          return msgs;
-        });
+
+      if (sessionChanged) {
+        setCoachMessages([
+          createGreetingMessage(next.mode, next.situation, next.shadowingContext, next.blitzContext)
+        ]);
+        setError(null);
       }
+
       return next;
     });
   }, []);
@@ -183,7 +229,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         shadowingContext: contextState.shadowingContext,
         blitzContext: contextState.blitzContext,
         question: q,
-        coachHistory: coachMessages
+        coachHistory: coachMessages.filter(ch => ch.id !== 'coach-init')
       });
 
       const assistantMsg: CoachMessage = {
