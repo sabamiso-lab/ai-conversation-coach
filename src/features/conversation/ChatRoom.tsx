@@ -69,19 +69,37 @@ export default function ChatRoom({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Track latest inputText for speech recognition session baseline
+  const inputTextRef = useRef(inputText);
+  useEffect(() => {
+    inputTextRef.current = inputText;
+  }, [inputText]);
+
+  // Baseline input text captured when speech recognition starts
+  const baseInputTextRef = useRef('');
+
   // Wrap sendMessage with TTS callback for AI response
   const handleSendMessage = useCallback((textToSend?: string) => {
+    baseInputTextRef.current = '';
     sendMessage(textToSend, (aiText) => {
       speakText(aiText);
     });
   }, [sendMessage]);
 
-  const handleFinalResult = useCallback((finalText: string) => {
-    setInputText(finalText);
-  }, [setInputText]);
+  const handleSpeechStart = useCallback(() => {
+    baseInputTextRef.current = inputTextRef.current;
+  }, []);
 
-  const handleInterimResult = useCallback((interimText: string) => {
-    setInputText(interimText);
+  const handleSpeechResult = useCallback(({ full }: { full: string }) => {
+    const trimmedBase = baseInputTextRef.current.trim();
+    const trimmedSpeech = full.trim();
+    if (!trimmedBase) {
+      setInputText(trimmedSpeech);
+    } else if (!trimmedSpeech) {
+      setInputText(baseInputTextRef.current);
+    } else {
+      setInputText(`${trimmedBase} ${trimmedSpeech}`);
+    }
   }, [setInputText]);
 
   const handleSpeechError = useCallback((speechErr: string) => {
@@ -89,9 +107,10 @@ export default function ChatRoom({
   }, [setErrorMsg]);
 
   const { isSupported, isRecording, stopRecording, toggleRecording } = useSpeechRecognition({
-    onFinalResult: handleFinalResult,
-    onInterimResult: handleInterimResult,
-    onError: handleSpeechError
+    onStart: handleSpeechStart,
+    onResult: handleSpeechResult,
+    onError: handleSpeechError,
+    continuous: true
   });
 
   // Stop recording when AI starts thinking

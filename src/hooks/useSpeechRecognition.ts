@@ -4,6 +4,7 @@ import { SpeechRecognizer, isSpeechRecognitionSupported, stopSpeaking } from '..
 export interface UseSpeechRecognitionOptions {
   onFinalResult?: (finalText: string) => void;
   onInterimResult?: (interimText: string) => void;
+  onResult?: (result: { final: string; interim: string; full: string }) => void;
   onError?: (errorMessage: string) => void;
   onStart?: () => void;
   onEnd?: () => void;
@@ -15,6 +16,7 @@ export interface UseSpeechRecognitionOptions {
 export function useSpeechRecognition({
   onFinalResult,
   onInterimResult,
+  onResult,
   onError,
   onStart,
   onEnd,
@@ -30,6 +32,7 @@ export function useSpeechRecognition({
 
   const onFinalResultRef = useRef(onFinalResult);
   const onInterimResultRef = useRef(onInterimResult);
+  const onResultRef = useRef(onResult);
   const onErrorRef = useRef(onError);
   const onStartRef = useRef(onStart);
   const onEndRef = useRef(onEnd);
@@ -37,10 +40,11 @@ export function useSpeechRecognition({
   useEffect(() => {
     onFinalResultRef.current = onFinalResult;
     onInterimResultRef.current = onInterimResult;
+    onResultRef.current = onResult;
     onErrorRef.current = onError;
     onStartRef.current = onStart;
     onEndRef.current = onEnd;
-  }, [onFinalResult, onInterimResult, onError, onStart, onEnd]);
+  }, [onFinalResult, onInterimResult, onResult, onError, onStart, onEnd]);
 
   const isSupported = isSpeechRecognitionSupported();
 
@@ -57,17 +61,17 @@ export function useSpeechRecognition({
         }
       },
       onResult: ({ final, interim }: { final: string; interim: string }) => {
-        if (final) {
-          setUserTranscript((prev) => (prev ? `${prev} ${final}` : final));
-          setInterimTranscript('');
-          if (onFinalResultRef.current) {
-            onFinalResultRef.current(final);
-          }
-        } else if (interim) {
-          setInterimTranscript(interim);
-          if (onInterimResultRef.current) {
-            onInterimResultRef.current(interim);
-          }
+        setUserTranscript(final);
+        setInterimTranscript(interim);
+        const full = [final, interim].filter(Boolean).join(' ').trim();
+        if (onResultRef.current) {
+          onResultRef.current({ final, interim, full });
+        }
+        if (final && onFinalResultRef.current) {
+          onFinalResultRef.current(final);
+        }
+        if (interim && onInterimResultRef.current) {
+          onInterimResultRef.current(interim);
         }
       },
       onError: (userFriendlyError: string) => {
@@ -106,6 +110,8 @@ export function useSpeechRecognition({
       return;
     }
     setError('');
+    setUserTranscript('');
+    setInterimTranscript('');
     try {
       recognizerRef.current.start();
       setIsRecording(true);

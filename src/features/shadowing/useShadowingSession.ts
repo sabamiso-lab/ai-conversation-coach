@@ -39,12 +39,8 @@ export function useShadowingSession({
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evalResult, setEvalResult] = useState<ShadowingEvaluation | null>(null);
 
-  const handleFinalResult = useCallback((finalText: string) => {
-    setUserTranscript(finalText);
-  }, []);
-
-  const handleInterimResult = useCallback((interimText: string) => {
-    setUserTranscript(interimText);
+  const handleSpeechResult = useCallback(({ full }: { full: string }) => {
+    setUserTranscript(full);
   }, []);
 
   const handleSpeechError = useCallback((speechErr: string) => {
@@ -52,8 +48,7 @@ export function useShadowingSession({
   }, []);
 
   const { isSupported, isRecording, abortRecording, toggleRecording: rawToggleRecording } = useSpeechRecognition({
-    onFinalResult: handleFinalResult,
-    onInterimResult: handleInterimResult,
+    onResult: handleSpeechResult,
     onError: handleSpeechError,
     continuous: true
   });

@@ -1,13 +1,33 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ChatRoom from '../ChatRoom';
+
+let mockRecognizerCallbacks: {
+  onStart?: () => void;
+  onResult?: (result: { final: string; interim: string }) => void;
+  onError?: (err: string) => void;
+  onEnd?: () => void;
+} = {};
 
 // Mock speech service
 vi.mock('../../../services/speech', () => ({
   speakText: vi.fn(),
   stopSpeaking: vi.fn(),
-  isSpeechRecognitionSupported: () => false,
-  SpeechRecognizer: vi.fn(),
+  isSpeechRecognitionSupported: () => true,
+  SpeechRecognizer: vi.fn().mockImplementation((options) => {
+    mockRecognizerCallbacks = options;
+    return {
+      start: vi.fn(() => {
+        options.onStart?.();
+      }),
+      stop: vi.fn(() => {
+        options.onEnd?.();
+      }),
+      abort: vi.fn(() => {
+        options.onEnd?.();
+      })
+    };
+  }),
 }));
 
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -100,5 +120,53 @@ describe('ChatRoom component', () => {
     const closeBtn = screen.getByRole('button', { name: /閉じる/i });
     fireEvent.click(closeBtn);
     expect(screen.queryByText('AI学習コーチ')).not.toBeInTheDocument();
+  });
+
+  it('appends speech recognition result to existing input text without overwriting on subsequent input', () => {
+    render(
+      <CoachProvider>
+        <TestChatRoomWithCoach />
+      </CoachProvider>
+    );
+
+    const inputField = screen.getByPlaceholderText(/英語でメッセージを入力/i) as HTMLInputElement;
+    const micButton = screen.getByRole('button', { name: /マイクで英語を話す/i });
+
+    // Step 1: User types manual text
+    fireEvent.change(inputField, { target: { value: 'I would like' } });
+    expect(inputField.value).toBe('I would like');
+
+    // Step 2: Start recording
+    fireEvent.click(micButton);
+
+    // Simulate recognition result
+    act(() => {
+      mockRecognizerCallbacks.onResult?.({
+        final: 'a hot coffee',
+        interim: ''
+      });
+    });
+
+    // Existing text should NOT be erased; speech should be appended with a space
+    expect(inputField.value).toBe('I would like a hot coffee');
+
+    // Step 3: Stop recording
+    const stopMicButton = screen.getByRole('button', { name: /録音停止/i });
+    fireEvent.click(stopMicButton);
+
+    // Step 4: Start recording AGAIN to add more text
+    const restartMicButton = screen.getByRole('button', { name: /マイクで英語を話す/i });
+    fireEvent.click(restartMicButton);
+
+    // Simulate subsequent recognition
+    act(() => {
+      mockRecognizerCallbacks.onResult?.({
+        final: 'please',
+        interim: ''
+      });
+    });
+
+    // Previous text must NOT be erased; new speech is appended
+    expect(inputField.value).toBe('I would like a hot coffee please');
   });
 });
