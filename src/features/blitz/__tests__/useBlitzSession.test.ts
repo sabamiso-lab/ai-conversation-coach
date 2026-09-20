@@ -202,6 +202,7 @@ describe('useBlitzSession hook', () => {
         title: '基礎英文法',
         questions: mockQuestions,
         apiKey: 'dummy-api-key',
+        onCompleteSession: vi.fn(),
       })
     );
 
