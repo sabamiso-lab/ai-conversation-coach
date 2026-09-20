@@ -16,7 +16,7 @@ export interface CoachQuickPrompt {
   query: string;
 }
 
-export const CONVERSATION_QUICK_PROMPTS: CoachQuickPrompt[] = [
+const CONVERSATION_QUICK_PROMPTS: CoachQuickPrompt[] = [
   {
     label: '相手の発言のニュアンス',
     icon: <MessageCircleQuestion size={13} />,
@@ -39,7 +39,7 @@ export const CONVERSATION_QUICK_PROMPTS: CoachQuickPrompt[] = [
   }
 ];
 
-export const SHADOWING_QUICK_PROMPTS: CoachQuickPrompt[] = [
+const SHADOWING_QUICK_PROMPTS: CoachQuickPrompt[] = [
   {
     label: 'リエゾン・発音のコツ',
     icon: <Volume2 size={13} />,
@@ -62,7 +62,7 @@ export const SHADOWING_QUICK_PROMPTS: CoachQuickPrompt[] = [
   }
 ];
 
-export const BLITZ_QUICK_PROMPTS: CoachQuickPrompt[] = [
+const BLITZ_QUICK_PROMPTS: CoachQuickPrompt[] = [
   {
     label: '別の自然な言い回し・表現',
     icon: <Lightbulb size={13} />,
@@ -85,7 +85,7 @@ export const BLITZ_QUICK_PROMPTS: CoachQuickPrompt[] = [
   }
 ];
 
-export const GENERAL_QUICK_PROMPTS: CoachQuickPrompt[] = [
+const GENERAL_QUICK_PROMPTS: CoachQuickPrompt[] = [
   {
     label: '初心者におすすめの会話は？',
     icon: <Lightbulb size={13} />,

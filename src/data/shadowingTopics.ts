@@ -1,5 +1,5 @@
 // Preset topic lists for random shadowing scenario generation
-export const RANDOM_SHADOWING_TOPICS: readonly string[] = [
+const RANDOM_SHADOWING_TOPICS: readonly string[] = [
   // Daily Life
   'カフェでの注文とカスタマイズ (Ordering and customizing a drink at a coffee shop)',
   'アパートの賃貸内見の問い合わせ (Inquiring about an apartment viewing)',

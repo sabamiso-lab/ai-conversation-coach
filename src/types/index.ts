@@ -46,13 +46,6 @@ export interface HintSuggestion {
   difficulty?: string;
 }
 
-export interface ConversationKeyPhrase {
-  phrase: string;
-  meaning: string;
-}
-
-export type ConversationReport = SessionReport;
-
 export interface CoachPhrase {
   english: string;
   japanese: string;
@@ -233,24 +226,6 @@ export interface BlitzSessionSummaryData {
   totalDurationSec?: number;
   totalTimeSec?: number;
   avgResponseTimeSec?: number;
-}
-
-export interface GeminiApiOptions {
-  apiKey: string;
-  model: string;
-  situation?: Situation;
-  history?: ChatMessage[];
-  userText?: string;
-}
-
-export interface BaseEvaluationResult {
-  score: number;
-  feedbackJa: string;
-  strengthsJa?: string[];
-  improvementsJa?: string[];
-  improvedSpeech?: string;
-  status?: string;
-  statusLabelJa?: string;
 }
 
 export * from '../constants/difficulty';

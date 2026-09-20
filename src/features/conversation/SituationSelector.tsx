@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Coffee, Plane, Building, Briefcase, Award, MessageSquare, 
-  ArrowRight, Target, Globe, Zap, Newspaper, LucideIcon 
+  Target, Globe, Zap, Newspaper, LucideIcon 
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import CategoryFilter from '../../components/common/CategoryFilter';
 import LoadingState from '../../components/common/LoadingState';
-import DifficultyBadge from '../../components/common/DifficultyBadge';
 import NewsCitation from '../../components/common/NewsCitation';
 import PracticeItemCard from '../../components/common/PracticeItemCard';
 import { NewsGeneratorSection } from './NewsGeneratorSection';

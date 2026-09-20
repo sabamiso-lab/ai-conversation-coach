@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import BlitzTopicSelector from '../features/blitz/BlitzTopicSelector';
 import BlitzSession from '../features/blitz/BlitzSession';
 import BlitzSummary from '../features/blitz/BlitzSummary';
-import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
+import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
 import { useSettings } from '../hooks/useSettings';
 import { generateBlitzQuestions } from '../services/gemini';

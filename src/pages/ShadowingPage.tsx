@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ShadowingSelector from '../features/shadowing/ShadowingSelector';
 import ShadowingPlayer from '../features/shadowing/ShadowingPlayer';
-import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
+import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
 import { useSettings } from '../hooks/useSettings';
 import { ShadowingScript, CoachShadowingContext } from '../types';

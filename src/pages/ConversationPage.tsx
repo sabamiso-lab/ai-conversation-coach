@@ -1,7 +1,7 @@
 import React from 'react';
 import SituationSelector from '../features/conversation/SituationSelector';
 import ChatRoom from '../features/conversation/ChatRoom';
-import FloatingCoachWidget from '../features/conversation/FloatingCoachWidget';
+import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
 import { useConversationCoach } from '../hooks/useConversationCoach';
 import { useSettings } from '../hooks/useSettings';
 import { Situation } from '../types';

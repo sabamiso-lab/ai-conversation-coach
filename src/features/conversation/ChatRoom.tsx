@@ -12,7 +12,7 @@ import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useChatSession } from '../../hooks/useChatSession';
 import { useConversationCoach } from '../../hooks/useConversationCoach';
 import { useSettings } from '../../hooks/useSettings';
-import FloatingCoachWidget from './FloatingCoachWidget';
+import FloatingCoachWidget from '../coach/FloatingCoachWidget';
 import type { Situation } from '../../types';
 
 export interface ChatRoomProps {

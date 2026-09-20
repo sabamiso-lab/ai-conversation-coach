@@ -116,10 +116,3 @@ export const SITUATIONS: Situation[] = [
     ]
   }
 ];
-
-export const DIFFICULTY_COLORS = {
-  Beginner: 'badge-green',
-  Intermediate: 'badge-yellow',
-  Advanced: 'badge-purple',
-  Casual: 'badge-blue'
-};
