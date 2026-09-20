@@ -60,15 +60,16 @@
 ├── tsconfig.json           # ルート TypeScript 設定 (strict, bundler module resolution)
 ├── src/                    # フロントエンド アプリケーションコード (100% TypeScript)
 │   ├── components/
-│   │   └── common/         # プロジェクト共通の UI コンポーネント (Modal, PageHeader, AiGeneratorCard 等)
-│   ├── contexts/           # React Context (SettingsContext.tsx: API Key, 選択モデル, モーダル開閉)
-│   ├── data/               # 静的データ・デフォルトシナリオ・フォールバック (TS化)
-│   ├── features/           # 機能ドメイン別のコード (UI + ロジック + テスト)
-│   │   ├── blitz/          # 瞬間英作文 (Session, Summary, TopicSelector, useBlitzSpeech, useBlitzTimer)
-│   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, MessageItem, NewsGeneratorSection)
-│   │   │   └── coach/      # AIコーチ分割UI (CoachMessageItem, CoachContextBanner, coachPrompts)
-│   │   └── shadowing/      # シャドーイング (Player, Selector, AudioControls, EvalCard, useShadowingAudio)
-│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useSpeechRecognition 等)
+│   │   └── common/         # プロジェクト共通の UI コンポーネント (Header, Modal, MicButton, PageHeader, AiGeneratorCard 等)
+│   ├── constants/          # 共通定数 (難易度設定 difficulty.ts 等)
+│   ├── contexts/           # React Context (SettingsContext: API設定, CoachContext: リアルタイム学習コンテキスト・正誤状況)
+│   ├── data/               # 静的マスターデータ (プリセットシチュエーション、シャドーイングスクリプト等)
+│   ├── features/           # 機能ドメイン別のコード (UI + ロジック + フック + テスト)
+│   │   ├── blitz/          # 瞬間英作文 (Session, SpeechBox, AnswerPanel, Summary, TopicSelector, useBlitzSession, useBlitzTimer, data/blitzTopics)
+│   │   ├── coach/          # 全画面常駐 AI コーチ (FloatingCoachWidget, CoachMessageItem, CoachContextBanner, coachPrompts)
+│   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, MessageItem, HintPanel, ReportModal, SituationSelector, NewsGeneratorSection)
+│   │   └── shadowing/      # シャドーイング (Player, Selector, AudioControls, EvalCard, ScriptViewer, useShadowingSession, useShadowingAudio)
+│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useCoach, useSpeechRecognition, useChatSession 等)
 │   ├── pages/              # 画面ルーティング単位のトップレベルページ (TSX)
 │   ├── services/           # 外部通信・AI・API クライアント (完全 TypeScript 化)
 │   │   └── ai/             # Gemini API 呼び出しモジュール (client, chat, coach, blitz, shadowing, news)
@@ -78,7 +79,7 @@
 │   │   ├── components.css  # 共通 UI コンポーネントスタイル
 │   │   ├── responsive.css  # モバイル固定ボトムナビ・メディアクエリ
 │   │   └── features/       # 各機能ドメイン固有スタイル (*.css)
-│   ├── types/              # TypeScript 型定義 (ドメインモデル等 index.ts)
+│   ├── types/              # TypeScript 型定義 (ドメインモデル等 index.ts, speech.ts)
 │   ├── utils/              # 汎用ヘルパー・修復関数 (TypeScript)
 │   ├── index.css           # スタイル統合エントリポイント (@import 集約)
 │   ├── main.tsx            # アプリケーションエントリポイント
@@ -88,12 +89,12 @@
 ```
 
 ### ディレクトリ別の責務ルール
-- **`components/common/`**: ドメイン知識を持たない純粋なUI部品（`Header`, `Button`, `Modal`, `LoadingState`, `DifficultyBadge` など）。
+- **`components/common/`**: ドメイン知識を持たない純粋なUI部品（`Header`, `Modal`, `LoadingState`, `DifficultyBadge`, `AiGeneratorCard` など）。
 - **`features/<domain>/`**: その機能に特化したコンポーネント、サブコンポーネント、専用カスタムフック、およびテストを配置。他の feature に依存しない独立性を保ちます。
 - **`styles/`**: CSS を責務別に分割（Tokens, Base, Components, Features, Responsive）。巨大な単一ファイルを避け、保守性を向上させます。
 - **`services/`**: ビジネスロジックや外部通信（HTTP fetch、Gemini SDK、Web Speech API）をカプセル化。React の状態（`useState` 等）を持たず、純粋な非同期関数として TypeScript で実装します。
 - **`hooks/`**: UIとサービスの橋渡しを行い、状態管理や副作用ライフサイクルをカプセル化します。
-- **`contexts/`**: 広域で共有する状態（API Key、選択モデルなど）を保持。カスタムフック経由（`useSettings()`）で安全にアクセスし、不要なバケツリレー（Prop Drilling）を防ぎます。
+- **`contexts/`**: 広域で共有する状態（`SettingsContext`: API Key・モデル設定等、`CoachContext`: 画面横断のリアルタイム学習コンテキスト・出題・回答状況）を保持。カスタムフック経由（`useSettings()`, `useCoach()`）で安全にアクセスし、不要なバケツリレー（Prop Drilling）を防ぎます。
 
 
 ---
@@ -103,12 +104,12 @@
 ### 3.1. ファイル・ディレクトリ命名
 | 種別 | 命名規則 | 例 |
 | :--- | :--- | :--- |
-| React コンポーネント | **PascalCase** | `ChatRoom.jsx`, `MicButton.tsx` |
-| カスタムフック | **camelCase** (`use` プレフィックス) | `useChatSession.ts`, `useSettings.ts` |
-| ユーティリティ・サービス | **camelCase** | `jsonRepair.js`, `api.ts`, `gemini.ts` |
-| 型定義ファイル | **camelCase** または `index.ts` | `index.ts`, `blitzTypes.ts` |
-| テストファイル | `*.test.ts`, `*.test.tsx`, `*.test.js` | `api.test.js`, `getSituations.test.ts` |
-| ディレクトリ名 | **camelCase** または **kebab-case** | `common`, `conversation`, `services` |
+| React コンポーネント | **PascalCase** | `ChatRoom.tsx`, `MicButton.tsx` |
+| カスタムフック | **camelCase** (`use` プレフィックス) | `useChatSession.ts`, `useSettings.ts`, `useCoach.ts` |
+| ユーティリティ・サービス | **camelCase** | `jsonRepair.ts`, `api.ts`, `gemini.ts` |
+| 型定義ファイル | **camelCase** または `index.ts` | `index.ts`, `speech.ts` |
+| テストファイル | `*.test.ts`, `*.test.tsx` | `api.test.ts`, `getSituations.test.ts`, `ChatRoom.test.tsx` |
+| ディレクトリ名 | **camelCase** または **kebab-case** | `common`, `conversation`, `coach`, `services` |
 
 ### 3.2. 識別子 (Identifiers) の命名
 | 対象 | 命名規則 | 例 / 説明 |
@@ -337,7 +338,7 @@ return <DataView data={data} />;
 - JSON 形式での応答が必要な処理（セッション診断、お題生成、ヒント生成等）では、Gemini API の `responseSchema` および `responseMimeType: 'application/json'` を指定します。
 
 ### 7.3. 出力サニタイズと JSON 修復
-- LLM がマークダウン記法（` ```json ... ``` `）を混入させたり、出力トークン上限で JSON が途切れるケースに備え、パース前には必ず `cleanPhrase()` や `repairJson()` (`src/utils/jsonRepair.js`) を通します。
+- LLM がマークダウン記法（` ```json ... ``` `）を混入させたり、出力トークン上限で JSON が途切れるケースに備え、パース前には必ず `cleanPhrase()` や `repairJson()` (`src/utils/jsonRepair.ts`) を通します。
 
 ```typescript
 // ✅ Good

@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['lambda/__tests__/**/*.test.ts'],
+    include: ['lambda/__tests__/**/*.test.ts', 'lib/__tests__/**/*.test.ts'],
   },
 });

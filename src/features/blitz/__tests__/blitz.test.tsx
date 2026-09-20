@@ -5,16 +5,30 @@ import { PRESET_BLITZ_TOPICS, RANDOM_BLITZ_TOPICS, getRandomBlitzTopic } from '.
 import BlitzTopicSelector from '../BlitzTopicSelector';
 import BlitzSession from '../BlitzSession';
 import BlitzSummary from '../BlitzSummary';
-import { evaluateBlitzSpeech } from '../../../services/gemini';
+import { evaluateBlitzSpeech } from '../../../services/ai/blitz';
 import type { BlitzSessionSummaryData } from '../../../types';
 
-vi.mock('../../../services/gemini', async () => {
-  const actual = await vi.importActual('../../../services/gemini');
-  return {
-    ...actual,
-    evaluateBlitzSpeech: vi.fn()
-  };
-});
+let mockSpeechText = '';
+
+vi.mock('../useBlitzSpeech', () => ({
+  useBlitzSpeech: () => ({
+    isListening: false,
+    userTranscript: mockSpeechText,
+    setUserTranscript: (t: string) => { mockSpeechText = t; },
+    interimTranscript: '',
+    fullUserText: mockSpeechText,
+    speechError: '',
+    startListening: vi.fn(),
+    stopListening: vi.fn(),
+    toggleListening: vi.fn(),
+    resetSpeech: () => { mockSpeechText = ''; },
+  })
+}));
+
+vi.mock('../../../services/ai/blitz', () => ({
+  evaluateBlitzSpeech: vi.fn(),
+  generateBlitzQuestions: vi.fn()
+}));
 
 describe('Instant Oral Blitz Feature', () => {
   describe('PRESET_BLITZ_TOPICS & RANDOM_BLITZ_TOPICS', () => {
@@ -176,6 +190,8 @@ describe('Instant Oral Blitz Feature', () => {
     });
 
     it('triggers AI evaluation and displays feedback and improved speech', async () => {
+      mockSpeechText = 'I should have wake up early.';
+
       vi.mocked(evaluateBlitzSpeech).mockResolvedValueOnce({
         isCorrect: true,
         status: 'PERFECT',
@@ -200,17 +216,28 @@ describe('Instant Oral Blitz Feature', () => {
         />
       );
 
-      // Reveal answer first
+      // Verify user spoken text is rendered
+      expect(screen.getByText('I should have wake up early.')).toBeInTheDocument();
+
+      // Click reveal answer
       const revealBtn = screen.getByRole('button', { name: /答え合わせ/i });
       fireEvent.click(revealBtn);
 
-      // Open speech edit form and simulate speech input
-      // If fullUserText is empty initially, we can trigger AI evaluation via speech edit
-      // Let's test entering text in the speech input
-      const startSpeechEditBtn = screen.queryByRole('button', { name: /修正/i });
-      if (!startSpeechEditBtn) {
-        // If not shown because fullUserText was empty, we can trigger speech edit by clicking edit or entering text
-      }
+      // Verify evaluateBlitzSpeech was called
+      expect(evaluateBlitzSpeech).toHaveBeenCalledWith(expect.objectContaining({
+        apiKey: 'test-api-key',
+        prompt: mockQuestions[0].prompt,
+        standardAnswer: mockQuestions[0].answer,
+        userSpeech: 'I should have wake up early.'
+      }));
+
+      // Verify AI evaluation result is rendered in the evaluation card
+      expect(await screen.findByText('🎉 完璧！')).toBeInTheDocument();
+      expect(screen.getByText(/素晴らしい発話です！自然に表現できています。/)).toBeInTheDocument();
+      expect(screen.getByText(/I should have gotten up earlier./)).toBeInTheDocument();
+      expect(screen.getByText(/should have \+ 過去分詞が完璧に使えています。/)).toBeInTheDocument();
+
+      mockSpeechText = '';
     });
 
     it('renders AI evaluation result card and highlights recommended button', async () => {

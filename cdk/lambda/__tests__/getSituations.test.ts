@@ -103,4 +103,38 @@ describe('getSituations Lambda Handler', () => {
     expect(body.count).toBe(2);
     expect(body.situations.map((s: any) => s.id)).toEqual(['valid-permanent', 'valid-future-news']);
   });
+
+  it('rejects request with 403 when origin or referer is not in allowed origins', async () => {
+    const defaultApiKey = 'sf_secret_key_default';
+    const event = {
+      httpMethod: 'GET',
+      headers: {
+        'x-speakflow-api-key': defaultApiKey,
+        origin: 'https://malicious-site.com',
+        referer: 'https://malicious-site.com/attack',
+      },
+    };
+
+    const response = await handler(event);
+    expect(response.statusCode).toBe(403);
+    const body = JSON.parse(response.body);
+    expect(body.error).toContain('Forbidden: Origin or Referer not allowed');
+  });
+
+  it('returns 500 Internal Server Error when DynamoDB query fails', async () => {
+    const defaultApiKey = 'sf_secret_key_default';
+    vi.spyOn(DynamoDBDocumentClient.prototype, 'send').mockRejectedValueOnce(new Error('DynamoDB failure'));
+
+    const event = {
+      httpMethod: 'GET',
+      headers: {
+        'x-speakflow-api-key': defaultApiKey,
+      },
+    };
+
+    const response = await handler(event);
+    expect(response.statusCode).toBe(500);
+    const body = JSON.parse(response.body);
+    expect(body.error).toBe('Failed to fetch situations from database');
+  });
 });

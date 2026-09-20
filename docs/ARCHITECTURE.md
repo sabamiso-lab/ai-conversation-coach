@@ -60,7 +60,7 @@ flowchart TD
 | レイヤー / 領域 | 採用技術 | バージョン / 備考 |
 | :--- | :--- | :--- |
 | **Frontend Core** | React | 19.x |
-| **Language** | TypeScript | 5.9.x (`strict: true`) |
+| **Language** | TypeScript | 7.0.x (`strict: true`) |
 | **Routing** | React Router | 7.x |
 | **Build Tool** | Vite | 8.x |
 | **Styling** | Modular Vanilla CSS | Tokens, Base, Components, Features, Responsive |
@@ -69,7 +69,7 @@ flowchart TD
 | **Backend / IaC** | AWS CDK (TypeScript) | v2 |
 | **Compute / DB** | AWS Lambda / Amazon DynamoDB | Node.js 24.x, Single-table design (TTL) |
 | **API Gateway** | Amazon API Gateway | HTTP API (CORS & Domain Verification) |
-| **Testing** | Vitest, React Testing Library | 32 テストファイル / 144 テスト網羅 |
+| **Testing** | Vitest, React Testing Library | 49 テストファイル / 231 テスト網羅 |
 | **Linting** | Oxlint | 高速 Rust 製リンター |
 | **Icons** | Lucide React | |
 | **Hosting & CI/CD** | GitHub Pages, GitHub Actions | 4段階品質ゲート自動検証 |
@@ -85,26 +85,35 @@ SpeakFlow はフロントエンドコードベースの **100% TypeScript (`.ts`
 ```
 src/
 ├── components/
-│   └── common/           # 汎用 UI コンポーネント (Header, Modal, MicButton, PageHeader, AiGeneratorCard 等)
-├── contexts/             # グローバル状態 (SettingsContext: API Key, 選択モデル, モーダル開閉)
+│   └── common/           # 汎用 UI コンポーネント (Header, Modal, MicButton, PageHeader, AiGeneratorCard, CategoryFilter, AudioPlayButton, StatCard 等)
+├── constants/             # 共通定数 (難易度設定 difficulty.ts 等)
+├── contexts/             # グローバル状態 (SettingsContext: API Key/モデル, CoachContext: リアルタイム学習コンテキスト・正誤状況)
 ├── data/                 # 静的マスターデータ (プリセットシチュエーション、シャドーイングスクリプト等)
-├── features/             # ドメイン別モジュール (UI + 専用ロジック + テスト)
-│   ├── conversation/     # ロールプレイ対話機能
-│   │   ├── coach/        # AIコーチ分割サブコンポーネント (CoachMessageItem, CoachContextBanner, coachPrompts)
-│   │   ├── ChatRoom.tsx, ChatSidebar.tsx, ChatInputBar.tsx, MessageItem.tsx
-│   │   ├── NewsGeneratorSection.tsx (動的ニュース対話生成)
-│   │   └── FloatingCoachWidget.tsx (薄いオーケストレーター)
+├── features/             # ドメイン別モジュール (UI + 専用ロジック・フック + テスト)
 │   ├── blitz/            # 瞬間英作文機能
-│   │   ├── BlitzSession.tsx, BlitzSpeechBox.tsx, BlitzAnswerPanel.tsx, BlitzSummary.tsx
-│   │   ├── useBlitzTimer.ts (回答制限タイマー)
-│   │   └── useBlitzSpeech.ts (音声認識・発話待機制御フック)
+│   │   ├── BlitzSession.tsx, BlitzSpeechBox.tsx, BlitzAnswerPanel.tsx, BlitzEvaluationPanel.tsx, BlitzSummary.tsx, BlitzTopicSelector.tsx
+│   │   ├── useBlitzSession.ts (セッションライフサイクル管理フック)
+│   │   ├── useBlitzTimer.ts (回答制限タイマーフック)
+│   │   ├── useBlitzSpeech.ts (音声認識・発話待機制御フック)
+│   │   └── data/blitzTopics.ts (基礎構文100問 ＆ シチュエーション即レスデータ)
+│   ├── coach/            # 全画面常駐 AI コーチングアシスタント
+│   │   ├── FloatingCoachWidget.tsx (フローティングUIオーケストレーター)
+│   │   ├── CoachContextBanner.tsx (出題中の問題・回答状況のコンテキスト表示)
+│   │   ├── CoachMessageItem.tsx (個別コーチメッセージ表示)
+│   │   └── coachPrompts.tsx (シチュエーション・正誤適応型クイック質問プリセット)
+│   ├── conversation/     # ロールプレイ英会話機能
+│   │   ├── ChatRoom.tsx, ChatSidebar.tsx, ChatInputBar.tsx, MessageItem.tsx
+│   │   ├── HintPanel.tsx (3段階返答ヒント), ReportModal.tsx (総合診断レポート)
+│   │   ├── SituationSelector.tsx (シチュエーション選択)
+│   │   └── NewsGeneratorSection.tsx (動的ニュース対話生成)
 │   └── shadowing/        # シャドーイング特訓機能
-│       ├── ShadowingPlayer.tsx, ShadowingSelector.tsx, ShadowingAudioControls.tsx, ShadowingEvaluationCard.tsx
-│       └── useShadowingAudio.ts (音声再生・ループタイマー・速度制御フック)
-├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition, useSettings 等)
+│       ├── ShadowingPlayer.tsx, ShadowingSelector.tsx, ShadowingAudioControls.tsx, ShadowingEvaluationCard.tsx, ShadowingScriptViewer.tsx
+│       ├── useShadowingSession.ts (シャドーイングセッション制御フック)
+│       └── useShadowingAudio.ts (音声再生・ループ・速度制御フック)
+├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition, useSettings, useCoach 等)
 ├── pages/                # トップレベル画面ページ (ConversationPage, InstantBlitzPage, ShadowingPage)
 ├── services/             # 外部通信・AI・API クライアント層 (純粋 TypeScript)
-│   ├── ai/               # Gemini API 個別エンドポイントモジュール (chat, blitz, coach, shadowing, news)
+│   ├── ai/               # Gemini API モジュール (client.ts, chat.ts, blitz.ts, coach.ts, shadowing.ts, news.ts)
 │   ├── api.ts            # DynamoDB API クライアント (ローカルフォールバック内蔵)
 │   ├── gemini.ts         # Gemini サービス統括エントリポイント
 │   └── speech.ts         # Web Speech API (音声認識 & 音声合成) ラッパー
@@ -114,7 +123,7 @@ src/
 │   ├── components.css    # 共通コンポーネント用スタイル
 │   ├── responsive.css    # モバイル固定ボトムナビ・メディアクエリ
 │   └── features/         # 機能別固有 CSS (conversation, blitz, shadowing, coach)
-├── types/                # 厳格な TypeScript ドメイン型定義 (index.ts)
+├── types/                # 厳格な TypeScript ドメイン型定義 (index.ts, speech.ts)
 └── utils/                # 共通ヘルパー (jsonRepair.ts, textMatcher.ts 等)
 ```
 
@@ -125,7 +134,8 @@ src/
 - モバイル表示時は `responsive.css` により、固定ボトムナビゲーションを含む専用レイアウトへ自動適応。
 
 ### 3.3. 状態管理とハイブリッド Context アクセス (Prop Drilling の完全解消)
-- `SettingsContext`（API Key、選択モデル、モーダル制御）は、深い階層のコンポーネントで直接 `useSettings()` フックから参照します。これにより親コンポーネント（`App.tsx` や各 `Page`）での不要な Props バケツリレー（Prop Drilling）を完全に解消。
+- **`SettingsContext`**: API Key、選択モデル、モーダル制御などを管理。深い階層のコンポーネントから `useSettings()` フックを通じて直接アクセスし、親コンポーネントでの不要な Props バケツリレー（Prop Drilling）を排除。
+- **`CoachContext`**: アプリケーション全体で現在アクティブな学習画面（ロールプレイ、瞬間英作文、シャドーイング）、出題中の問題文、模範解答、ユーザー発話/回答内容、および合否判定ステータスをリアルタイムに共有。右下の `FloatingCoachWidget` はこのコンテキストを自動購読し、ユーザーが今まさに直面している課題に応じた的確な助言やクイック質問を提供します。
 - 各セレクター（`SituationSelector`, `ShadowingSelector`, `BlitzTopicSelector` など）は **ハイブリッド設計** を採用：
   ```tsx
   const settings = useSettings();
@@ -221,14 +231,14 @@ SpeakFlow は品質と安全性を担保するため、コミットおよび PR 
 ```mermaid
 flowchart LR
     Lint["1. Lint (Oxlint)"] --> TypeCheck["2. Type Check (tsc)"]
-    TypeCheck --> UnitTests["3. Unit Tests (Vitest 144 tests)"]
+    TypeCheck --> UnitTests["3. Unit Tests (Vitest 231 tests / 49 files)"]
     UnitTests --> Build["4. Production Build (Vite)"]
     Build --> Deploy["GitHub Pages 自動デプロイ"]
 ```
 
 1. **Lint (`npm run lint`)**: Oxlint による高速コード解析。
 2. **Type Check (`npm run typecheck`)**: TypeScript コンパイラ (`tsc --noEmit`) による厳格な型検証。
-3. **Unit Tests (`npm test`)**: Vitest による 32 テストファイル / 144 テストの自動実行。
+3. **Unit Tests (`npm test`)**: Vitest による 49 テストファイル / 231 テストの自動実行。
 4. **Production Build (`npm run build`)**: Vite によるバンドルと最適化。
 
 ### 6.2. CI/CD パイプライン (`deploy.yml`)

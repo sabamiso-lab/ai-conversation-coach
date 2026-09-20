@@ -23,7 +23,7 @@
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
   <img src="https://img.shields.io/badge/Node.js-24%20LTS-339933.svg?logo=nodedotjs" alt="Node.js 24 LTS" />
-  <img src="https://img.shields.io/badge/Testing-159%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 159 Tests" />
+  <img src="https://img.shields.io/badge/Testing-231%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 231 Tests" />
   <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
@@ -67,8 +67,8 @@ SpeakFlow は英語の「知識」を「とっさに使えるスピーキング�
 
 2. **⚡ 瞬間英作文 ＆ パターンプラクティス (Instant Oral Blitz)**
    - 瞬発力を鍛えるタイムアタック英作文（3秒・5秒・7秒・無制限タイマー）
-   - 文法構文パターン集 ＆ AI カスタムお題自動生成（10問即時作成）
-   - Gemini AI によるリアルタイム発話自動添削・合否判定・改善アドバイス
+   - 体系的カリキュラム（基礎構文パターン10セット・計100問 ＆ シチュエーション即レス）
+   - Gemini AI によるリアルタイム発話自動添削・合否判定・改善アドバイス ＆ AI カスタムお題即時生成
    - 音声認識テキストの手動修正機能 ＆ セッション振り返りレポート
 
 3. **🎧 シャドーイング・スタジオ (Shadowing Studio)**
@@ -79,7 +79,8 @@ SpeakFlow は英語の「知識」を「とっさに使えるスピーキング�
 
 4. **💡 全画面常駐型 AI コーチングアシスタント (Floating Coach Widget)**
    - 画面右下のフローティングボタンから、いつでも日本語で学習相談
-   - 画面コンテキスト自動認識（ホーム、対話中、シャドーイング中、英作文中の文脈に即応）
+   - グローバル `CoachContext` によるリアルタイム学習連携（出題中の問題、ユーザーの音声/テキスト回答内容、正誤判定を常時把握）
+   - 画面に応じた状況適応型クイック質問チップ（「別解を教えて」「なぜ不合格？」「自然な言い回しは？」等）
 
 > 各機能の詳細な仕様や使い方は **[docs/FEATURES.md](docs/FEATURES.md)** をご覧ください。
 
@@ -109,7 +110,7 @@ npm run dev
 # 型チェック (TypeScript)
 npm run typecheck
 
-# 単体テスト実行 (Vitest 144 tests)
+# 単体テスト実行 (Vitest 49 files / 231 tests)
 npm test
 
 # リンター実行 (Oxlint)
@@ -129,12 +130,12 @@ npm run lint
 
 ## 🛠️ 技術スタック概要 (Tech Stack Overview)
 
-- **Frontend**: React 19, TypeScript 5.9, React Router 7, Vite 8
+- **Frontend**: React 19, TypeScript 7.0, React Router 7, Vite 8
 - **Styling**: Modular Vanilla CSS (Tokens, Base, Components, Features, Responsive)
 - **AI Engine**: Google Gemini API (`gemini-3.5-flash-lite`, Google Search Grounding)
 - **Speech Engine**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`)
-- **Backend / IaC**: AWS CDK (TypeScript), AWS Lambda, Amazon DynamoDB (TTL), Amazon API Gateway
-- **Testing & Quality**: Vitest (32 Files / 144 Tests), Oxlint, TypeScript strict mode
+- **Backend / IaC**: AWS CDK (TypeScript), AWS Lambda (Node.js 24), Amazon DynamoDB (TTL), Amazon API Gateway
+- **Testing & Quality**: Vitest (49 Files / 231 Tests), Oxlint, TypeScript strict mode
 - **CI/CD & Hosting**: GitHub Actions (4段階品質ゲート), GitHub Pages
 
 > システム構成図、ディレクトリ構成、AI/インフラ設計の詳細は **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** をご覧ください。

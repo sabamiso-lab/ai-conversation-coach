@@ -13,14 +13,16 @@ SpeakFlow のバックエンドインフラ（DynamoDB, AWS Lambda, API Gateway�
 
 1. **DynamoDB テーブル (`SpeakFlowSituations`)**
    - シチュエーション（ロールプレイシナリオ）情報を保持。デプロイ時に初期6シナリオが自動投入されます。
-2. **AWS Lambda (`SpeakFlowGetSituations`)**
-   - DynamoDB からデータ取得。
+   - 動的ニュースシナリオには TTL (`expiresAt`) が設定され、古いデータは自動パージされます。
+2. **AWS Lambda (Node.js 24.x LTS)**
+   - **`SpeakFlowGetSituations`**: DynamoDB からシナリオ一覧を取得。
+   - **`SpeakFlowCreateSituation`**: 新規シナリオ（動的ニュース会話シナリオ等）を DynamoDB に登録。
    - **セキュリティ実装**:
      - ① CORS 制限 (`https://sabamiso-lab.github.io` / `localhost`)
      - ② Origin / Referer ヘッダーのドメイン検証
      - ③ `x-speakflow-api-key` カスタムヘッダーの照合
 3. **API Gateway (HTTP API)**
-   - エンドポイント `GET /situations` を公開。
+   - エンドポイント `GET /situations` (一覧取得) および `POST /situations` (新規登録) を公開。
 
 ---
 

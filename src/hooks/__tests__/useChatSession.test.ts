@@ -88,4 +88,135 @@ describe('useChatSession hook', () => {
     expect(result.current.hints).toHaveLength(1);
     expect(result.current.hints[0].english).toBe('Could I get a latte?');
   });
+
+  it('sets errorMsg when sendMessage is called without apiKey', async () => {
+    const { result } = renderHook(() =>
+      useChatSession({
+        situation: mockSituation,
+        apiKey: '',
+        model: 'gemini-3.5-flash-lite'
+      })
+    );
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(result.current.errorMsg).toContain('Gemini API Key が設定されていません');
+    expect(result.current.messages).toHaveLength(1); // Only initial message
+  });
+
+  it('ignores empty message or whitespace in sendMessage', async () => {
+    const { result } = renderHook(() =>
+      useChatSession({
+        situation: mockSituation,
+        apiKey: 'test-key',
+        model: 'gemini-3.5-flash-lite'
+      })
+    );
+
+    await act(async () => {
+      await result.current.sendMessage('   ');
+    });
+
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.isAiThinking).toBe(false);
+  });
+
+  it('handles API error in sendMessage gracefully and resets isAiThinking', async () => {
+    vi.spyOn(geminiService, 'sendChatMessage').mockRejectedValueOnce(new Error('Network failure'));
+
+    const { result } = renderHook(() =>
+      useChatSession({
+        situation: mockSituation,
+        apiKey: 'test-key',
+        model: 'gemini-3.5-flash-lite'
+      })
+    );
+
+    await act(async () => {
+      await result.current.sendMessage('Can I order?');
+    });
+
+    expect(result.current.errorMsg).toBe('Network failure');
+    expect(result.current.isAiThinking).toBe(false);
+    expect(result.current.messages).toHaveLength(2); // Initial AI + User message
+  });
+
+  it('handles error in fetchHints gracefully and resets isHintLoading', async () => {
+    vi.spyOn(geminiService, 'getHintSuggestions').mockRejectedValueOnce(new Error('Hint service error'));
+
+    const { result } = renderHook(() =>
+      useChatSession({
+        situation: mockSituation,
+        apiKey: 'test-key',
+        model: 'gemini-3.5-flash-lite'
+      })
+    );
+
+    await act(async () => {
+      await result.current.fetchHints();
+    });
+
+    expect(result.current.errorMsg).toContain('ヒントの生成に失敗しました');
+    expect(result.current.isHintLoading).toBe(false);
+    expect(result.current.isHintOpen).toBe(true);
+  });
+
+  describe('finishSession', () => {
+    it('generates session report successfully and opens report modal', async () => {
+      const mockReport = {
+        overallScore: 92,
+        grammarScore: 90,
+        vocabScore: 95,
+        fluencyScore: 90,
+        summaryJa: '素晴らしい英会話でした！',
+        strengthsJa: ['自然な挨拶'],
+        improvementsJa: ['接続詞の使い方'],
+        keyPhrases: [{ phrase: 'Could I get...', meaning: '〜をいただけますか？' }],
+        goalsAchieved: [{ goal: 'Order a drink', achieved: true }]
+      };
+
+      vi.spyOn(geminiService, 'generateSessionReport').mockResolvedValueOnce(mockReport);
+
+      const { result } = renderHook(() =>
+        useChatSession({
+          situation: mockSituation,
+          apiKey: 'test-key',
+          model: 'gemini-3.5-flash-lite'
+        })
+      );
+
+      await act(async () => {
+        await result.current.finishSession();
+      });
+
+      expect(result.current.isReportOpen).toBe(true);
+      expect(result.current.isReportLoading).toBe(false);
+      expect(result.current.reportData).toEqual(mockReport);
+      expect(result.current.reportError).toBe('');
+    });
+
+    it('handles error during finishSession and sets reportError', async () => {
+      vi.spyOn(geminiService, 'generateSessionReport').mockRejectedValueOnce(new Error('Report generation failed'));
+
+      const { result } = renderHook(() =>
+        useChatSession({
+          situation: mockSituation,
+          apiKey: 'test-key',
+          model: 'gemini-3.5-flash-lite'
+        })
+      );
+
+      await act(async () => {
+        await result.current.finishSession();
+      });
+
+      expect(result.current.isReportOpen).toBe(true);
+      expect(result.current.isReportLoading).toBe(false);
+      expect(result.current.reportData).toBeNull();
+      expect(result.current.reportError).toBe('Report generation failed');
+      expect(result.current.errorMsg).toBe('Report generation failed');
+    });
+  });
 });
