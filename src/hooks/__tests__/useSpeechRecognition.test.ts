@@ -8,6 +8,7 @@ describe('useSpeechRecognition hook', () => {
     start: ReturnType<typeof vi.fn>;
     stop: ReturnType<typeof vi.fn>;
     abort: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
     options: speechService.SpeechRecognizerOptions;
   };
 
@@ -20,6 +21,7 @@ describe('useSpeechRecognition hook', () => {
         start: vi.fn(),
         stop: vi.fn(),
         abort: vi.fn(),
+        clear: vi.fn(),
         options
       };
       return mockRecognizerInstance as unknown as speechService.SpeechRecognizer;
@@ -117,6 +119,36 @@ describe('useSpeechRecognition hook', () => {
     expect(result.current.interimTranscript).toBe('');
     expect(result.current.fullTranscript).toBe('');
     expect(mockRecognizerInstance.start).toHaveBeenCalled();
+  });
+
+  it('clears transcript and calls recognizer.clear() when clearSpeech is called', () => {
+    const handleResult = vi.fn();
+    const { result } = renderHook(() => useSpeechRecognition({ onResult: handleResult }));
+
+    act(() => {
+      mockRecognizerInstance.options.onResult?.({
+        final: 'Speaking something',
+        interim: 'unfinished'
+      });
+    });
+
+    expect(result.current.userTranscript).toBe('Speaking something');
+    expect(result.current.interimTranscript).toBe('unfinished');
+    expect(result.current.fullTranscript).toBe('Speaking something unfinished');
+
+    act(() => {
+      result.current.clearSpeech();
+    });
+
+    expect(result.current.userTranscript).toBe('');
+    expect(result.current.interimTranscript).toBe('');
+    expect(result.current.fullTranscript).toBe('');
+    expect(mockRecognizerInstance.clear).toHaveBeenCalled();
+    expect(handleResult).toHaveBeenLastCalledWith({
+      final: '',
+      interim: '',
+      full: ''
+    });
   });
 
   it('handles unsupported browser gracefully', () => {

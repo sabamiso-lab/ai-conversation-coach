@@ -50,6 +50,24 @@ describe('useBlitzSpeech', () => {
     expect(result.current.isListening).toBe(false);
   });
 
+  it('clears transcript on clearSpeech', () => {
+    const { result } = renderHook(() => useBlitzSpeech());
+
+    act(() => {
+      result.current.setUserTranscript('Cleared text');
+    });
+
+    expect(result.current.userTranscript).toBe('Cleared text');
+
+    act(() => {
+      result.current.clearSpeech();
+    });
+
+    expect(result.current.userTranscript).toBe('');
+    expect(result.current.interimTranscript).toBe('');
+    expect(result.current.fullUserText).toBe('');
+  });
+
   it('handles speech recognition unsupported gracefully', () => {
     vi.spyOn(speechService, 'isSpeechRecognitionSupported').mockReturnValue(false);
 

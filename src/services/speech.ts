@@ -38,6 +38,8 @@ export class SpeechRecognizer {
   public isListening: boolean;
   private recognition: ISpeechRecognition | null = null;
   private onErrorCallback?: (userFriendlyError: string, rawError?: string) => void;
+  private startIndex: number = 0;
+  private lastResultsLength: number = 0;
 
   constructor({ onResult, onError, onStart, onEnd, lang = 'en-US', continuous = false }: SpeechRecognizerOptions) {
     const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
@@ -50,6 +52,8 @@ export class SpeechRecognizer {
     this.supported = true;
     this.isListening = false;
     this.onErrorCallback = onError;
+    this.startIndex = 0;
+    this.lastResultsLength = 0;
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = continuous;
     this.recognition.interimResults = true;
@@ -57,15 +61,18 @@ export class SpeechRecognizer {
 
     this.recognition.onstart = () => {
       this.isListening = true;
+      this.startIndex = 0;
+      this.lastResultsLength = 0;
       if (onStart) onStart();
     };
 
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+      this.lastResultsLength = event.results.length;
       let finalTranscript = '';
       let interimTranscript = '';
 
-      // Aggregate all results from index 0 to avoid losing earlier finalized sentences
-      for (let i = 0; i < event.results.length; ++i) {
+      // Aggregate results from startIndex to allow clearing past transcripts during an active session
+      for (let i = this.startIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
         } else {
@@ -106,6 +113,8 @@ export class SpeechRecognizer {
 
     this.recognition.onend = () => {
       this.isListening = false;
+      this.startIndex = 0;
+      this.lastResultsLength = 0;
       if (onEnd) onEnd();
     };
   }
@@ -113,6 +122,8 @@ export class SpeechRecognizer {
   start(): void {
     if (this.recognition && !this.isListening) {
       try {
+        this.startIndex = 0;
+        this.lastResultsLength = 0;
         this.recognition.start();
         this.isListening = true;
       } catch (err: unknown) {
@@ -138,6 +149,8 @@ export class SpeechRecognizer {
         console.warn("Speech recognition stop error:", err);
       } finally {
         this.isListening = false;
+        this.startIndex = 0;
+        this.lastResultsLength = 0;
       }
     }
   }
@@ -150,8 +163,14 @@ export class SpeechRecognizer {
         console.warn("Speech recognition abort error:", err);
       } finally {
         this.isListening = false;
+        this.startIndex = 0;
+        this.lastResultsLength = 0;
       }
     }
+  }
+
+  clear(): void {
+    this.startIndex = this.lastResultsLength;
   }
 }
 

@@ -46,6 +46,7 @@ export default function BlitzSession({
     revealAnswer,
     toggleMic,
     handleSaveEditedSpeech,
+    handleClearSpeech,
     handleJudge
   } = useBlitzSession({
     title,
@@ -142,6 +143,7 @@ export default function BlitzSession({
           speechError={speechError}
           onToggleMic={toggleMic}
           onSaveEditedSpeech={handleSaveEditedSpeech}
+          onClearSpeech={handleClearSpeech}
         />
 
         {/* 回答開示前の操作ボタン */}

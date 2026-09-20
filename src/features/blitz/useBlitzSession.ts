@@ -50,7 +50,8 @@ export function useBlitzSession({
     startListening,
     stopListening,
     toggleListening: toggleMic,
-    resetSpeech
+    resetSpeech,
+    clearSpeech
   } = useBlitzSpeech();
 
   // AI 自動発話評価用の状態
@@ -58,6 +59,14 @@ export function useBlitzSession({
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [aiEvaluation, setAiEvaluation] = useState<BlitzSpeechEvaluationResult | null>(null);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
+
+  const handleClearSpeech = useCallback(() => {
+    clearSpeech();
+    if (isRevealed) {
+      setAiEvaluation(null);
+      setEvaluationError(null);
+    }
+  }, [clearSpeech, isRevealed]);
 
   const currentQuestion = questions[currentIndex];
 
@@ -233,6 +242,7 @@ export function useBlitzSession({
     revealAnswer,
     toggleMic,
     handleSaveEditedSpeech,
+    handleClearSpeech,
     handleJudge
   };
 }

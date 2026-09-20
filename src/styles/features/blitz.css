@@ -711,8 +711,15 @@
 }
 
 /* Edit Speech Button & Input Form */
-.btn-edit-speech {
+.mic-speech-actions {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-edit-speech,
+.btn-clear-speech {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -727,9 +734,23 @@
   transition: all 0.15s ease;
 }
 
+.btn-edit-speech {
+  margin-left: auto;
+}
+
+.mic-speech-actions .btn-edit-speech {
+  margin-left: 0;
+}
+
 .btn-edit-speech:hover {
   background: #E2E8F0;
   color: var(--text-main);
+}
+
+.btn-clear-speech:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FECACA;
 }
 
 .speech-edit-form {

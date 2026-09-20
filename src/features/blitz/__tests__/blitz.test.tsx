@@ -22,6 +22,7 @@ vi.mock('../useBlitzSpeech', () => ({
     stopListening: vi.fn(),
     toggleListening: vi.fn(),
     resetSpeech: () => { mockSpeechText = ''; },
+    clearSpeech: () => { mockSpeechText = ''; },
   })
 }));
 
@@ -238,6 +239,29 @@ describe('Instant Oral Blitz Feature', () => {
       expect(screen.getByText(/should have \+ 過去分詞が完璧に使えています。/)).toBeInTheDocument();
 
       mockSpeechText = '';
+    });
+
+    it('shows clear button when user has speech and clears it on click', () => {
+      mockSpeechText = 'I am saying something wrong.';
+
+      render(
+        <BlitzSession
+          title="クリアテストセッション"
+          questions={mockQuestions}
+          timerSeconds={0}
+          onCompleteSession={vi.fn()}
+          onExitSession={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('I am saying something wrong.')).toBeInTheDocument();
+
+      const clearBtn = screen.getByRole('button', { name: /クリア/i });
+      expect(clearBtn).toBeInTheDocument();
+
+      fireEvent.click(clearBtn);
+
+      expect(mockSpeechText).toBe('');
     });
 
     it('renders AI evaluation result card and highlights recommended button', async () => {

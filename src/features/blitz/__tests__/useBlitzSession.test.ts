@@ -185,4 +185,41 @@ describe('useBlitzSession hook', () => {
       })
     );
   });
+
+  it('clears speech transcript when handleClearSpeech is called and resets aiEvaluation if revealed', async () => {
+    vi.mocked(aiBlitzService.evaluateBlitzSpeech).mockResolvedValueOnce({
+      isCorrect: true,
+      status: 'PERFECT',
+      statusLabelJa: '🎉 完璧！',
+      score: 100,
+      evaluationJa: 'パーフェクトです！',
+      improvedSpeech: 'I like coffee.',
+      grammarAdviceJa: '正確な文法です。'
+    });
+
+    const { result } = renderHook(() =>
+      useBlitzSession({
+        title: '基礎英文法',
+        questions: mockQuestions,
+        apiKey: 'dummy-api-key',
+      })
+    );
+
+    act(() => {
+      result.current.handleSaveEditedSpeech('I like tea.');
+      result.current.revealAnswer();
+    });
+
+    await vi.waitFor(() => {
+      expect(result.current.aiEvaluation).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.handleClearSpeech();
+    });
+
+    expect(result.current.userTranscript).toBe('');
+    expect(result.current.fullUserText).toBe('');
+    expect(result.current.aiEvaluation).toBeNull();
+  });
 });

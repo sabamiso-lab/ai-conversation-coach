@@ -233,6 +233,41 @@ describe('SpeechRecognizer module', () => {
     });
   });
 
+  it('clears recognized transcript results from startIndex when clear() is called', () => {
+    const onResult = vi.fn();
+    const recognizer = new SpeechRecognizer({ onResult });
+
+    mockRecognitionInstance.onresult!({
+      resultIndex: 0,
+      results: [
+        Object.assign([{ transcript: 'First attempt.' }], { isFinal: true })
+      ]
+    });
+
+    expect(onResult).toHaveBeenLastCalledWith({
+      final: 'First attempt.',
+      interim: ''
+    });
+
+    // Clear past results
+    recognizer.clear();
+
+    // Event after clear: previous item still exists in event.results, but a new item is added
+    mockRecognitionInstance.onresult!({
+      resultIndex: 1,
+      results: [
+        Object.assign([{ transcript: 'First attempt.' }], { isFinal: true }),
+        Object.assign([{ transcript: 'Second attempt.' }], { isFinal: true })
+      ]
+    });
+
+    // Only 'Second attempt.' should be returned!
+    expect(onResult).toHaveBeenLastCalledWith({
+      final: 'Second attempt.',
+      interim: ''
+    });
+  });
+
   it('handles onstart and onend callbacks and manages isListening state', () => {
     const onStart = vi.fn();
     const onEnd = vi.fn();

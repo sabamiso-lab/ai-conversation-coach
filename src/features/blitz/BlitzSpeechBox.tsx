@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Edit2, Check } from 'lucide-react';
+import { Mic, MicOff, Edit2, Check, RotateCcw } from 'lucide-react';
 
 export interface BlitzSpeechBoxProps {
   isListening: boolean;
@@ -9,6 +9,7 @@ export interface BlitzSpeechBoxProps {
   speechError: string;
   onToggleMic: () => void;
   onSaveEditedSpeech: (text: string) => void;
+  onClearSpeech?: () => void;
 }
 
 export default function BlitzSpeechBox({
@@ -18,7 +19,8 @@ export default function BlitzSpeechBox({
   interimTranscript,
   speechError,
   onToggleMic,
-  onSaveEditedSpeech
+  onSaveEditedSpeech,
+  onClearSpeech
 }: BlitzSpeechBoxProps) {
   const [isEditingSpeech, setIsEditingSpeech] = useState(false);
   const [editedSpeechText, setEditedSpeechText] = useState('');
@@ -52,16 +54,30 @@ export default function BlitzSpeechBox({
           {isListening ? 'マイク起動中... 英語で発話してください' : 'マイクオフ'}
         </span>
 
-        {/* 回答開示後で発話テキストがある場合、テキスト修正ボタン */}
-        {isRevealed && !isEditingSpeech && fullUserText && (
-          <button
-            type="button"
-            className="btn-edit-speech"
-            onClick={handleStartEditSpeech}
-            title="認識テキストを修正して再評価"
-          >
-            <Edit2 size={13} /> 修正
-          </button>
+        {/* 発話テキストがある場合の操作ボタン（クリア・修正） */}
+        {!isEditingSpeech && fullUserText && (
+          <div className="mic-speech-actions">
+            {isRevealed && (
+              <button
+                type="button"
+                className="btn-edit-speech"
+                onClick={handleStartEditSpeech}
+                title="認識テキストを修正して再評価"
+              >
+                <Edit2 size={13} /> 修正
+              </button>
+            )}
+            {onClearSpeech && (
+              <button
+                type="button"
+                className="btn-clear-speech"
+                onClick={onClearSpeech}
+                title="入力した音声をクリア"
+              >
+                <RotateCcw size={13} /> クリア
+              </button>
+            )}
+          </div>
         )}
       </div>
 

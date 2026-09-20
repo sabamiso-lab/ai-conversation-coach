@@ -149,6 +149,18 @@ export function useSpeechRecognition({
     setError('');
   }, [stopRecording]);
 
+  const clearSpeech = useCallback(() => {
+    if (recognizerRef.current) {
+      recognizerRef.current.clear();
+    }
+    setUserTranscript('');
+    setInterimTranscript('');
+    setError('');
+    if (onResultRef.current) {
+      onResultRef.current({ final: '', interim: '', full: '' });
+    }
+  }, []);
+
   const fullTranscript = `${userTranscript} ${interimTranscript}`.trim();
 
   return {
@@ -173,6 +185,7 @@ export function useSpeechRecognition({
     toggleRecording,
     toggleListening: toggleRecording,
     resetSpeech,
-    clearTranscript: resetSpeech
+    clearSpeech,
+    clearTranscript: clearSpeech
   };
 }
