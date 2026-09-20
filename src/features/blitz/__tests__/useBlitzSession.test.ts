@@ -86,6 +86,26 @@ describe('useBlitzSession hook', () => {
     expect(speechService.speakText).toHaveBeenCalledWith('I like coffee.', { rate: 0.95 });
   });
 
+  it('prevents multiple calls to revealAnswer from triggering speakText multiple times', () => {
+    const { result } = renderHook(() =>
+      useBlitzSession({
+        title: '基礎英文法',
+        questions: mockQuestions,
+        timerSeconds: 5,
+        onCompleteSession: vi.fn(),
+      })
+    );
+
+    act(() => {
+      result.current.revealAnswer();
+      result.current.revealAnswer();
+      result.current.revealAnswer();
+    });
+
+    expect(result.current.isRevealed).toBe(true);
+    expect(speechService.speakText).toHaveBeenCalledTimes(1);
+  });
+
   it('triggers AI evaluation on revealAnswer if speech exists and apiKey is provided', async () => {
     vi.mocked(aiBlitzService.evaluateBlitzSpeech).mockResolvedValueOnce({
       isCorrect: true,

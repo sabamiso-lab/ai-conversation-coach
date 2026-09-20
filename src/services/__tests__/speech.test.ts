@@ -126,6 +126,22 @@ describe('speech.js TTS module', () => {
     expect(mockSpeak).not.toHaveBeenCalled();
   });
 
+  it('prevents duplicate playback when speakText is called rapidly with identical text', () => {
+    mockGetVoices.mockReturnValue([{ name: 'Google US English', lang: 'en-US' }]);
+
+    speakText('Duplicate check');
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+
+    // Call immediately with same text (< 150ms)
+    speakText('Duplicate check');
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+
+    // After 200ms, should allow speaking again
+    vi.advanceTimersByTime(200);
+    speakText('Duplicate check');
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+  });
+
   it('selects high quality voices first, and falls back to standard Windows voices', () => {
     const mockVoices = [
       { name: 'Microsoft Haruka Desktop - Japanese', lang: 'ja-JP' },
@@ -415,5 +431,23 @@ describe('SpeechRecognizer module', () => {
     recognizer.start();
     expect(mockRecognitionInstance.start).toHaveBeenCalledTimes(2);
     expect(recognizer.isListening).toBe(true);
+  });
+
+  it('ignores trailing onresult events after stop() or abort() is called', () => {
+    const onResult = vi.fn();
+    const recognizer = new SpeechRecognizer({ onResult });
+    recognizer.start();
+
+    // Stop recognition
+    recognizer.stop();
+
+    // Simulate browser delivering delayed onresult event (e.g. speaker audio leak)
+    mockRecognitionInstance.onresult!({
+      results: [
+        Object.assign([{ transcript: 'Trailing speaker sound' }], { isFinal: true })
+      ]
+    });
+
+    expect(onResult).not.toHaveBeenCalled();
   });
 });

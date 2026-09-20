@@ -150,8 +150,10 @@ export default function BlitzSession({
         {!isRevealed ? (
           <div className="blitz-actions-row mt-6">
             <button
+              type="button"
               className="btn btn-primary btn-lg btn-reveal"
               onClick={revealAnswer}
+              disabled={isRevealed}
             >
               <Eye size={20} /> 答え合わせ・模範解答を見る
             </button>

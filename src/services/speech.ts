@@ -36,6 +36,7 @@ export interface SpeechRecognizerOptions {
 export class SpeechRecognizer {
   public supported: boolean;
   public isListening: boolean;
+  private isStopped: boolean = false;
   private recognition: ISpeechRecognition | null = null;
   private options: SpeechRecognizerOptions;
   private startIndex: number = 0;
@@ -52,11 +53,13 @@ export class SpeechRecognizer {
     if (!SpeechRecognition) {
       this.supported = false;
       this.isListening = false;
+      this.isStopped = false;
       return;
     }
 
     this.supported = true;
     this.isListening = false;
+    this.isStopped = false;
     this.startIndex = 0;
     this.lastResultsLength = 0;
     this.createRecognitionInstance();
@@ -86,12 +89,16 @@ export class SpeechRecognizer {
 
     rec.onstart = () => {
       this.isListening = true;
+      this.isStopped = false;
       this.startIndex = 0;
       this.lastResultsLength = 0;
       if (this.options.onStart) this.options.onStart();
     };
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
+      // If recognition was explicitly stopped or aborted, ignore trailing events
+      if (this.isStopped) return;
+
       this.lastResultsLength = event.results.length;
       let finalTranscript = '';
       let interimTranscript = '';
@@ -160,6 +167,7 @@ export class SpeechRecognizer {
     if (!this.supported) return;
 
     try {
+      this.isStopped = false;
       this.startIndex = 0;
       this.lastResultsLength = 0;
       // Re-create instance to avoid browser hang on re-start and ensure clean state
@@ -181,13 +189,14 @@ export class SpeechRecognizer {
   }
 
   stop(): void {
+    this.isStopped = true;
     if (this.recognition && this.isListening) {
+      this.isListening = false;
       try {
         this.recognition.stop();
       } catch (err) {
         console.warn("Speech recognition stop error:", err);
       } finally {
-        this.isListening = false;
         this.startIndex = 0;
         this.lastResultsLength = 0;
       }
@@ -195,15 +204,20 @@ export class SpeechRecognizer {
   }
 
   abort(): void {
+    this.isStopped = true;
     if (this.recognition) {
+      this.isListening = false;
+      this.startIndex = 0;
+      this.lastResultsLength = 0;
+      const rec = this.recognition;
       try {
-        this.recognition.abort();
+        rec.onstart = null;
+        rec.onresult = null;
+        rec.onerror = null;
+        rec.onend = null;
+        rec.abort();
       } catch (err) {
         console.warn("Speech recognition abort error:", err);
-      } finally {
-        this.isListening = false;
-        this.startIndex = 0;
-        this.lastResultsLength = 0;
       }
     }
   }
@@ -326,8 +340,17 @@ export interface SpeakTextOptions {
   onError?: (event: SpeechSynthesisErrorEvent) => void;
 }
 
+let lastSpeakRequest = { text: '', time: 0 };
+
 export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd, onError }: SpeakTextOptions = {}): void {
-  if (!isSpeechSynthesisSupported()) return;
+  if (!isSpeechSynthesisSupported() || !text) return;
+
+  const now = Date.now();
+  // Prevent duplicate playback when called in quick succession (< 150ms) with the exact same text
+  if (lastSpeakRequest.text === text && (now - lastSpeakRequest.time) < 150) {
+    return;
+  }
+  lastSpeakRequest = { text, time: now };
 
   // Cancel any ongoing speech & clear pending timers/event listeners
   stopSpeaking();

@@ -20,6 +20,7 @@ vi.mock('../useBlitzSpeech', () => ({
     speechError: '',
     startListening: vi.fn(),
     stopListening: vi.fn(),
+    abortListening: vi.fn(),
     toggleListening: vi.fn(),
     resetSpeech: () => { mockSpeechText = ''; },
     clearSpeech: () => { mockSpeechText = ''; },

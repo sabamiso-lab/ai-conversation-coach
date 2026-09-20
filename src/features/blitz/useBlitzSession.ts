@@ -35,6 +35,7 @@ export function useBlitzSession({
 }: UseBlitzSessionOptions) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
+  const isRevealedRef = useRef(false);
   const [userResults, setUserResults] = useState<BlitzResult[]>([]);
   const [startTime] = useState(() => Date.now());
   const [questionStartTime, setQuestionStartTime] = useState(() => Date.now());
@@ -50,10 +51,12 @@ export function useBlitzSession({
     speechError,
     startListening,
     stopListening,
+    abortListening: rawAbortListening,
     toggleListening: toggleMic,
     resetSpeech,
     clearSpeech
   } = useBlitzSpeech();
+  const abortListening = rawAbortListening || stopListening;
 
   // AI 自動発話評価用の状態
   const [enableAiEvaluation, setEnableAiEvaluation] = useState(true);
@@ -119,9 +122,12 @@ export function useBlitzSession({
 
   // 回答開示
   const revealAnswer = useCallback(() => {
-    if (isRevealed) return;
-    stopListening();
+    if (isRevealedRef.current || isRevealed) return;
+    isRevealedRef.current = true;
     setIsRevealed(true);
+
+    // 音声認識を直ちに即時中断（スピーカーからの模範音声がマイクに拾われて二重入力されるのを防ぐ）
+    abortListening();
 
     // ネイティブ模範音声の自動再生
     if (currentQuestion?.answer) {
@@ -132,7 +138,7 @@ export function useBlitzSession({
     if (enableAiEvaluation && apiKey && fullUserText) {
       requestAiEvaluation(fullUserText);
     }
-  }, [isRevealed, stopListening, currentQuestion, enableAiEvaluation, apiKey, fullUserText, requestAiEvaluation]);
+  }, [isRevealed, abortListening, currentQuestion, enableAiEvaluation, apiKey, fullUserText, requestAiEvaluation]);
 
   // タイマーカスタムフック
   const { timeLeft, progressPercent: timerPercent, resetTimer } = useBlitzTimer({
@@ -181,7 +187,9 @@ export function useBlitzSession({
   }, []);
 
   const startSpeechForNextQuestion = () => {
+    isRevealedRef.current = false;
     setIsRevealed(false);
+    abortListening();
     resetSpeech();
     setAiEvaluation(null);
     setIsEvaluating(false);

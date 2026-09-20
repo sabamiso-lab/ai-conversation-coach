@@ -144,11 +144,11 @@ export function useSpeechRecognition({
   }, [isRecording, startRecording, stopRecording]);
 
   const resetSpeech = useCallback(() => {
-    stopRecording();
+    abortRecording();
     setUserTranscript('');
     setInterimTranscript('');
     setError('');
-  }, [stopRecording]);
+  }, [abortRecording]);
 
   const clearSpeech = useCallback(() => {
     if (recognizerRef.current) {
@@ -183,6 +183,7 @@ export function useSpeechRecognition({
     stopRecording,
     stopListening: stopRecording,
     abortRecording,
+    abortListening: abortRecording,
     toggleRecording,
     toggleListening: toggleRecording,
     resetSpeech,
