@@ -187,7 +187,7 @@ describe('useBlitzSession hook', () => {
   });
 
   it('clears speech transcript when handleClearSpeech is called and resets aiEvaluation if revealed', async () => {
-    vi.mocked(aiBlitzService.evaluateBlitzSpeech).mockResolvedValueOnce({
+    vi.mocked(aiBlitzService.evaluateBlitzSpeech).mockResolvedValue({
       isCorrect: true,
       status: 'PERFECT',
       statusLabelJa: '🎉 完璧！',
@@ -201,18 +201,21 @@ describe('useBlitzSession hook', () => {
       useBlitzSession({
         title: '基礎英文法',
         questions: mockQuestions,
+        timerSeconds: 0,
         apiKey: 'dummy-api-key',
         onCompleteSession: vi.fn(),
       })
     );
 
-    act(() => {
+    await act(async () => {
       result.current.handleSaveEditedSpeech('I like tea.');
       result.current.revealAnswer();
     });
 
-    await vi.waitFor(() => {
-      expect(result.current.aiEvaluation).not.toBeNull();
+    await act(async () => {
+      await vi.waitFor(() => {
+        expect(result.current.aiEvaluation).not.toBeNull();
+      });
     });
 
     act(() => {

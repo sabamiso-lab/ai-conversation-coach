@@ -32,6 +32,21 @@ describe('getSituations Lambda Handler', () => {
     expect(body.error).toContain('Forbidden: Invalid API Key');
   });
 
+  it('rejects request with 403 when origin is not allowed even without referer', async () => {
+    const event = {
+      httpMethod: 'GET',
+      headers: {
+        'x-speakflow-api-key': 'sf_secret_key_default',
+        'origin': 'https://malicious-site.com',
+      },
+    };
+
+    const response = await handler(event);
+    expect(response.statusCode).toBe(403);
+    const body = JSON.parse(response.body);
+    expect(body.error).toContain('Forbidden: Origin or Referer not allowed');
+  });
+
   it('returns situation list successfully when API key is valid', async () => {
     const defaultApiKey = 'sf_secret_key_default';
     const mockItems = [

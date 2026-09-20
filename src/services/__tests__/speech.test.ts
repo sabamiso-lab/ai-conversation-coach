@@ -317,4 +317,21 @@ describe('SpeechRecognizer module', () => {
     expect(mockRecognitionInstance.abort).toHaveBeenCalled();
     expect(recognizer.isListening).toBe(false);
   });
+
+  it('inserts space between consecutive recognition chunks without leading space', () => {
+    const onResult = vi.fn();
+    new SpeechRecognizer({ onResult });
+
+    mockRecognitionInstance.onresult!({
+      results: [
+        Object.assign([{ transcript: 'I have' }], { isFinal: true }),
+        Object.assign([{ transcript: 'a pen' }], { isFinal: true })
+      ]
+    });
+
+    expect(onResult).toHaveBeenCalledWith({
+      final: 'I have a pen',
+      interim: ''
+    });
+  });
 });

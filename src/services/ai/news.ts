@@ -137,7 +137,7 @@ Adhere strictly to this JSON schema:
   };
 
   const rawJson = await callGeminiApi(apiKey, model, structPrompt, [
-    { role: 'user', parts: [{ text: structPrompt }] }
+    { role: 'user', parts: [{ text: `Based on the search results above, generate the structured English conversation roleplay scenario JSON for a ${difficulty} level learner.` }] }
   ], schema);
 
   interface RawNewsScenario {

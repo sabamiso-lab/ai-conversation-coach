@@ -60,6 +60,77 @@ export interface SessionReportResult {
 }
 
 /**
+ * Helper to build sanitized Gemini contents adhering strictly to Gemini API requirements:
+ * 1. First turn MUST be 'user'
+ * 2. Turns MUST alternate between 'user' and 'model'
+ */
+export function buildChatContents(
+  situation: Situation,
+  history: Array<{ role: 'user' | 'ai' | 'model'; text: string }>,
+  userText: string
+): GeminiContent[] {
+  const rawTurns: Array<{ role: 'user' | 'model'; text: string }> = [];
+
+  const hasHistory = history.length > 0;
+  const startsWithAi = hasHistory
+    ? history[0].role === 'ai' || history[0].role === 'model'
+    : Boolean(situation.initialMessage);
+
+  if (startsWithAi) {
+    rawTurns.push({
+      role: 'user',
+      text: '[Starts the scenario conversation]'
+    });
+  }
+
+  if (!hasHistory && situation.initialMessage) {
+    rawTurns.push({
+      role: 'model',
+      text: situation.initialMessage
+    });
+  }
+
+  history.forEach(item => {
+    const role: 'user' | 'model' = item.role === 'user' ? 'user' : 'model';
+    rawTurns.push({ role, text: item.text });
+  });
+
+  rawTurns.push({
+    role: 'user',
+    text: userText
+  });
+
+  // Ensure alternating user/model roles and non-empty texts
+  const sanitized: GeminiContent[] = [];
+
+  for (const turn of rawTurns) {
+    const trimmedText = turn.text.trim();
+    if (!trimmedText) continue;
+
+    const last = sanitized[sanitized.length - 1];
+    if (last && last.role === turn.role) {
+      // Merge consecutive same-role turns
+      last.parts[0].text += `\n${trimmedText}`;
+    } else {
+      sanitized.push({
+        role: turn.role,
+        parts: [{ text: trimmedText }]
+      });
+    }
+  }
+
+  // Ensure the very first turn is always 'user'
+  if (sanitized.length === 0 || sanitized[0].role !== 'user') {
+    sanitized.unshift({
+      role: 'user',
+      parts: [{ text: '[Starts the scenario conversation]' }]
+    });
+  }
+
+  return sanitized;
+}
+
+/**
  * Send a chat turn to Gemini and receive roleplay response + user feedback
  */
 export async function sendChatMessage({
@@ -130,28 +201,7 @@ Return your response strictly as JSON with this structure:
 `;
 
   // Format conversation history for Gemini API
-  const contents: GeminiContent[] = [];
-  
-  // Add initial message if history is empty
-  if (history.length === 0 && situation.initialMessage) {
-    contents.push({
-      role: 'model',
-      parts: [{ text: situation.initialMessage }]
-    });
-  }
-
-  history.forEach(item => {
-    contents.push({
-      role: item.role === 'user' ? 'user' : 'model',
-      parts: [{ text: item.text }]
-    });
-  });
-
-  // Append current user message
-  contents.push({
-    role: 'user',
-    parts: [{ text: userText }]
-  });
+  const contents = buildChatContents(situation, history, userText);
 
   const schema = {
     type: "OBJECT",

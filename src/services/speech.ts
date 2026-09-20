@@ -73,10 +73,19 @@ export class SpeechRecognizer {
 
       // Aggregate results from startIndex to allow clearing past transcripts during an active session
       for (let i = this.startIndex; i < event.results.length; ++i) {
+        const piece = event.results[i][0].transcript;
+        if (!piece) continue;
+
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          if (finalTranscript && !finalTranscript.endsWith(' ') && !piece.startsWith(' ')) {
+            finalTranscript += ' ';
+          }
+          finalTranscript += piece;
         } else {
-          interimTranscript += event.results[i][0].transcript;
+          if (interimTranscript && !interimTranscript.endsWith(' ') && !piece.startsWith(' ')) {
+            interimTranscript += ' ';
+          }
+          interimTranscript += piece;
         }
       }
 
@@ -178,17 +187,31 @@ export class SpeechRecognizer {
  * Text-to-Speech Helper
  */
 let pendingSpeechTimeout: ReturnType<typeof setTimeout> | null = null;
+// Retain reference to active utterances to prevent garbage collection in Chrome during long playback
+const activeUtterances = new Set<SpeechSynthesisUtterance>();
 
 function setVoiceAndSpeak(utterance: SpeechSynthesisUtterance, onEnd?: () => void): void {
+  activeUtterances.add(utterance);
+
+  const cleanup = () => {
+    activeUtterances.delete(utterance);
+    if (onEnd) onEnd();
+  };
+
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
   if (naturalVoice) {
     utterance.voice = naturalVoice;
   }
 
-  if (onEnd) {
-    utterance.onend = () => onEnd();
-  }
+  utterance.onend = () => {
+    cleanup();
+  };
+
+  utterance.onerror = (event) => {
+    console.warn('Speech synthesis error:', event);
+    cleanup();
+  };
 
   window.speechSynthesis.speak(utterance);
 }
@@ -242,6 +265,7 @@ export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1
 
 export function stopSpeaking(): void {
   if (isSpeechSynthesisSupported()) {
+    activeUtterances.clear();
     if (pendingSpeechTimeout) {
       clearTimeout(pendingSpeechTimeout);
       pendingSpeechTimeout = null;

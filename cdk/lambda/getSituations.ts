@@ -82,7 +82,7 @@ export const handler = async (event: APIGatewayEvent) => {
     origin.startsWith(allowed) || referer.startsWith(allowed)
   );
 
-  if (!isAllowedOrigin && origin !== '' && referer !== '') {
+  if (!isAllowedOrigin && (origin !== '' || referer !== '')) {
     return {
       statusCode: 403,
       headers: defaultResponseHeaders,

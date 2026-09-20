@@ -23,7 +23,7 @@
   <img src="https://img.shields.io/badge/Backend-AWS%20CDK%20%2F%20DynamoDB-FF9900.svg?logo=amazonaws" alt="AWS CDK & DynamoDB" />
   <img src="https://img.shields.io/badge/Mobile-Responsive-green.svg" alt="Mobile Responsive" />
   <img src="https://img.shields.io/badge/Node.js-24%20LTS-339933.svg?logo=nodedotjs" alt="Node.js 24 LTS" />
-  <img src="https://img.shields.io/badge/Testing-231%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 231 Tests" />
+  <img src="https://img.shields.io/badge/Testing-254%20Tests%20Passing-6E9F18.svg?logo=vitest" alt="Vitest 254 Tests" />
   <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg?logo=githubactions" alt="GitHub Pages" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { calculateTextMatchScore } from '../../utils/textMatcher';
 import { evaluateBlitzSpeech, BlitzSpeechEvaluationResult } from '../../services/ai/blitz';
@@ -59,12 +59,24 @@ export function useBlitzSession({
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [aiEvaluation, setAiEvaluation] = useState<BlitzSpeechEvaluationResult | null>(null);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  const evalRequestIdRef = useRef(0);
+
+  // 初回マウント時にお題開始と同時に音声認識を自動開始
+  useEffect(() => {
+    startListening();
+    return () => {
+      stopListening();
+      stopSpeaking();
+    };
+  }, [startListening, stopListening]);
 
   const handleClearSpeech = useCallback(() => {
+    evalRequestIdRef.current++;
     clearSpeech();
     if (isRevealed) {
       setAiEvaluation(null);
       setEvaluationError(null);
+      setIsEvaluating(false);
     }
   }, [clearSpeech, isRevealed]);
 
@@ -75,6 +87,7 @@ export function useBlitzSession({
     const textToEvaluate = (speechText !== undefined ? speechText : fullUserText).trim();
     if (!apiKey || !textToEvaluate || !currentQuestion) return;
 
+    const currentReqId = ++evalRequestIdRef.current;
     setIsEvaluating(true);
     setEvaluationError(null);
     try {
@@ -87,13 +100,19 @@ export function useBlitzSession({
         grammarPoint: currentQuestion.grammarPoint,
         userSpeech: textToEvaluate
       });
-      setAiEvaluation(result);
+      if (evalRequestIdRef.current === currentReqId) {
+        setAiEvaluation(result);
+      }
     } catch (err: unknown) {
-      console.warn('AI evaluation error:', err);
-      const msg = err instanceof Error ? err.message : 'AI発話評価に失敗しました';
-      setEvaluationError(msg);
+      if (evalRequestIdRef.current === currentReqId) {
+        console.warn('AI evaluation error:', err);
+        const msg = err instanceof Error ? err.message : 'AI発話評価に失敗しました';
+        setEvaluationError(msg);
+      }
     } finally {
-      setIsEvaluating(false);
+      if (evalRequestIdRef.current === currentReqId) {
+        setIsEvaluating(false);
+      }
     }
   }, [apiKey, model, currentQuestion, fullUserText]);
 

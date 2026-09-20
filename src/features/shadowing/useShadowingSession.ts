@@ -29,7 +29,6 @@ export function useShadowingSession({
     isLooping,
     setIsLooping,
     togglePlayAudio,
-    stopAudio,
     clearLoopTimer
   } = useAudioPlayer();
 
@@ -93,9 +92,6 @@ export function useShadowingSession({
       setErrorMsg('');
       setUserTranscript('');
       setEvalResult(null);
-    }
-    if (isPlaying) {
-      stopAudio();
     }
     rawToggleRecording();
   };

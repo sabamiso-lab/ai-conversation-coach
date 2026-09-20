@@ -33,6 +33,21 @@ describe('createSituation Lambda Handler', () => {
     expect(response.statusCode).toBe(403);
   });
 
+  it('rejects request with 403 when origin is not allowed even without referer', async () => {
+    const event = {
+      httpMethod: 'POST',
+      headers: {
+        'x-speakflow-api-key': defaultApiKey,
+        'origin': 'https://malicious-site.com',
+      },
+      body: JSON.stringify({ title: 'Test' }),
+    };
+
+    const response = await handler(event);
+    expect(response.statusCode).toBe(403);
+    expect(JSON.parse(response.body).error).toContain('Forbidden: Origin or Referer not allowed');
+  });
+
   it('returns 400 Bad Request when request body is missing', async () => {
     const event = {
       httpMethod: 'POST',

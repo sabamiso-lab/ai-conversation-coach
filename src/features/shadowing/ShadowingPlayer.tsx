@@ -106,7 +106,7 @@ export default function ShadowingPlayer({
         <div className="shadowing-recording-section">
           <div className="mb-3">
             <span className="shadowing-rec-status">
-              {isRecording ? '🎧 音声を聴きながら同時に発話中...' : 'マイクを押してシャドーイング（音読）開始'}
+              {isRecording ? '🎧 音声を聴きながら同時に発話中...' : 'マイクを押してシャドーイング（音読）開始（※イヤホン推奨）'}
             </span>
           </div>
 

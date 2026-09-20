@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sendChatMessage, getHintSuggestions, generateSessionReport } from '../chat';
+import { sendChatMessage, getHintSuggestions, generateSessionReport, buildChatContents } from '../chat';
 import * as clientModule from '../client';
 import { Situation } from '../../../types';
 
@@ -154,6 +154,53 @@ describe('services/ai/chat.ts', () => {
       expect(report.overallScore).toBe(88);
       expect(report.goalsAchieved[0].achieved).toBe(true);
       expect(report.strengthsJa).toHaveLength(2);
+    });
+  });
+
+  describe('buildChatContents', () => {
+    it('ensures first turn is user even when history is empty and scenario has initialMessage', () => {
+      const contents = buildChatContents(mockSituation, [], 'Can I have an espresso?');
+      expect(contents[0].role).toBe('user');
+      expect(contents[1].role).toBe('model');
+      expect(contents[1].parts[0].text).toBe(mockSituation.initialMessage);
+      expect(contents[2].role).toBe('user');
+      expect(contents[2].parts[0].text).toBe('Can I have an espresso?');
+    });
+
+    it('ensures alternating roles when multiple user messages appear consecutively', () => {
+      const history = [
+        { role: 'user' as const, text: 'Hello' },
+        { role: 'user' as const, text: 'I am here' }
+      ];
+      const contents = buildChatContents(mockSituation, history, 'Give me coffee');
+      expect(contents[0].role).toBe('user');
+      // Consecutive user messages should be merged
+      expect(contents).toHaveLength(1);
+      expect(contents[0].parts[0].text).toContain('Hello');
+      expect(contents[0].parts[0].text).toContain('I am here');
+      expect(contents[0].parts[0].text).toContain('Give me coffee');
+    });
+
+    it('passed contents to callGeminiApi with first turn as user', async () => {
+      const spy = vi.spyOn(clientModule, 'callGeminiApi').mockResolvedValueOnce(JSON.stringify({
+        aiResponseText: 'Here you go!',
+        aiResponseTranslation: 'どうぞ！',
+        userTextTranslation: 'コーヒー',
+        clarityStatus: 'FULL',
+        clarityBadgeJa: '🟢 100%',
+        clarityFeedbackJa: 'Good'
+      }));
+
+      await sendChatMessage({
+        apiKey: 'test-key',
+        situation: mockSituation,
+        history: [{ role: 'ai', text: mockSituation.initialMessage }],
+        userText: 'One coffee please.'
+      });
+
+      expect(spy).toHaveBeenCalled();
+      const calledContents = spy.mock.calls[0][3];
+      expect(calledContents[0].role).toBe('user');
     });
   });
 });
