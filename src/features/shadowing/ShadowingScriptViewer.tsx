@@ -20,54 +20,38 @@ export default function ShadowingScriptViewer({
   return (
     <div>
       {/* Display Mode Toggles */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      <div className="shadowing-mode-bar">
+        <div className="shadowing-mode-group">
           <button
-            className={`btn ${viewMode === 'slash' ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn ${viewMode === 'slash' ? 'btn-primary' : 'btn-secondary'} shadowing-mode-btn`}
             onClick={() => setViewMode('slash')}
-            style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
           >
             / 区切り
           </button>
           <button
-            className={`btn ${viewMode === 'full' ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn ${viewMode === 'full' ? 'btn-primary' : 'btn-secondary'} shadowing-mode-btn`}
             onClick={() => setViewMode('full')}
-            style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
           >
             標準
           </button>
           <button
-            className={`btn ${viewMode === 'blank' ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn ${viewMode === 'blank' ? 'btn-primary' : 'btn-secondary'} shadowing-mode-btn`}
             onClick={() => setViewMode('blank')}
-            style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '8px' }}
           >
             🙈 穴埋め
           </button>
         </div>
 
         <button
-          className="btn btn-ghost"
+          className="btn btn-ghost shadowing-trans-toggle-btn"
           onClick={() => setShowTranslation(!showTranslation)}
-          style={{ fontSize: '0.78rem', color: '#64748B', padding: '4px 8px' }}
         >
           {showTranslation ? <><EyeOff size={14} /> 訳を隠す</> : <><Eye size={14} /> 訳を表示</>}
         </button>
       </div>
 
       {/* Script Content Card */}
-      <div 
-        style={{
-          background: '#F1F5F9',
-          borderRadius: '16px',
-          padding: '24px',
-          lineHeight: 1.8,
-          fontSize: '1.15rem',
-          fontWeight: 600,
-          color: '#0F172A',
-          letterSpacing: '0.01em',
-          marginBottom: '16px'
-        }}
-      >
+      <div className="shadowing-script-card">
         {viewMode === 'slash' ? (
           slashedText || text || ''
         ) : viewMode === 'blank' ? (
@@ -83,15 +67,15 @@ export default function ShadowingScriptViewer({
 
       {/* Japanese Translation Box */}
       {showTranslation && translation && (
-        <div style={{ background: '#EEF2FF', padding: '14px 18px', borderRadius: '12px', color: '#3730A3', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+        <div className="shadowing-translation-box">
           <strong>日本語訳:</strong> {translation}
         </div>
       )}
 
       {/* Pronunciation & Linking Tips */}
       {tipsJa && (
-        <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', padding: '12px 16px', borderRadius: '12px', color: '#92400E', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '24px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-          <Lightbulb size={18} style={{ flexShrink: 0, marginTop: '2px', color: '#D97706' }} />
+        <div className="shadowing-tips-box">
+          <Lightbulb size={18} className="shadowing-tips-icon" />
           <div>
             <strong>発音・リンキングのコツ:</strong> {tipsJa}
           </div>

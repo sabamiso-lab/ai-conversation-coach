@@ -31,7 +31,7 @@ export interface ChatMessage {
   text: string;
   translation?: string;
   userTextTranslation?: string;
-  clarityStatus?: 'FULL' | 'PARTIAL' | 'UNCLEAR' | 'natural' | 'acceptable' | 'needs_improvement';
+  clarityStatus?: 'FULL' | 'PARTIAL' | 'UNCLEAR';
   clarityBadgeJa?: string;
   clarityFeedbackJa?: string;
   simpleAlternative?: string | null;
@@ -115,12 +115,6 @@ export interface CoachMessage {
   timestamp: number;
 }
 
-export interface BetterExpression {
-  original: string;
-  better: string;
-  reasonJa: string;
-}
-
 export interface SessionReport {
   overallScore: number;
   grammarScore?: number;
@@ -131,9 +125,6 @@ export interface SessionReport {
   improvementsJa?: string[];
   keyPhrases?: Array<{ phrase: string; meaning: string }>;
   goalsAchieved?: Array<{ goal: string; achieved: boolean }>;
-  clearPoints?: string[];
-  improvementPoints?: string[];
-  betterExpressions?: BetterExpression[];
 }
 
 export interface ShadowingSentence {

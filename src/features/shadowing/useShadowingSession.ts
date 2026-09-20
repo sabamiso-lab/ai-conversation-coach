@@ -64,8 +64,8 @@ export function useShadowingSession({
       onContextChange({
         title: script.title,
         category: script.category,
-        fullText: script.fullText || script.text,
-        targetText: script.fullText || script.text,
+        fullText: script.text,
+        targetText: script.text,
         sentences: script.sentences,
         userSpeech: userTranscript.trim(),
         hasRecorded: Boolean(userTranscript.trim()),

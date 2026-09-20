@@ -26,27 +26,12 @@ export default function ShadowingAudioControls({
   className = 'player-controls-wrap'
 }: ShadowingAudioControlsProps) {
   return (
-    <div 
-      className={className}
-      style={{
-        background: '#F8FAFC',
-        border: '1px solid #E2E8F0',
-        borderRadius: '16px',
-        padding: '14px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        marginBottom: '20px'
-      }}
-    >
+    <div className={`shadowing-controls-bar ${className}`.trim()}>
       {/* Play/Stop Button & Repeat */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <div className="shadowing-play-group">
         <button
-          className={`btn ${isPlaying ? 'btn-accent' : 'btn-primary'}`}
+          className={`btn ${isPlaying ? 'btn-accent' : 'btn-primary'} shadowing-play-btn`}
           onClick={onPlayToggle}
-          style={{ padding: '8px 16px', borderRadius: '9999px', fontSize: '0.9rem' }}
         >
           {isPlaying ? (
             <>
@@ -60,15 +45,8 @@ export default function ShadowingAudioControls({
         </button>
 
         <button
-          className={`btn ${isLooping ? 'btn-secondary' : 'btn-ghost'}`}
+          className={`btn ${isLooping ? 'btn-secondary' : 'btn-ghost'} shadowing-repeat-btn ${isLooping ? 'is-looping' : ''}`}
           onClick={onLoopToggle}
-          style={{
-            color: isLooping ? '#4F46E5' : '#64748B',
-            borderColor: isLooping ? '#818CF8' : 'transparent',
-            fontWeight: 600,
-            padding: '8px 12px',
-            fontSize: '0.84rem'
-          }}
           title="リピート再生モード"
         >
           <Repeat size={15} /> リピート {isLooping ? 'ON' : 'OFF'}
@@ -76,26 +54,15 @@ export default function ShadowingAudioControls({
       </div>
 
       {/* Speed Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div className="shadowing-speed-group">
+        <span className="shadowing-speed-label">
           <Gauge size={14} /> 速度:
         </span>
         {SPEED_OPTIONS.map(speed => (
           <button
             key={speed}
             onClick={() => onSpeedChange(speed)}
-            style={{
-              background: playbackSpeed === speed ? '#4F46E5' : '#FFFFFF',
-              color: playbackSpeed === speed ? '#FFFFFF' : '#475569',
-              border: '1px solid',
-              borderColor: playbackSpeed === speed ? '#4F46E5' : '#CBD5E1',
-              borderRadius: '6px',
-              padding: '3px 8px',
-              fontSize: '0.76rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
+            className={`shadowing-speed-btn ${playbackSpeed === speed ? 'is-active' : ''}`}
           >
             {speed === 1.0 ? '1.0x' : `${speed}x`}
           </button>

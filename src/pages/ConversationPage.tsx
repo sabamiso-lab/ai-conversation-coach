@@ -21,7 +21,7 @@ export default function ConversationPage({
   model: propsModel, 
   onOpenApiKeyModal: propsOnOpenApiKeyModal, 
   onResetSession: propsOnReset 
-}: ConversationPageProps) {
+}: ConversationPageProps = {}) {
   const settings = useSettings();
   const coach = useCoach();
 
@@ -49,7 +49,7 @@ export default function ConversationPage({
   }, [selectedSituation, updateCoachContext]);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div className="flex-1 flex-col">
       {!selectedSituation ? (
         <SituationSelector
           onSelectSituation={onSelectSituation}

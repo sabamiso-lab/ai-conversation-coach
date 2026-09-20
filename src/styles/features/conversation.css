@@ -461,3 +461,107 @@
   font-weight: 700;
   color: #065F46;
 }
+
+/* Report Modal Styles */
+.report-hero-banner {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+  color: #FFFFFF;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.report-hero-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.report-hero-score {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.report-hero-score-unit {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.report-hero-msg {
+  font-size: 0.92rem;
+  opacity: 0.95;
+}
+
+.report-summary-box {
+  background: #F8FAFC;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 20px;
+}
+
+.report-summary-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  color: #0F172A;
+}
+
+.report-summary-text {
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.report-key-phrases {
+  margin-bottom: 20px;
+}
+
+.report-phrases-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-phrases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-phrase-item {
+  background: #F1F5F9;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.88rem;
+}
+
+.report-phrase-en {
+  font-weight: 700;
+  color: #4F46E5;
+}
+
+.report-phrase-ja {
+  color: #475569;
+}
+
+.report-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}

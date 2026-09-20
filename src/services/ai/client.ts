@@ -32,6 +32,32 @@ export interface GeminiApiResponse {
 }
 
 /**
+ * Internal helper to send POST request to Gemini API and handle HTTP errors
+ */
+async function postGeminiRequest(
+  apiKey: string,
+  model: string | undefined,
+  payload: unknown
+): Promise<GeminiApiResponse> {
+  const modelName = model || DEFAULT_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData: GeminiApiResponse = await response.json().catch(() => ({}));
+    const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+/**
  * Call Gemini API endpoint
  */
 export async function callGeminiApi(
@@ -41,9 +67,6 @@ export async function callGeminiApi(
   contents: GeminiContent[],
   responseSchema: object | null = null
 ): Promise<string> {
-  const modelName = model || DEFAULT_MODEL;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
   const payload: {
     contents: GeminiContent[];
     systemInstruction: { parts: GeminiContentPart[] };
@@ -54,7 +77,7 @@ export async function callGeminiApi(
       responseSchema?: object;
     };
   } = {
-    contents: contents,
+    contents,
     systemInstruction: {
       parts: [{ text: systemInstruction }]
     },
@@ -69,19 +92,7 @@ export async function callGeminiApi(
     payload.generationConfig.responseSchema = responseSchema;
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errorData: GeminiApiResponse = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
-    throw new Error(message);
-  }
-
-  const data: GeminiApiResponse = await response.json();
+  const data = await postGeminiRequest(apiKey, model, payload);
   const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!textResponse) {
     throw new Error("No response received from Gemini API.");
@@ -98,9 +109,6 @@ export async function callGeminiApiWithGrounding(
   model: string | undefined,
   prompt: string
 ): Promise<{ text: string; groundingMetadata: GeminiGroundingMetadata | null }> {
-  const modelName = model || DEFAULT_MODEL;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
   const payload = {
     contents: [
       {
@@ -116,19 +124,7 @@ export async function callGeminiApiWithGrounding(
     }
   };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errorData: GeminiApiResponse = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
-    throw new Error(message);
-  }
-
-  const data: GeminiApiResponse = await response.json();
+  const data = await postGeminiRequest(apiKey, model, payload);
   const candidate = data.candidates?.[0];
   const textResponse = candidate?.content?.parts?.[0]?.text;
 

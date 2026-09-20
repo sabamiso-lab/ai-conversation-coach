@@ -70,7 +70,7 @@ export default function ShadowingSelector({
     : scripts.filter(s => s.category === selectedCategory);
 
   return (
-    <div style={{ marginTop: '24px', animation: 'fadeIn 0.3s ease-out' }}>
+    <div className="shadowing-selector-container">
       {/* Title Banner */}
       <PageHeader
         badgeIcon={<Headphones size={16} />}
@@ -120,7 +120,7 @@ export default function ShadowingSelector({
             onClick={() => onSelectScript(script)}
           >
             {script.tipsJa && (
-              <div style={{ marginTop: '10px', fontSize: '0.78rem', color: '#6366F1', background: '#F5F3FF', padding: '6px 10px', borderRadius: '8px', fontWeight: 600 }}>
+              <div className="shadowing-tip-badge">
                 💡 {script.tipsJa}
               </div>
             )}

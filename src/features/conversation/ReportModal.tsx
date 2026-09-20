@@ -68,14 +68,14 @@ export default function ReportModal({
       ) : report ? (
         <div>
           {/* Overall Score Banner */}
-          <div style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)', color: 'white', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="report-hero-banner">
+            <div className="report-hero-label">
               OVERALL PERFORMANCE
             </div>
-            <div style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1, margin: '8px 0' }}>
-              {report.overallScore}<span style={{ fontSize: '1.5rem', opacity: 0.8 }}>/100</span>
+            <div className="report-hero-score">
+              {report.overallScore}<span className="report-hero-score-unit">/100</span>
             </div>
-            <div style={{ fontSize: '0.92rem', opacity: 0.95 }}>
+            <div className="report-hero-msg">
               {report.overallScore >= 80 ? '🌟 素晴らしいコミュニケーション力です！' : '👍 よく頑張りました！着実に成長しています。'}
             </div>
           </div>
@@ -97,11 +97,11 @@ export default function ReportModal({
           </div>
 
           {/* AI Summary */}
-          <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
-            <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '6px', color: '#0F172A' }}>
+          <div className="report-summary-box">
+            <div className="report-summary-title">
               📝 AIコーチからのアドバイス
             </div>
-            <p style={{ fontSize: '0.88rem', color: '#334155', lineHeight: 1.6 }}>
+            <p className="report-summary-text">
               {report.summaryJa}
             </p>
           </div>
@@ -112,20 +112,20 @@ export default function ReportModal({
             improvements={report.improvementsJa}
             strengthsTitle="💪 良かった点"
             improvementsTitle="🎯 次回の改善ポイント"
-            style={{ marginBottom: '20px' }}
+            className="mb-4"
           />
 
           {/* Key Phrases */}
           {report.keyPhrases && report.keyPhrases.length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '8px', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="report-key-phrases">
+              <div className="report-phrases-title">
                 <BookOpen size={18} color="#4F46E5" /> 今回学んだキーフレーズ
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="report-phrases-list">
                 {report.keyPhrases.map((item, i) => (
-                  <div key={i} style={{ background: '#F1F5F9', padding: '10px 14px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px', fontSize: '0.88rem' }}>
-                    <span style={{ fontWeight: 700, color: '#4F46E5' }}>{item.phrase}</span>
-                    <span style={{ color: '#475569' }}>{item.meaning}</span>
+                  <div key={i} className="report-phrase-item">
+                    <span className="report-phrase-en">{item.phrase}</span>
+                    <span className="report-phrase-ja">{item.meaning}</span>
                   </div>
                 ))}
               </div>
@@ -133,7 +133,7 @@ export default function ReportModal({
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '10px', marginTop: '24px' }}>
+          <div className="report-actions-row">
             <button className="btn btn-secondary" onClick={onClose}>
               閉じる
             </button>

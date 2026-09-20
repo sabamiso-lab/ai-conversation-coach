@@ -40,7 +40,7 @@ function AppContent() {
     <div className="app-layout">
       <Header />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main className="flex-1 flex-col">
         <Routes>
           <Route path="/" element={<ConversationPage />} />
           <Route path="/conversation" element={<Navigate to="/" replace />} />

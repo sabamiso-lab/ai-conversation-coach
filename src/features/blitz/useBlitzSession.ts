@@ -121,9 +121,11 @@ export function useBlitzSession({
         totalQuestions: questions.length,
         currentQuestion: {
           id: currentQuestion.id,
-          japanese: currentQuestion.prompt || currentQuestion.japanese,
-          sampleAnswer: currentQuestion.answer || currentQuestion.sampleAnswer,
-          keyPoints: currentQuestion.grammarPoint ? [currentQuestion.grammarPoint] : (currentQuestion.keyPoints || [])
+          prompt: currentQuestion.prompt,
+          answer: currentQuestion.answer,
+          japanese: currentQuestion.prompt,
+          sampleAnswer: currentQuestion.answer,
+          keyPoints: currentQuestion.grammarPoint ? [currentQuestion.grammarPoint] : []
         },
         userSpeech: fullUserText,
         hasAnswered: Boolean(fullUserText),

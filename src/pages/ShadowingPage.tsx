@@ -29,7 +29,7 @@ export default function ShadowingPage({
   const initialShadowingContext: CoachShadowingContext | null = selectedScript ? {
     title: selectedScript.title,
     category: selectedScript.category,
-    fullText: selectedScript.fullText,
+    fullText: selectedScript.text,
     sentences: selectedScript.sentences
   } : null;
 
@@ -57,7 +57,7 @@ export default function ShadowingPage({
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div className="flex-1 flex-col">
       {!selectedScript ? (
         <ShadowingSelector
           onSelectScript={(script: ShadowingScript) => {

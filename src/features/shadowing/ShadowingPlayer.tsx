@@ -55,31 +55,31 @@ export default function ShadowingPlayer({
   });
 
   return (
-    <div className="shadowing-container animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+    <div className="shadowing-container animate-fade-in">
       {/* Top Header & Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button className="btn btn-ghost" onClick={onBack} style={{ paddingLeft: 0 }}>
+      <div className="shadowing-top-nav">
+        <button className="btn btn-ghost" onClick={onBack}>
           <ArrowLeft size={18} /> 教材一覧に戻る
         </button>
 
-        <span className="badge badge-purple" style={{ fontSize: '0.85rem' }}>
+        <span className="badge badge-purple">
           {script.difficultyLabel || script.difficulty}
         </span>
       </div>
 
       {errorMsg && (
-        <Alert variant="error" style={{ marginBottom: '16px' }}>
+        <Alert variant="error">
           {errorMsg}
         </Alert>
       )}
 
       {/* Main Practice Card */}
-      <div className="chat-container" style={{ display: 'block', padding: '18px 16px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <h2 style={{ fontSize: 'clamp(1.15rem, 3.5vw, 1.4rem)', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
+      <div className="shadowing-card">
+        <div className="shadowing-header-meta">
+          <h2 className="shadowing-title">
             {script.title}
           </h2>
-          <div style={{ fontSize: '0.86rem', color: '#64748B', fontWeight: 600 }}>
+          <div className="shadowing-subtitle">
             {script.titleJa}
           </div>
         </div>
@@ -103,14 +103,14 @@ export default function ShadowingPlayer({
         />
 
         {/* Recording Section */}
-        <div className="shadowing-recording-section" style={{ borderTop: '1px solid #E2E8F0', paddingTop: '20px', textAlign: 'center' }}>
-          <div style={{ marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#475569' }}>
+        <div className="shadowing-recording-section">
+          <div className="mb-3">
+            <span className="shadowing-rec-status">
               {isRecording ? '🎧 音声を聴きながら同時に発話中...' : 'マイクを押してシャドーイング（音読）開始'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <div className="shadowing-mic-wrap">
             <MicButton
               isRecording={isRecording}
               onClick={toggleRecording}
@@ -122,11 +122,11 @@ export default function ShadowingPlayer({
 
           {/* Transcript Feedback Live */}
           {userTranscript && (
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px 16px', margin: '0 auto 16px auto', maxWidth: '600px', textAlign: 'left' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>
+            <div className="shadowing-transcript-box">
+              <div className="shadowing-transcript-label">
                 音声認識テキスト:
               </div>
-              <p style={{ fontSize: '0.92rem', color: '#1E293B', fontStyle: 'italic', margin: 0 }}>
+              <p className="shadowing-transcript-text">
                 "{userTranscript}"
               </p>
             </div>
@@ -135,10 +135,9 @@ export default function ShadowingPlayer({
           {/* Evaluation Trigger Button */}
           {userTranscript && !isRecording && (
             <button
-              className="btn btn-primary"
+              className="btn btn-primary shadowing-eval-btn"
               onClick={handleEvaluate}
               disabled={isEvaluating}
-              style={{ padding: '10px 24px', fontSize: '0.95rem' }}
             >
               {isEvaluating ? (
                 <>
