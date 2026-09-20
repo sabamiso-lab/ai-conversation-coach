@@ -27,8 +27,8 @@ describe('useShadowingSession hook', () => {
     text: 'Hello, nice to meet you. My name is Alex.',
     audioUrl: '',
     sentences: [
-      { english: 'Hello, nice to meet you.', japanese: 'こんにちは、はじめまして。' },
-      { english: 'My name is Alex.', japanese: '私の名前はアレックスです。' }
+      { id: 1, text: 'Hello, nice to meet you.', translationJa: 'こんにちは、はじめまして。' },
+      { id: 2, text: 'My name is Alex.', translationJa: '私の名前はアレックスです。' }
     ]
   };
 
