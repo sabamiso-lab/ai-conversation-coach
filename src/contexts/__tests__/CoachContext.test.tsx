@@ -140,7 +140,7 @@ describe('CoachContext & CoachProvider', () => {
           topicTitle: '日常依頼',
           currentIndex: 0,
           currentQuestion: {
-            id: 1,
+            id: '1',
             japanese: '手伝ってくれますか？',
             sampleAnswer: 'Could you help me?'
           },

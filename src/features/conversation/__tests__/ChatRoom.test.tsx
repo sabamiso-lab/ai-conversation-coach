@@ -77,23 +77,22 @@ describe('ChatRoom component', () => {
     expect(screen.getByText("いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？")).toBeInTheDocument();
   });
 
-  it('toggles floating AI coach assistant from header button and FAB', () => {
+  it('toggles floating AI coach assistant from FAB and does not show duplicate header button', () => {
     render(
       <CoachProvider>
         <TestChatRoomWithCoach />
       </CoachProvider>
     );
 
+    // Duplicate header "AI相談" button should NOT be in document
+    expect(screen.queryByRole('button', { name: /AI相談/i })).not.toBeInTheDocument();
+
     // FAB should be in document
     const fab = screen.getByRole('button', { name: /AIコーチに質問する/i });
     expect(fab).toBeInTheDocument();
 
-    // Header "AI相談" button
-    const headerCoachBtn = screen.getByRole('button', { name: /AI相談/i });
-    expect(headerCoachBtn).toBeInTheDocument();
-
-    // Click header button to open floating panel
-    fireEvent.click(headerCoachBtn);
+    // Click FAB to open floating panel
+    fireEvent.click(fab);
     expect(screen.getByText('AI学習コーチ')).toBeInTheDocument();
     expect(screen.getByText('現在の会話内容について何でも相談')).toBeInTheDocument();
 

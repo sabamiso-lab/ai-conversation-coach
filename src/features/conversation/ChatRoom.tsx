@@ -28,8 +28,7 @@ export default function ChatRoom({
   onBack 
 }: ChatRoomProps) {
   const settings = useSettings();
-  const coach = useCoach();
-  const { isOpen: isCoachOpen, toggleOpen: toggleCoachOpen } = coach;
+  const { updateCoachContext } = useCoach();
   const apiKey = propsApiKey !== undefined ? propsApiKey : (settings.apiKey || '');
   const model = propsModel !== undefined ? propsModel : (settings.model || 'gemini-3.5-flash-lite');
   const {
@@ -52,8 +51,6 @@ export default function ChatRoom({
     reportError,
     finishSession
   } = useChatSession({ situation, apiKey, model });
-
-  const { updateCoachContext } = coach;
 
   // Sync state with global CoachContext
   useEffect(() => {
@@ -172,15 +169,6 @@ export default function ChatRoom({
                 style={{ fontSize: '0.85rem', padding: '6px 12px' }}
               >
                 <Lightbulb size={16} color="#F59E0B" /> <span className="btn-text-desktop">ヒント</span>
-              </button>
-
-              <button 
-                className="btn btn-secondary" 
-                onClick={toggleCoachOpen}
-                title="AIコーチに現在の会話について相談する"
-                style={{ fontSize: '0.85rem', padding: '6px 12px', background: isCoachOpen ? '#EEF2FF' : undefined, borderColor: isCoachOpen ? '#818CF8' : undefined }}
-              >
-                <Sparkles size={16} color="#6366F1" /> <span className="btn-text-desktop">AI相談</span>
               </button>
             </div>
           </div>
