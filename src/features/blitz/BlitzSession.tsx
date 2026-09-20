@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { ArrowLeft, Zap, Eye, Timer, Sparkles } from 'lucide-react';
-import { speakText, stopSpeaking } from '../../services/speech';
-import { calculateTextMatchScore } from '../../utils/textMatcher';
-import { evaluateBlitzSpeech, BlitzSpeechEvaluationResult } from '../../services/ai/blitz';
-import { BlitzQuestion, BlitzResult, CoachBlitzContext } from '../../types';
-import { useBlitzTimer } from './useBlitzTimer';
-import { useBlitzSpeech } from './useBlitzSpeech';
+import { BlitzQuestion, CoachBlitzContext, BlitzSessionSummaryData, BlitzResult } from '../../types';
+import { useBlitzSession } from './useBlitzSession';
 import BlitzEvaluationPanel from './BlitzEvaluationPanel';
 import BlitzSpeechBox from './BlitzSpeechBox';
 import BlitzAnswerPanel from './BlitzAnswerPanel';
@@ -16,15 +12,7 @@ export interface BlitzSessionProps {
   timerSeconds?: number;
   apiKey?: string;
   model?: string;
-  onCompleteSession: (data: {
-    title: string;
-    totalQuestions: number;
-    correctCount: number;
-    results: BlitzResult[];
-    totalDurationSec: number;
-    totalTimeSec?: number;
-    avgResponseTimeSec: number;
-  }) => void;
+  onCompleteSession: (data: BlitzSessionSummaryData & { results: BlitzResult[] }) => void;
   onExitSession: () => void;
   onContextChange?: (context: CoachBlitzContext) => void;
 }
@@ -39,183 +27,35 @@ export default function BlitzSession({
   onExitSession,
   onContextChange
 }: BlitzSessionProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [userResults, setUserResults] = useState<BlitzResult[]>([]);
-  const [startTime] = useState(() => Date.now());
-  const [questionStartTime, setQuestionStartTime] = useState(() => Date.now());
-
-  // Speech recognition custom hook
   const {
+    currentIndex,
+    currentQuestion,
+    isRevealed,
+    timeLeft,
+    timerPercent,
     isListening,
     userTranscript,
-    setUserTranscript,
     interimTranscript,
     fullUserText,
     speechError,
-    startListening,
-    stopListening,
-    toggleListening: toggleMic,
-    resetSpeech
-  } = useBlitzSpeech();
-
-  // AI 自動発話評価用の状態
-  const [enableAiEvaluation, setEnableAiEvaluation] = useState(true);
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [aiEvaluation, setAiEvaluation] = useState<BlitzSpeechEvaluationResult | null>(null);
-  const [evaluationError, setEvaluationError] = useState<string | null>(null);
-
-  const currentQuestion = questions[currentIndex];
-
-  // AI 発話評価リクエスト
-  const requestAiEvaluation = useCallback(async (speechText?: string) => {
-    const textToEvaluate = (speechText !== undefined ? speechText : fullUserText).trim();
-    if (!apiKey || !textToEvaluate || !currentQuestion) return;
-
-    setIsEvaluating(true);
-    setEvaluationError(null);
-    try {
-      const result = await evaluateBlitzSpeech({
-        apiKey,
-        model,
-        prompt: currentQuestion.prompt,
-        standardAnswer: currentQuestion.answer,
-        acceptedAnswers: currentQuestion.acceptedAnswers,
-        grammarPoint: currentQuestion.grammarPoint,
-        userSpeech: textToEvaluate
-      });
-      setAiEvaluation(result);
-    } catch (err: unknown) {
-      console.warn('AI evaluation error:', err);
-      const msg = err instanceof Error ? err.message : 'AI発話評価に失敗しました';
-      setEvaluationError(msg);
-    } finally {
-      setIsEvaluating(false);
-    }
-  }, [apiKey, model, currentQuestion, fullUserText]);
-
-  // 回答開示
-  const revealAnswer = useCallback(() => {
-    if (isRevealed) return;
-    stopListening();
-    setIsRevealed(true);
-
-    // ネイティブ模範音声の自動再生
-    if (currentQuestion?.answer) {
-      speakText(currentQuestion.answer, { rate: 0.95 });
-    }
-
-    // AI評価が有効かつ発話テキストがある場合、自動評価を開始
-    if (enableAiEvaluation && apiKey && fullUserText) {
-      requestAiEvaluation(fullUserText);
-    }
-  }, [isRevealed, stopListening, currentQuestion, enableAiEvaluation, apiKey, fullUserText, requestAiEvaluation]);
-
-  // タイマーカスタムフック
-  const { timeLeft, progressPercent: timerPercent, resetTimer } = useBlitzTimer({
+    isEvaluating,
+    aiEvaluation,
+    evaluationError,
+    enableAiEvaluation,
+    setEnableAiEvaluation,
+    revealAnswer,
+    toggleMic,
+    handleSaveEditedSpeech,
+    handleJudge
+  } = useBlitzSession({
+    title,
+    questions,
     timerSeconds,
-    isPaused: isRevealed,
-    onTimeUp: revealAnswer
+    apiKey,
+    model,
+    onCompleteSession,
+    onContextChange
   });
-
-  // 親コンポーネント（AIコーチ）へ現在のリアルタイム状況を通知
-  useEffect(() => {
-    if (onContextChange && currentQuestion) {
-      onContextChange({
-        topicTitle: title,
-        currentIndex,
-        totalQuestions: questions.length,
-        currentQuestion: {
-          id: currentQuestion.id,
-          japanese: currentQuestion.prompt || currentQuestion.japanese,
-          sampleAnswer: currentQuestion.answer || currentQuestion.sampleAnswer,
-          keyPoints: currentQuestion.grammarPoint ? [currentQuestion.grammarPoint] : (currentQuestion.keyPoints || [])
-        },
-        userSpeech: fullUserText,
-        hasAnswered: Boolean(fullUserText),
-        isRevealed,
-        isCorrect: aiEvaluation ? aiEvaluation.isCorrect : null,
-        aiEvaluation: aiEvaluation ? {
-          isCorrect: aiEvaluation.isCorrect,
-          feedbackJa: aiEvaluation.evaluationJa,
-          improvedAnswer: aiEvaluation.improvedSpeech
-        } : null,
-        allQuestions: questions
-      });
-    }
-  }, [onContextChange, title, currentIndex, questions, currentQuestion, fullUserText, isRevealed, aiEvaluation]);
-
-  const startSpeechForNextQuestion = () => {
-    setIsRevealed(false);
-    resetSpeech();
-    setAiEvaluation(null);
-    setIsEvaluating(false);
-    setEvaluationError(null);
-    setQuestionStartTime(Date.now());
-    resetTimer(timerSeconds);
-    stopSpeaking();
-    startListening();
-  };
-
-  const handleSaveEditedSpeech = (newText: string) => {
-    setUserTranscript(newText);
-    if (newText) {
-      requestAiEvaluation(newText);
-    }
-  };
-
-  const handleJudge = (isCorrect: boolean) => {
-    stopSpeaking();
-
-    const responseTimeSec = +((Date.now() - questionStartTime) / 1000).toFixed(1);
-    const matchScore = calculateTextMatchScore(
-      fullUserText,
-      currentQuestion.answer,
-      currentQuestion.acceptedAnswers
-    );
-
-    const resultItem: BlitzResult = {
-      questionId: currentQuestion.id,
-      question: currentQuestion,
-      isCorrect,
-      userSpeech: fullUserText,
-      matchScore,
-      responseTimeSec,
-      aiEvaluation: aiEvaluation ? {
-        ...aiEvaluation,
-        score: aiEvaluation.score,
-        status: aiEvaluation.status,
-        statusLabelJa: aiEvaluation.statusLabelJa,
-        evaluationJa: aiEvaluation.evaluationJa,
-        improvedSpeech: aiEvaluation.improvedSpeech,
-        feedbackJa: aiEvaluation.evaluationJa,
-        improvedAnswer: aiEvaluation.improvedSpeech
-      } : null
-    };
-
-    const nextResults = [...userResults, resultItem];
-    setUserResults(nextResults);
-
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex((prev) => prev + 1);
-      startSpeechForNextQuestion();
-    } else {
-      const totalDurationSec = Math.round((Date.now() - startTime) / 1000);
-      const correctCount = nextResults.filter((r) => r.isCorrect).length;
-      const totalResponseTime = nextResults.reduce((acc, cur) => acc + (cur.responseTimeSec ?? 0), 0);
-      const avgResponseTimeSec = +(totalResponseTime / nextResults.length).toFixed(1);
-
-      onCompleteSession({
-        title,
-        totalQuestions: questions.length,
-        correctCount,
-        results: nextResults,
-        totalDurationSec,
-        totalTimeSec: totalDurationSec,
-        avgResponseTimeSec
-      });
-    }
-  };
 
   if (!questions || questions.length === 0 || !currentQuestion) {
     return (
@@ -329,7 +169,7 @@ export default function BlitzSession({
               isEvaluating={isEvaluating}
               aiEvaluation={aiEvaluation}
               evaluationError={evaluationError}
-              onRequestEvaluation={requestAiEvaluation}
+              onRequestEvaluation={handleSaveEditedSpeech}
             />
           </>
         )}

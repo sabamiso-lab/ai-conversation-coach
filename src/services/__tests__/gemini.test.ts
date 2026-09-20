@@ -35,28 +35,28 @@ describe('gemini service (repairJson)', () => {
   it('auto-closes truncated string literals and unclosed JSON objects', () => {
     // Truncated string at end of JSON object (simulating Unterminated string error)
     const truncatedStr = `{\n  "title": "News Scenario",\n  "descriptionJa": "本日のトレンドニュースに関する議論で、最新のAI`;
-    const result = repairJson(truncatedStr);
+    const result = repairJson<{ title: string; descriptionJa: string }>(truncatedStr);
     expect(result.title).toBe('News Scenario');
     expect(result.descriptionJa).toBe('本日のトレンドニュースに関する議論で、最新のAI');
   });
 
   it('auto-closes truncated JSON inside array items', () => {
     const truncatedArray = `{\n  "title": "Test",\n  "goals": ["Goal 1", "Goal 2`;
-    const result = repairJson(truncatedArray);
+    const result = repairJson<{ title: string; goals: string[] }>(truncatedArray);
     expect(result.title).toBe('Test');
     expect(result.goals).toEqual(['Goal 1', 'Goal 2']);
   });
 
   it('auto-closes JSON with trailing comma after truncation', () => {
     const truncatedWithComma = `{\n  "title": "Test",\n  "goals": ["Goal 1"],\n`;
-    const result = repairJson(truncatedWithComma);
+    const result = repairJson<{ title: string; goals: string[] }>(truncatedWithComma);
     expect(result.title).toBe('Test');
     expect(result.goals).toEqual(['Goal 1']);
   });
 
   it('throws error for empty input', () => {
     expect(() => repairJson('')).toThrow('Empty response from API');
-    expect(() => repairJson(null)).toThrow('Empty response from API');
+    expect(() => repairJson(null as unknown as string)).toThrow('Empty response from API');
   });
 
   it('re-throws syntax error if JSON cannot be repaired at all', () => {
@@ -88,4 +88,3 @@ describe('gemini service (cleanPhrase)', () => {
     expect(cleanPhrase('')).toBe(null);
   });
 });
-

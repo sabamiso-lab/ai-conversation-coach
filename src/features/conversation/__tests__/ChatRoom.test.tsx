@@ -12,25 +12,59 @@ vi.mock('../../../services/speech', () => ({
 
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+import { CoachProvider } from '../../../contexts/CoachContext';
+import { useCoach } from '../../../hooks/useCoach';
+import FloatingCoachWidget from '../../coach/FloatingCoachWidget';
+
+const mockSituation = {
+  id: 'cafe-order',
+  title: 'Cafe Coffee Order',
+  titleJa: 'カフェでの注文',
+  category: 'Daily',
+  icon: 'Coffee',
+  difficulty: 'Beginner',
+  systemRole: 'Friendly Barista',
+  userRole: 'Customer',
+  description: 'Order coffee.',
+  descriptionJa: 'コーヒーを注文します。',
+  initialMessage: "Hi there! Welcome to Green Mountain Coffee. What can I get started for you today?",
+  initialMessageJa: "いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？",
+  goals: ['Order a drink']
+};
+
+function TestChatRoomWithCoach() {
+  const coach = useCoach();
+  return (
+    <>
+      <ChatRoom situation={mockSituation} apiKey="dummy-key" model="gemini-3.5-flash-lite" onBack={() => {}} />
+      <FloatingCoachWidget
+        mode={coach.mode}
+        situation={coach.situation}
+        conversationHistory={coach.conversationHistory}
+        conversationContext={coach.conversationContext}
+        isOpen={coach.isOpen}
+        onToggle={coach.toggleOpen}
+        onClose={() => coach.setIsOpen(false)}
+        coachMessages={coach.coachMessages}
+        isLoading={coach.isLoading}
+        error={coach.error}
+        questionInput={coach.questionInput}
+        onQuestionInputChange={coach.setQuestionInput}
+        onAskQuestion={coach.askQuestion}
+        onClearHistory={coach.clearHistory}
+      />
+    </>
+  );
+}
+
 describe('ChatRoom component', () => {
-  const mockSituation = {
-    id: 'cafe-order',
-    title: 'Cafe Coffee Order',
-    titleJa: 'カフェでの注文',
-    category: 'Daily',
-    icon: 'Coffee',
-    difficulty: 'Beginner',
-    systemRole: 'Friendly Barista',
-    userRole: 'Customer',
-    description: 'Order coffee.',
-    descriptionJa: 'コーヒーを注文します。',
-    initialMessage: "Hi there! Welcome to Green Mountain Coffee. What can I get started for you today?",
-    initialMessageJa: "いらっしゃいませ！グリーンマウンテンコーヒーへようこそ。本日ご注文は何にいたしましょうか？",
-    goals: ['Order a drink']
-  };
 
   it('renders initial AI message with situation-specific translation', () => {
-    render(<ChatRoom situation={mockSituation} apiKey="dummy-key" model="gemini-3.5-flash-lite" onBack={() => {}} />);
+    render(
+      <CoachProvider>
+        <TestChatRoomWithCoach />
+      </CoachProvider>
+    );
 
     // Initial English message should be displayed
     expect(screen.getByText("Hi there! Welcome to Green Mountain Coffee. What can I get started for you today?")).toBeInTheDocument();
@@ -44,7 +78,11 @@ describe('ChatRoom component', () => {
   });
 
   it('toggles floating AI coach assistant from header button and FAB', () => {
-    render(<ChatRoom situation={mockSituation} apiKey="dummy-key" model="gemini-3.5-flash-lite" onBack={() => {}} />);
+    render(
+      <CoachProvider>
+        <TestChatRoomWithCoach />
+      </CoachProvider>
+    );
 
     // FAB should be in document
     const fab = screen.getByRole('button', { name: /AIコーチに質問する/i });

@@ -4,7 +4,7 @@ import React from 'react';
 import { afterEach } from 'vitest';
 
 // Expose React globally for JSX transform in tests
-globalThis.React = React;
+(globalThis as unknown as { React: typeof React }).React = React;
 
 // Mock scrollIntoView for jsdom environment
 if (typeof window !== 'undefined' && window.HTMLElement) {

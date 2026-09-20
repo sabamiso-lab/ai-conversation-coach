@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ShadowingSelector from '../features/shadowing/ShadowingSelector';
 import ShadowingPlayer from '../features/shadowing/ShadowingPlayer';
-import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
-import { useConversationCoach } from '../hooks/useConversationCoach';
+import { useCoach } from '../hooks/useCoach';
 import { useSettings } from '../hooks/useSettings';
 import { ShadowingScript, CoachShadowingContext } from '../types';
 
@@ -18,6 +17,7 @@ export default function ShadowingPage({
   onOpenApiKeyModal: propsOnOpenApiKeyModal
 }: ShadowingPageProps) {
   const settings = useSettings();
+  const coach = useCoach();
 
   const apiKey = propsApiKey ?? settings.apiKey ?? '';
   const model = propsModel ?? settings.model ?? 'gemini-3.5-flash-lite';
@@ -37,24 +37,19 @@ export default function ShadowingPage({
     ? (shadowingLiveContext || initialShadowingContext) 
     : null;
 
-  // Floating AI Shadowing Coach State
-  const {
-    isOpen: isCoachOpen,
-    setIsOpen: setIsCoachOpen,
-    toggleOpen: toggleCoachOpen,
-    coachMessages,
-    isLoading: isCoachLoading,
-    error: coachError,
-    questionInput: coachQuestionInput,
-    setQuestionInput: setCoachQuestionInput,
-    askQuestion: askCoachQuestion,
-    clearHistory: clearCoachHistory
-  } = useConversationCoach({
-    apiKey,
-    model,
-    mode: selectedScript ? 'shadowing' : 'general',
-    shadowingContext: activeShadowingContext
-  });
+  const { updateCoachContext } = coach;
+
+  // Sync state with global CoachContext
+  useEffect(() => {
+    updateCoachContext({
+      mode: selectedScript ? 'shadowing' : 'general',
+      situation: null,
+      conversationHistory: [],
+      conversationContext: null,
+      shadowingContext: activeShadowingContext,
+      blitzContext: null
+    });
+  }, [updateCoachContext, selectedScript, activeShadowingContext]);
 
   const handleBack = () => {
     setSelectedScript(null);
@@ -83,22 +78,6 @@ export default function ShadowingPage({
           onContextChange={setShadowingLiveContext}
         />
       )}
-
-      {/* Floating AI Coach Widget */}
-      <FloatingCoachWidget
-        mode={selectedScript ? 'shadowing' : 'general'}
-        shadowingContext={activeShadowingContext}
-        isOpen={isCoachOpen}
-        onToggle={toggleCoachOpen}
-        onClose={() => setIsCoachOpen(false)}
-        coachMessages={coachMessages}
-        isLoading={isCoachLoading}
-        error={coachError}
-        questionInput={coachQuestionInput}
-        onQuestionInputChange={setCoachQuestionInput}
-        onAskQuestion={askCoachQuestion}
-        onClearHistory={clearCoachHistory}
-      />
     </div>
   );
 }

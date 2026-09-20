@@ -69,11 +69,30 @@ export async function fetchSituations(): Promise<FetchSituationsResult> {
       return { data: SITUATIONS, isFallback: true };
     }
 
+    interface DynamoDBSituationItem {
+      id: string;
+      title: string;
+      titleJa: string;
+      category: string;
+      icon?: string;
+      difficulty?: string;
+      systemRole: string;
+      userRole?: string;
+      description?: string;
+      descriptionJa: string;
+      initialMessage: string;
+      initialMessageJa?: string;
+      isNews?: boolean;
+      expiresAt?: number;
+      newsCategory?: string | null;
+      goals?: unknown;
+    }
+
     // Format DynamoDB data if needed and return
     const nowInSeconds = Math.floor(Date.now() / 1000);
-    const formattedSituations: Situation[] = fetchedSituations
-      .filter((item: any) => !item.expiresAt || item.expiresAt > nowInSeconds)
-      .map((item: any): Situation => ({
+    const formattedSituations: Situation[] = (fetchedSituations as DynamoDBSituationItem[])
+      .filter(item => !item.expiresAt || item.expiresAt > nowInSeconds)
+      .map((item): Situation => ({
         id: item.id,
         title: item.title,
         titleJa: item.titleJa,
@@ -101,10 +120,14 @@ export async function fetchSituations(): Promise<FetchSituationsResult> {
   }
 }
 
+export type CreateSituationInput = Partial<Omit<Situation, 'goals'>> & {
+  goals?: string[] | string;
+};
+
 /**
  * Register a new situation via AWS DynamoDB API (POST /situations).
  */
-export async function createSituation(situationData: Partial<Situation>): Promise<CreateSituationResult> {
+export async function createSituation(situationData: CreateSituationInput): Promise<CreateSituationResult> {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const apiKey = import.meta.env.VITE_API_KEY || 'sf_secret_key_speakflow_2026';
 

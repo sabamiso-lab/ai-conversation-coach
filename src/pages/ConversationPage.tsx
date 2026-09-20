@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import SituationSelector from '../features/conversation/SituationSelector';
 import ChatRoom from '../features/conversation/ChatRoom';
-import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
-import { useConversationCoach } from '../hooks/useConversationCoach';
+import { useCoach } from '../hooks/useCoach';
 import { useSettings } from '../hooks/useSettings';
 import { Situation } from '../types';
 
@@ -24,6 +23,7 @@ export default function ConversationPage({
   onResetSession: propsOnReset 
 }: ConversationPageProps) {
   const settings = useSettings();
+  const coach = useCoach();
 
   const selectedSituation = propsSituation !== undefined ? propsSituation : (settings.selectedSituation ?? null);
   const onSelectSituation = propsOnSelect ?? settings.setSelectedSituation;
@@ -32,48 +32,31 @@ export default function ConversationPage({
   const onOpenApiKeyModal = propsOnOpenApiKeyModal ?? settings.openApiKeyModal;
   const onResetSession = propsOnReset ?? (() => settings.setSelectedSituation(null));
 
-  // Floating Coach for Situation Selection view
-  const {
-    isOpen: isGeneralCoachOpen,
-    toggleOpen: toggleGeneralCoachOpen,
-    setIsOpen: setIsGeneralCoachOpen,
-    coachMessages: generalCoachMessages,
-    isLoading: isGeneralCoachLoading,
-    error: generalCoachError,
-    questionInput: generalQuestionInput,
-    setQuestionInput: setGeneralQuestionInput,
-    askQuestion: askGeneralQuestion,
-    clearHistory: clearGeneralHistory
-  } = useConversationCoach({
-    apiKey,
-    model,
-    situation: null,
-    messages: []
-  });
+  const { updateCoachContext } = coach;
+
+  // Sync general conversation coach context when no situation is selected
+  useEffect(() => {
+    if (!selectedSituation) {
+      updateCoachContext({
+        mode: 'general',
+        situation: null,
+        conversationHistory: [],
+        conversationContext: null,
+        shadowingContext: null,
+        blitzContext: null
+      });
+    }
+  }, [selectedSituation, updateCoachContext]);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {!selectedSituation ? (
-        <>
-          <SituationSelector
-            onSelectSituation={onSelectSituation}
-            apiKey={apiKey}
-            model={model}
-            onOpenApiKeyModal={onOpenApiKeyModal}
-          />
-          <FloatingCoachWidget
-            isOpen={isGeneralCoachOpen}
-            onToggle={toggleGeneralCoachOpen}
-            onClose={() => setIsGeneralCoachOpen(false)}
-            coachMessages={generalCoachMessages}
-            isLoading={isGeneralCoachLoading}
-            error={generalCoachError}
-            questionInput={generalQuestionInput}
-            onQuestionInputChange={setGeneralQuestionInput}
-            onAskQuestion={askGeneralQuestion}
-            onClearHistory={clearGeneralHistory}
-          />
-        </>
+        <SituationSelector
+          onSelectSituation={onSelectSituation}
+          apiKey={apiKey}
+          model={model}
+          onOpenApiKeyModal={onOpenApiKeyModal}
+        />
       ) : (
         <ChatRoom
           situation={selectedSituation}

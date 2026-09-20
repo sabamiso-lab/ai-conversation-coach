@@ -1,3 +1,5 @@
+import { cleanAndParseJson } from '../../utils/jsonRepair';
+
 export const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 export interface GeminiContentPart {
@@ -139,3 +141,29 @@ export async function callGeminiApiWithGrounding(
     groundingMetadata: candidate?.groundingMetadata || null
   };
 }
+
+/**
+ * Call Gemini API with JSON Schema and automatically repair/parse JSON response
+ */
+export async function callGeminiJson<T>(
+  apiKey: string,
+  model: string | undefined,
+  systemInstruction: string,
+  contents: GeminiContent[],
+  responseSchema?: object | null
+): Promise<T> {
+  if (!apiKey) {
+    throw new Error("Gemini APIキーを設定してください。");
+  }
+
+  const rawJson = await callGeminiApi(
+    apiKey,
+    model,
+    systemInstruction,
+    contents,
+    responseSchema || null
+  );
+
+  return cleanAndParseJson<T>(rawJson);
+}
+

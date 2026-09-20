@@ -120,10 +120,19 @@ Return strictly JSON with this structure:
     required: ["title", "questions"]
   };
 
-  const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
-  const data = cleanAndParseJson<{ title?: string; questions?: Array<any> }>(rawJson);
+  interface RawBlitzQuestion {
+    id?: string;
+    prompt: string;
+    answer: string;
+    acceptedAnswers?: string[];
+    explanation?: string;
+    grammarPoint?: string;
+  }
 
-  const questions: BlitzQuestion[] = (data.questions || []).map((q: any, idx: number) => ({
+  const rawJson = await callGeminiApi(apiKey, model, systemPrompt, contents, schema);
+  const data = cleanAndParseJson<{ title?: string; questions?: RawBlitzQuestion[] }>(rawJson);
+
+  const questions: BlitzQuestion[] = (data.questions || []).map((q, idx) => ({
     ...q,
     id: q.id || `gen-${Date.now()}-${idx}`,
     acceptedAnswers: q.acceptedAnswers || []

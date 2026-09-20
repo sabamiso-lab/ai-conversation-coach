@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { speakText, stopSpeaking, SpeechRecognizer, isSpeechRecognitionSupported } from '../speech';
 
 describe('speech.js TTS module', () => {
-  let mockSpeak;
-  let mockCancel;
-  let mockGetVoices;
-  let originalSpeechSynthesis;
-  let originalUtterance;
+  let mockSpeak: Mock;
+  let mockCancel: Mock;
+  let mockGetVoices: Mock;
+  let originalSpeechSynthesis: SpeechSynthesis;
+  let originalUtterance: typeof SpeechSynthesisUtterance;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -18,26 +18,48 @@ describe('speech.js TTS module', () => {
     originalSpeechSynthesis = window.speechSynthesis;
     originalUtterance = window.SpeechSynthesisUtterance;
 
-    window.speechSynthesis = {
-      speak: mockSpeak,
-      cancel: mockCancel,
-      getVoices: mockGetVoices,
-      onvoiceschanged: null
-    };
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        speak: mockSpeak,
+        cancel: mockCancel,
+        getVoices: mockGetVoices,
+        onvoiceschanged: null
+      },
+      writable: true,
+      configurable: true
+    });
 
     window.SpeechSynthesisUtterance = class {
-      constructor(text) {
-        this.text = text;
-        this.lang = '';
-        this.rate = 1;
-        this.pitch = 1;
+      text: string;
+      lang = '';
+      rate = 1;
+      pitch = 1;
+      volume = 1;
+      voice = null;
+      onstart = null;
+      onend = null;
+      onerror = null;
+      onpause = null;
+      onresume = null;
+      onmark = null;
+      onboundary = null;
+      addEventListener = vi.fn();
+      removeEventListener = vi.fn();
+      dispatchEvent = vi.fn();
+
+      constructor(text?: string) {
+        this.text = text || '';
       }
-    };
+    } as unknown as typeof SpeechSynthesisUtterance;
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    window.speechSynthesis = originalSpeechSynthesis;
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: originalSpeechSynthesis,
+      writable: true,
+      configurable: true
+    });
     window.SpeechSynthesisUtterance = originalUtterance;
   });
 
@@ -60,7 +82,7 @@ describe('speech.js TTS module', () => {
 
     // Trigger onvoiceschanged
     if (window.speechSynthesis.onvoiceschanged) {
-      window.speechSynthesis.onvoiceschanged();
+      (window.speechSynthesis.onvoiceschanged as unknown as () => void)();
     }
 
     expect(mockSpeak).toHaveBeenCalledTimes(1);
@@ -86,7 +108,7 @@ describe('speech.js TTS module', () => {
 
     // Now trigger onvoiceschanged late
     if (window.speechSynthesis.onvoiceschanged) {
-      window.speechSynthesis.onvoiceschanged();
+      (window.speechSynthesis.onvoiceschanged as unknown as () => void)();
     }
 
     // Should STILL be 1 call!
@@ -106,8 +128,21 @@ describe('speech.js TTS module', () => {
 });
 
 describe('SpeechRecognizer module', () => {
-  let mockRecognitionInstance;
-  let originalSpeechRecognition;
+  interface MockRecognitionInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    start: Mock;
+    stop: Mock;
+    abort: Mock;
+    onstart: (() => void) | null;
+    onresult: ((event: unknown) => void) | null;
+    onerror: ((event: unknown) => void) | null;
+    onend: (() => void) | null;
+  }
+
+  let mockRecognitionInstance: MockRecognitionInstance;
+  let originalSpeechRecognition: typeof window.SpeechRecognition;
 
   beforeEach(() => {
     mockRecognitionInstance = {
@@ -124,7 +159,7 @@ describe('SpeechRecognizer module', () => {
     };
 
     originalSpeechRecognition = window.SpeechRecognition;
-    window.SpeechRecognition = vi.fn().mockImplementation(() => mockRecognitionInstance);
+    window.SpeechRecognition = vi.fn().mockImplementation(() => mockRecognitionInstance) as unknown as typeof window.SpeechRecognition;
   });
 
   afterEach(() => {
@@ -134,8 +169,8 @@ describe('SpeechRecognizer module', () => {
   it('detects speech recognition support correctly', () => {
     expect(isSpeechRecognitionSupported()).toBe(true);
 
-    delete window.SpeechRecognition;
-    delete window.webkitSpeechRecognition;
+    delete (window as { SpeechRecognition?: unknown }).SpeechRecognition;
+    delete (window as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
     expect(isSpeechRecognitionSupported()).toBe(false);
   });
 
@@ -156,7 +191,7 @@ describe('SpeechRecognizer module', () => {
     new SpeechRecognizer({ onResult });
 
     // Event 1: First final sentence
-    mockRecognitionInstance.onresult({
+    mockRecognitionInstance.onresult!({
       resultIndex: 0,
       results: [
         Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true })
@@ -169,7 +204,7 @@ describe('SpeechRecognizer module', () => {
     });
 
     // Event 2: Second sentence in progress (interim)
-    mockRecognitionInstance.onresult({
+    mockRecognitionInstance.onresult!({
       resultIndex: 1,
       results: [
         Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true }),
@@ -184,7 +219,7 @@ describe('SpeechRecognizer module', () => {
     });
 
     // Event 3: Second sentence finalized
-    mockRecognitionInstance.onresult({
+    mockRecognitionInstance.onresult!({
       resultIndex: 1,
       results: [
         Object.assign([{ transcript: 'Hello world. ' }], { isFinal: true }),
@@ -207,12 +242,12 @@ describe('SpeechRecognizer module', () => {
     expect(mockRecognitionInstance.start).toHaveBeenCalled();
 
     // Trigger onstart
-    mockRecognitionInstance.onstart();
+    mockRecognitionInstance.onstart!();
     expect(recognizer.isListening).toBe(true);
     expect(onStart).toHaveBeenCalled();
 
     // Trigger onend
-    mockRecognitionInstance.onend();
+    mockRecognitionInstance.onend!();
     expect(recognizer.isListening).toBe(false);
     expect(onEnd).toHaveBeenCalled();
   });
@@ -222,7 +257,7 @@ describe('SpeechRecognizer module', () => {
     const recognizer = new SpeechRecognizer({ onError });
 
     recognizer.isListening = true;
-    mockRecognitionInstance.onerror({ error: 'aborted' });
+    mockRecognitionInstance.onerror!({ error: 'aborted' });
 
     expect(recognizer.isListening).toBe(false);
     expect(onError).not.toHaveBeenCalled();
@@ -232,7 +267,7 @@ describe('SpeechRecognizer module', () => {
     const onError = vi.fn();
     new SpeechRecognizer({ onError });
 
-    mockRecognitionInstance.onerror({ error: 'not-allowed' });
+    mockRecognitionInstance.onerror!({ error: 'not-allowed' });
     expect(onError).toHaveBeenCalledWith(
       expect.stringContaining('マイクの使用が拒否されています'),
       'not-allowed'
@@ -248,4 +283,3 @@ describe('SpeechRecognizer module', () => {
     expect(recognizer.isListening).toBe(false);
   });
 });
-

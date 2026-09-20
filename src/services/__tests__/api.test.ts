@@ -3,14 +3,14 @@ import { SITUATIONS } from '../../data/situations';
 import { createSituation, fetchSituations } from '../api';
 
 describe('api service (fetchSituations & createSituation)', () => {
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
 
   describe('fetchSituations', () => {
@@ -44,10 +44,10 @@ describe('api service (fetchSituations & createSituation)', () => {
       ];
 
       // Mock import.meta.env by stubbing fetch response
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ situations: mockRawSituations }),
-      });
+      } as unknown as Response);
 
       // Temporarily mock API_BASE_URL via vi.stubEnv if supported or simulation
       vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com/situations');
@@ -63,10 +63,10 @@ describe('api service (fetchSituations & createSituation)', () => {
     });
 
     it('falls back to local SITUATIONS on API HTTP error', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
-      });
+      } as unknown as Response);
 
       vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com/situations');
 
@@ -79,7 +79,7 @@ describe('api service (fetchSituations & createSituation)', () => {
     });
 
     it('falls back to local SITUATIONS on network error', async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network connection failed'));
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network connection failed'));
 
       vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com/situations');
 
@@ -103,8 +103,8 @@ describe('api service (fetchSituations & createSituation)', () => {
       const result = await createSituation(newSituation);
       expect(result.success).toBe(true);
       expect(result.isFallback).toBe(true);
-      expect(result.situation.title).toBe('New Custom Situation');
-      expect(result.situation.goals).toEqual(['Goal A', 'Goal B']);
+      expect(result.situation?.title).toBe('New Custom Situation');
+      expect(result.situation?.goals).toEqual(['Goal A', 'Goal B']);
     });
 
     it('posts data to API and returns created situation on API success', async () => {
@@ -113,27 +113,27 @@ describe('api service (fetchSituations & createSituation)', () => {
         goals: ['Goal 1'],
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ situation: { ...newSituation, id: 'custom-123' } }),
-      });
+      } as unknown as Response);
 
       vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com/situations');
 
       const result = await createSituation(newSituation);
       expect(result.success).toBe(true);
       expect(result.isFallback).toBe(false);
-      expect(result.situation.id).toBe('custom-123');
+      expect(result.situation?.id).toBe('custom-123');
 
       vi.unstubAllEnvs();
     });
 
     it('handles API error when posting new situation', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => ({ error: 'Missing title' }),
-      });
+      } as unknown as Response);
 
       vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com/situations');
 

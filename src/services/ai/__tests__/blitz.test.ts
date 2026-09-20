@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { evaluateBlitzSpeech, generateBlitzQuestions } from '../blitz';
 import * as clientModule from '../client';
 
-describe('services/ai/blitz.js', () => {
+describe('services/ai/blitz.ts', () => {
   describe('evaluateBlitzSpeech', () => {
     it('throws error when apiKey is missing', async () => {
       await expect(

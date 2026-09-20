@@ -140,7 +140,22 @@ Adhere strictly to this JSON schema:
     { role: 'user', parts: [{ text: structPrompt }] }
   ], schema);
 
-  const scenarioData = cleanAndParseJson<any>(rawJson);
+  interface RawNewsScenario {
+    title: string;
+    titleJa: string;
+    category: string;
+    icon?: string;
+    difficulty?: string;
+    systemRole: string;
+    userRole?: string;
+    description?: string;
+    descriptionJa: string;
+    initialMessage: string;
+    initialMessageJa?: string;
+    goals: string[];
+  }
+
+  const scenarioData = cleanAndParseJson<RawNewsScenario>(rawJson);
 
   // Calculate Unix timestamp for tomorrow 00:00:00 in seconds (midnight of next day)
   const tomorrow = new Date();

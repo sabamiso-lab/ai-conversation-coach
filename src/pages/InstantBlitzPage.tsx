@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BlitzTopicSelector from '../features/blitz/BlitzTopicSelector';
 import BlitzSession from '../features/blitz/BlitzSession';
 import BlitzSummary from '../features/blitz/BlitzSummary';
-import FloatingCoachWidget from '../features/coach/FloatingCoachWidget';
-import { useConversationCoach } from '../hooks/useConversationCoach';
+import { useCoach } from '../hooks/useCoach';
 import { useSettings } from '../hooks/useSettings';
 import { generateBlitzQuestions } from '../services/gemini';
 import { BlitzQuestion, CoachBlitzContext, BlitzSessionSummaryData } from '../types';
@@ -20,6 +19,7 @@ export default function InstantBlitzPage({
   onOpenApiKeyModal: propsOnOpenApiKeyModal
 }: InstantBlitzPageProps) {
   const settings = useSettings();
+  const coach = useCoach();
 
   const apiKey = propsApiKey ?? settings.apiKey ?? '';
   const model = propsModel ?? settings.model ?? 'gemini-3.5-flash-lite';
@@ -37,28 +37,27 @@ export default function InstantBlitzPage({
 
   const isSessionActive = viewState === 'session';
 
-  const activeBlitzContext: CoachBlitzContext | null = isSessionActive ? (blitzLiveContext || {
-    topicTitle: activeTitle,
-    allQuestions: activeQuestions
-  }) : null;
+  const activeBlitzContext = React.useMemo<CoachBlitzContext | null>(() => {
+    if (!isSessionActive) return null;
+    return blitzLiveContext || {
+      topicTitle: activeTitle,
+      allQuestions: activeQuestions
+    };
+  }, [isSessionActive, blitzLiveContext, activeTitle, activeQuestions]);
 
-  const {
-    isOpen: isCoachOpen,
-    toggleOpen: toggleCoachOpen,
-    setIsOpen: setIsCoachOpen,
-    coachMessages,
-    isLoading: isCoachLoading,
-    error: coachError,
-    questionInput: coachQuestionInput,
-    setQuestionInput: setCoachQuestionInput,
-    askQuestion: askCoachQuestion,
-    clearHistory: clearCoachHistory
-  } = useConversationCoach({
-    apiKey,
-    model,
-    mode: isSessionActive ? 'blitz' : 'general',
-    blitzContext: activeBlitzContext
-  });
+  const { updateCoachContext } = coach;
+
+  // Sync state with global CoachContext
+  useEffect(() => {
+    updateCoachContext({
+      mode: isSessionActive ? 'blitz' : 'general',
+      situation: null,
+      conversationHistory: [],
+      conversationContext: null,
+      shadowingContext: null,
+      blitzContext: activeBlitzContext
+    });
+  }, [updateCoachContext, isSessionActive, activeBlitzContext]);
 
   // プリセットトピックでセッション開始
   const handleStartSession = (questions: BlitzQuestion[], title: string, seconds: number) => {
@@ -154,22 +153,6 @@ export default function InstantBlitzPage({
           onBackToSelector={handleBackToSelector}
         />
       )}
-
-      {/* Floating AI Coach Widget */}
-      <FloatingCoachWidget
-        mode={isSessionActive ? 'blitz' : 'general'}
-        blitzContext={activeBlitzContext}
-        isOpen={isCoachOpen}
-        onToggle={toggleCoachOpen}
-        onClose={() => setIsCoachOpen(false)}
-        coachMessages={coachMessages}
-        isLoading={isCoachLoading}
-        error={coachError}
-        questionInput={coachQuestionInput}
-        onQuestionInputChange={setCoachQuestionInput}
-        onAskQuestion={askCoachQuestion}
-        onClearHistory={clearCoachHistory}
-      />
     </div>
   );
 }

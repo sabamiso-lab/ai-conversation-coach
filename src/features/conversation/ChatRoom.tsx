@@ -10,9 +10,8 @@ import ChatInputBar from './ChatInputBar';
 import { speakText, stopSpeaking } from '../../services/speech';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useChatSession } from '../../hooks/useChatSession';
-import { useConversationCoach } from '../../hooks/useConversationCoach';
+import { useCoach } from '../../hooks/useCoach';
 import { useSettings } from '../../hooks/useSettings';
-import FloatingCoachWidget from '../coach/FloatingCoachWidget';
 import type { Situation } from '../../types';
 
 export interface ChatRoomProps {
@@ -29,6 +28,8 @@ export default function ChatRoom({
   onBack 
 }: ChatRoomProps) {
   const settings = useSettings();
+  const coach = useCoach();
+  const { isOpen: isCoachOpen, toggleOpen: toggleCoachOpen } = coach;
   const apiKey = propsApiKey !== undefined ? propsApiKey : (settings.apiKey || '');
   const model = propsModel !== undefined ? propsModel : (settings.model || 'gemini-3.5-flash-lite');
   const {
@@ -52,25 +53,19 @@ export default function ChatRoom({
     finishSession
   } = useChatSession({ situation, apiKey, model });
 
-  // Floating AI Conversation Coach State
-  const {
-    isOpen: isCoachOpen,
-    setIsOpen: setIsCoachOpen,
-    toggleOpen: toggleCoachOpen,
-    coachMessages,
-    isLoading: isCoachLoading,
-    error: coachError,
-    questionInput: coachQuestionInput,
-    setQuestionInput: setCoachQuestionInput,
-    askQuestion: askCoachQuestion,
-    clearHistory: clearCoachHistory
-  } = useConversationCoach({
-    apiKey,
-    model,
-    situation,
-    messages,
-    conversationContext: { currentUserInput: inputText }
-  });
+  const { updateCoachContext } = coach;
+
+  // Sync state with global CoachContext
+  useEffect(() => {
+    updateCoachContext({
+      mode: 'conversation',
+      situation,
+      conversationHistory: messages,
+      conversationContext: { currentUserInput: inputText },
+      shadowingContext: null,
+      blitzContext: null
+    });
+  }, [updateCoachContext, situation, messages, inputText]);
 
   // Goals Modal State for Mobile
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
@@ -280,25 +275,6 @@ export default function ChatRoom({
         error={reportError}
         onRestart={onBack}
         onRetry={finishSession}
-      />
-
-      {/* Floating AI Coach Assistant Widget */}
-      <FloatingCoachWidget
-        mode="conversation"
-        situation={situation}
-        conversationHistory={messages}
-        conversationContext={{ currentUserInput: inputText }}
-        isOpen={isCoachOpen}
-        onToggle={toggleCoachOpen}
-        onClose={() => setIsCoachOpen(false)}
-        coachMessages={coachMessages}
-        isLoading={isCoachLoading}
-        error={coachError}
-        questionInput={coachQuestionInput}
-        onQuestionInputChange={setCoachQuestionInput}
-        onAskQuestion={askCoachQuestion}
-        onClearHistory={clearCoachHistory}
-        hideFabOnMobile={true}
       />
     </div>
   );

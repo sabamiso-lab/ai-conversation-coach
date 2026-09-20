@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import MicButton from '../../components/common/MicButton';
 import Alert from '../../components/common/Alert';
 import ShadowingAudioControls from './ShadowingAudioControls';
 import ShadowingEvaluationCard from './ShadowingEvaluationCard';
 import ShadowingScriptViewer from './ShadowingScriptViewer';
-import { evaluateShadowingPerformance } from '../../services/gemini';
-import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { useShadowingSession } from './useShadowingSession';
 import { useSettings } from '../../hooks/useSettings';
-import { useShadowingAudio } from './useShadowingAudio';
-import { CoachShadowingContext, ShadowingScript, ShadowingEvaluation } from '../../types';
+import { CoachShadowingContext, ShadowingScript } from '../../types';
 
 export interface ShadowingPlayerProps {
   script: ShadowingScript;
@@ -33,135 +31,28 @@ export default function ShadowingPlayer({
   const model = propsModel ?? settings.model;
   const onOpenApiKeyModal = propsOnOpenApiKeyModal ?? settings.openApiKeyModal;
 
-  const scriptText = script?.text || '';
-
-  // Audio Playback Custom Hook
   const {
     playbackSpeed,
     setPlaybackSpeed,
     isPlaying,
     isLooping,
     setIsLooping,
-    togglePlayAudio,
-    stopAudio,
-    clearLoopTimer
-  } = useShadowingAudio();
-
-  // Recording & Evaluation States
-  const [userTranscript, setUserTranscript] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  
-  // Evaluation Result State
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evalResult, setEvalResult] = useState<ShadowingEvaluation | null>(null);
-
-  const handleFinalResult = useCallback((finalText: string) => {
-    setUserTranscript(finalText);
-  }, []);
-
-  const handleInterimResult = useCallback((interimText: string) => {
-    setUserTranscript(interimText);
-  }, []);
-
-  const handleSpeechError = useCallback((speechErr: string) => {
-    setErrorMsg(speechErr);
-  }, []);
-
-  const { isSupported, isRecording, abortRecording, toggleRecording: rawToggleRecording } = useSpeechRecognition({
-    onFinalResult: handleFinalResult,
-    onInterimResult: handleInterimResult,
-    onError: handleSpeechError,
-    continuous: true
+    isRecording,
+    isSupported,
+    userTranscript,
+    errorMsg,
+    isEvaluating,
+    evalResult,
+    handlePlayAudio,
+    toggleRecording,
+    handleEvaluate
+  } = useShadowingSession({
+    script,
+    apiKey,
+    model,
+    onOpenApiKeyModal,
+    onContextChange
   });
-
-  // 親コンポーネント（AIコーチ）へ現在のリアルタイム状況を通知
-  useEffect(() => {
-    if (onContextChange && script) {
-      onContextChange({
-        title: script.title,
-        category: script.category,
-        fullText: script.fullText || script.text,
-        targetText: script.fullText || script.text,
-        sentences: script.sentences,
-        userSpeech: userTranscript.trim(),
-        hasRecorded: Boolean(userTranscript.trim()),
-        isRecording,
-        evalResult: evalResult ? {
-          overallScore: evalResult.overallScore,
-          accuracyScore: evalResult.accuracyScore,
-          pronunciationScore: evalResult.pronunciationScore,
-          feedbackJa: evalResult.feedbackJa || evalResult.feedback,
-          recognizedText: evalResult.recognizedText || userTranscript
-        } : null
-      });
-    }
-  }, [onContextChange, script, userTranscript, isRecording, evalResult]);
-
-  useEffect(() => {
-    return () => {
-      clearLoopTimer();
-      abortRecording();
-    };
-  }, [abortRecording, clearLoopTimer]);
-
-  // Handle Speech Playback
-  const handlePlayAudio = useCallback(() => {
-    togglePlayAudio(scriptText);
-  }, [togglePlayAudio, scriptText]);
-
-  // Handle Recording Toggle
-  const toggleRecording = () => {
-    clearLoopTimer();
-    if (!isRecording) {
-      setErrorMsg('');
-      setUserTranscript('');
-      setEvalResult(null);
-    }
-    // Stop sample audio playback so mic does not capture speaker output
-    if (isPlaying) {
-      stopAudio();
-    }
-    rawToggleRecording();
-  };
-
-  // Handle Evaluation via Gemini API
-  const handleEvaluate = async () => {
-    if (!userTranscript.trim()) return;
-    if (!apiKey) {
-      if (onOpenApiKeyModal) onOpenApiKeyModal();
-      return;
-    }
-
-    setIsEvaluating(true);
-    setErrorMsg('');
-
-    try {
-      const evaluation = await evaluateShadowingPerformance({
-        apiKey,
-        model,
-        originalText: script.text,
-        userSpeechText: userTranscript
-      });
-
-      setEvalResult({
-        score: evaluation.score,
-        feedbackJa: evaluation.feedbackJa,
-        strengthsJa: evaluation.strengthsJa || [],
-        improvementsJa: evaluation.improvementsJa || [],
-        accuracyScore: evaluation.score,
-        pronunciationScore: Math.min(100, Math.round(evaluation.score * 0.95 + 5)),
-        overallScore: evaluation.score,
-        feedback: evaluation.feedbackJa,
-        recognizedText: userTranscript
-      });
-    } catch (err: unknown) {
-      console.error('Failed to evaluate shadowing:', err);
-      const msg = err instanceof Error ? err.message : 'AI診断に失敗しました。';
-      setErrorMsg(msg);
-    } finally {
-      setIsEvaluating(false);
-    }
-  };
 
   return (
     <div className="shadowing-container animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>

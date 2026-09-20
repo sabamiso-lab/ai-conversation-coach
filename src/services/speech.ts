@@ -1,12 +1,15 @@
-/**
- * Web Speech API wrapper for Speech Recognition & Text-to-Speech
- */
+import {
+  ISpeechRecognition,
+  SpeechRecognitionConstructor,
+  SpeechRecognitionEvent,
+  SpeechRecognitionErrorEvent
+} from '../types/speech';
 
 // Global Web Speech API type declarations
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
   }
 }
 
@@ -33,7 +36,7 @@ export interface SpeechRecognizerOptions {
 export class SpeechRecognizer {
   public supported: boolean;
   public isListening: boolean;
-  private recognition: any;
+  private recognition: ISpeechRecognition | null = null;
   private onErrorCallback?: (userFriendlyError: string, rawError?: string) => void;
 
   constructor({ onResult, onError, onStart, onEnd, lang = 'en-US', continuous = false }: SpeechRecognizerOptions) {
@@ -57,7 +60,7 @@ export class SpeechRecognizer {
       if (onStart) onStart();
     };
 
-    this.recognition.onresult = (event: any) => {
+    this.recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -78,7 +81,7 @@ export class SpeechRecognizer {
       }
     };
 
-    this.recognition.onerror = (event: any) => {
+    this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       // Ignore user-initiated abort or cancel
       if (event.error === 'aborted') {
         this.isListening = false;
@@ -112,13 +115,15 @@ export class SpeechRecognizer {
       try {
         this.recognition.start();
         this.isListening = true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         this.isListening = false;
         console.warn("Speech recognition start failed:", err);
         // If already started, do not crash
-        if (err?.name !== 'InvalidStateError') {
+        const isInvalidState = err instanceof DOMException && err.name === 'InvalidStateError';
+        if (!isInvalidState) {
           if (this.onErrorCallback) {
-            this.onErrorCallback('マイクの起動に失敗しました。もう一度お試しください。', err?.message);
+            const msg = err instanceof Error ? err.message : undefined;
+            this.onErrorCallback('マイクの起動に失敗しました。もう一度お試しください。', msg);
           }
         }
       }
