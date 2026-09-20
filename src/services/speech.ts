@@ -37,11 +37,17 @@ export class SpeechRecognizer {
   public supported: boolean;
   public isListening: boolean;
   private recognition: ISpeechRecognition | null = null;
-  private onErrorCallback?: (userFriendlyError: string, rawError?: string) => void;
+  private options: SpeechRecognizerOptions;
   private startIndex: number = 0;
   private lastResultsLength: number = 0;
 
-  constructor({ onResult, onError, onStart, onEnd, lang = 'en-US', continuous = false }: SpeechRecognizerOptions) {
+  constructor(options: SpeechRecognizerOptions) {
+    this.options = {
+      lang: 'en-US',
+      continuous: false,
+      ...options
+    };
+
     const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
     if (!SpeechRecognition) {
       this.supported = false;
@@ -51,29 +57,48 @@ export class SpeechRecognizer {
 
     this.supported = true;
     this.isListening = false;
-    this.onErrorCallback = onError;
     this.startIndex = 0;
     this.lastResultsLength = 0;
-    this.recognition = new SpeechRecognition();
-    this.recognition.continuous = continuous;
-    this.recognition.interimResults = true;
-    this.recognition.lang = lang;
+    this.createRecognitionInstance();
+  }
 
-    this.recognition.onstart = () => {
+  private createRecognitionInstance(): ISpeechRecognition | null {
+    const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+    if (!SpeechRecognition) return null;
+
+    // Detach listeners from previous instance if any
+    if (this.recognition) {
+      try {
+        this.recognition.onstart = null;
+        this.recognition.onresult = null;
+        this.recognition.onerror = null;
+        this.recognition.onend = null;
+        this.recognition.abort();
+      } catch {
+        // ignore
+      }
+    }
+
+    const rec = new SpeechRecognition();
+    rec.continuous = Boolean(this.options.continuous);
+    rec.interimResults = true;
+    rec.lang = this.options.lang || 'en-US';
+
+    rec.onstart = () => {
       this.isListening = true;
       this.startIndex = 0;
       this.lastResultsLength = 0;
-      if (onStart) onStart();
+      if (this.options.onStart) this.options.onStart();
     };
 
-    this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+    rec.onresult = (event: SpeechRecognitionEvent) => {
       this.lastResultsLength = event.results.length;
       let finalTranscript = '';
       let interimTranscript = '';
 
       // Aggregate results from startIndex to allow clearing past transcripts during an active session
       for (let i = this.startIndex; i < event.results.length; ++i) {
-        const piece = event.results[i][0].transcript;
+        const piece = event.results[i][0]?.transcript;
         if (!piece) continue;
 
         if (event.results[i].isFinal) {
@@ -89,15 +114,15 @@ export class SpeechRecognizer {
         }
       }
 
-      if (onResult) {
-        onResult({
+      if (this.options.onResult) {
+        this.options.onResult({
           final: finalTranscript.trim(),
           interim: interimTranscript.trim()
         });
       }
     };
 
-    this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    rec.onerror = (event: SpeechRecognitionErrorEvent) => {
       // Ignore user-initiated abort or cancel
       if (event.error === 'aborted') {
         this.isListening = false;
@@ -117,35 +142,40 @@ export class SpeechRecognizer {
         userFriendlyError = '音声認識ネットワーク接続エラーが発生しました。';
       }
 
-      if (this.onErrorCallback) this.onErrorCallback(userFriendlyError, event.error);
+      if (this.options.onError) this.options.onError(userFriendlyError, event.error);
     };
 
-    this.recognition.onend = () => {
+    rec.onend = () => {
       this.isListening = false;
       this.startIndex = 0;
       this.lastResultsLength = 0;
-      if (onEnd) onEnd();
+      if (this.options.onEnd) this.options.onEnd();
     };
+
+    this.recognition = rec;
+    return rec;
   }
 
   start(): void {
-    if (this.recognition && !this.isListening) {
-      try {
-        this.startIndex = 0;
-        this.lastResultsLength = 0;
-        this.recognition.start();
+    if (!this.supported) return;
+
+    try {
+      this.startIndex = 0;
+      this.lastResultsLength = 0;
+      // Re-create instance to avoid browser hang on re-start and ensure clean state
+      const rec = this.createRecognitionInstance();
+      if (rec) {
+        rec.start();
         this.isListening = true;
-      } catch (err: unknown) {
-        this.isListening = false;
-        console.warn("Speech recognition start failed:", err);
-        // If already started, do not crash
-        const isInvalidState = err instanceof DOMException && err.name === 'InvalidStateError';
-        if (!isInvalidState) {
-          if (this.onErrorCallback) {
-            const msg = err instanceof Error ? err.message : undefined;
-            this.onErrorCallback('マイクの起動に失敗しました。もう一度お試しください。', msg);
-          }
-        }
+      }
+    } catch (err: unknown) {
+      this.isListening = false;
+      console.warn("Speech recognition start failed:", err);
+      // If already started, do not crash
+      const isInvalidState = err instanceof DOMException && err.name === 'InvalidStateError';
+      if (!isInvalidState && this.options.onError) {
+        const msg = err instanceof Error ? err.message : undefined;
+        this.options.onError('マイクの起動に失敗しました。もう一度お試しください。', msg);
       }
     }
   }
@@ -187,30 +217,95 @@ export class SpeechRecognizer {
  * Text-to-Speech Helper
  */
 let pendingSpeechTimeout: ReturnType<typeof setTimeout> | null = null;
+let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
 // Retain reference to active utterances to prevent garbage collection in Chrome during long playback
 const activeUtterances = new Set<SpeechSynthesisUtterance>();
 
+function stopKeepAlive(): void {
+  if (keepAliveTimer) {
+    clearInterval(keepAliveTimer);
+    keepAliveTimer = null;
+  }
+}
+
+function startKeepAlive(): void {
+  stopKeepAlive();
+  // Chrome bug workaround: Chrome speech synthesis pauses after ~15s
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    keepAliveTimer = setInterval(() => {
+      try {
+        if (window.speechSynthesis && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }
+      } catch {
+        // ignore
+      }
+    }, 10000);
+  }
+}
+
+export function findPreferredVoice(voices: SpeechSynthesisVoice[], targetLang: string = 'en-US'): SpeechSynthesisVoice | null {
+  if (!voices || voices.length === 0) return null;
+  const langPrefix = targetLang.split('-')[0].toLowerCase();
+
+  // 1. First priority: High-quality / natural English voices
+  const highQualityVoice = voices.find(v => {
+    const vLang = (v.lang || '').replace('_', '-').toLowerCase();
+    const isMatchingLang = vLang.startsWith(langPrefix);
+    const name = v.name || '';
+    const hasQualityKeyword = name.includes('Natural') || name.includes('Google') || name.includes('Samantha') || name.includes('Jenny') || name.includes('Guy');
+    return isMatchingLang && hasQualityKeyword;
+  });
+  if (highQualityVoice) return highQualityVoice;
+
+  // 2. Second priority: Standard voice matching langPrefix (e.g. Windows Microsoft David, Zira, Mark, etc.)
+  const standardLangVoice = voices.find(v => {
+    const vLang = (v.lang || '').replace('_', '-').toLowerCase();
+    return vLang.startsWith(langPrefix);
+  });
+  if (standardLangVoice) return standardLangVoice;
+
+  // 3. Fallback: Any voice containing langPrefix
+  const anyMatching = voices.find(v => (v.lang || '').toLowerCase().includes(langPrefix));
+  return anyMatching || null;
+}
+
 function setVoiceAndSpeak(utterance: SpeechSynthesisUtterance, onEnd?: () => void): void {
   activeUtterances.add(utterance);
+  startKeepAlive();
 
-  const cleanup = () => {
+  let isCleanedUp = false;
+  const cleanup = (isNormalCompletion: boolean) => {
+    if (isCleanedUp) return;
+    isCleanedUp = true;
     activeUtterances.delete(utterance);
-    if (onEnd) onEnd();
+    if (activeUtterances.size === 0) {
+      stopKeepAlive();
+    }
+    // Only invoke onEnd on normal successful completion, NOT on error/cancel
+    if (isNormalCompletion && onEnd) {
+      onEnd();
+    }
   };
 
   const voices = window.speechSynthesis.getVoices();
-  const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
-  if (naturalVoice) {
-    utterance.voice = naturalVoice;
+  const targetVoice = findPreferredVoice(voices, utterance.lang || 'en-US');
+  if (targetVoice) {
+    utterance.voice = targetVoice;
   }
 
   utterance.onend = () => {
-    cleanup();
+    cleanup(true);
   };
 
   utterance.onerror = (event) => {
-    console.warn('Speech synthesis error:', event);
-    cleanup();
+    // If canceled or interrupted by stopSpeaking(), do not trigger onEnd
+    const isCancelled = event.error === 'canceled' || event.error === 'interrupted';
+    if (!isCancelled) {
+      console.warn('Speech synthesis error:', event);
+    }
+    cleanup(false);
   };
 
   window.speechSynthesis.speak(utterance);
@@ -265,6 +360,7 @@ export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1
 
 export function stopSpeaking(): void {
   if (isSpeechSynthesisSupported()) {
+    stopKeepAlive();
     activeUtterances.clear();
     if (pendingSpeechTimeout) {
       clearTimeout(pendingSpeechTimeout);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { speakText, stopSpeaking, SpeechRecognizer, isSpeechRecognitionSupported } from '../speech';
+import { speakText, stopSpeaking, SpeechRecognizer, isSpeechRecognitionSupported, findPreferredVoice } from '../speech';
 
 describe('speech.js TTS module', () => {
   let mockSpeak: Mock;
@@ -124,6 +124,57 @@ describe('speech.js TTS module', () => {
     vi.advanceTimersByTime(100);
 
     expect(mockSpeak).not.toHaveBeenCalled();
+  });
+
+  it('selects high quality voices first, and falls back to standard Windows voices', () => {
+    const mockVoices = [
+      { name: 'Microsoft Haruka Desktop - Japanese', lang: 'ja-JP' },
+      { name: 'Microsoft David Desktop - English (United States)', lang: 'en-US' },
+      { name: 'Google US English', lang: 'en-US' }
+    ] as unknown as SpeechSynthesisVoice[];
+
+    // Priority 1: Google / Natural
+    const preferred1 = findPreferredVoice(mockVoices, 'en-US');
+    expect(preferred1?.name).toBe('Google US English');
+
+    // Without Google voice, standard Windows voice should be selected, NOT Japanese Haruka
+    const mockWindowsOnly = [
+      { name: 'Microsoft Haruka Desktop - Japanese', lang: 'ja-JP' },
+      { name: 'Microsoft David Desktop - English (United States)', lang: 'en-US' }
+    ] as unknown as SpeechSynthesisVoice[];
+
+    const preferred2 = findPreferredVoice(mockWindowsOnly, 'en-US');
+    expect(preferred2?.name).toBe('Microsoft David Desktop - English (United States)');
+  });
+
+  it('does not call onEnd when utterance is cancelled or aborted', () => {
+    mockGetVoices.mockReturnValue([{ name: 'Google US English', lang: 'en-US' }]);
+    const onEnd = vi.fn();
+
+    speakText('Hello interrupt', { onEnd });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    const utterance = mockSpeak.mock.calls[0][0];
+
+    // Simulate browser error event on cancellation
+    utterance.onerror({ error: 'canceled' });
+
+    expect(onEnd).not.toHaveBeenCalled();
+  });
+
+  it('calls onEnd when utterance finishes normally', () => {
+    mockGetVoices.mockReturnValue([{ name: 'Google US English', lang: 'en-US' }]);
+    const onEnd = vi.fn();
+
+    speakText('Hello finish', { onEnd });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    const utterance = mockSpeak.mock.calls[0][0];
+
+    // Simulate normal finish
+    utterance.onend();
+
+    expect(onEnd).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -333,5 +384,19 @@ describe('SpeechRecognizer module', () => {
       final: 'I have a pen',
       interim: ''
     });
+  });
+
+  it('safely re-initializes and starts recognition across multiple sessions', () => {
+    const recognizer = new SpeechRecognizer({});
+    recognizer.start();
+    expect(mockRecognitionInstance.start).toHaveBeenCalledTimes(1);
+
+    // Stop and re-start
+    recognizer.stop();
+    expect(recognizer.isListening).toBe(false);
+
+    recognizer.start();
+    expect(mockRecognitionInstance.start).toHaveBeenCalledTimes(2);
+    expect(recognizer.isListening).toBe(true);
   });
 });

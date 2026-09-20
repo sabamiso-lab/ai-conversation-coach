@@ -78,14 +78,6 @@ export default function ChatRoom({
   // Baseline input text captured when speech recognition starts
   const baseInputTextRef = useRef('');
 
-  // Wrap sendMessage with TTS callback for AI response
-  const handleSendMessage = useCallback((textToSend?: string) => {
-    baseInputTextRef.current = '';
-    sendMessage(textToSend, (aiText) => {
-      speakText(aiText);
-    });
-  }, [sendMessage]);
-
   const handleSpeechStart = useCallback(() => {
     baseInputTextRef.current = inputTextRef.current;
   }, []);
@@ -112,6 +104,15 @@ export default function ChatRoom({
     onError: handleSpeechError,
     continuous: true
   });
+
+  // Wrap sendMessage with TTS callback for AI response and stop mic immediately
+  const handleSendMessage = useCallback((textToSend?: string) => {
+    stopRecording();
+    baseInputTextRef.current = '';
+    sendMessage(textToSend, (aiText) => {
+      speakText(aiText);
+    });
+  }, [sendMessage, stopRecording]);
 
   // Stop recording when AI starts thinking
   useEffect(() => {

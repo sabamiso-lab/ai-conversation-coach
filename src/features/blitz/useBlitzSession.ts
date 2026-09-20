@@ -169,6 +169,16 @@ export function useBlitzSession({
     }
   }, [onContextChange, title, currentIndex, questions, currentQuestion, fullUserText, isRevealed, aiEvaluation]);
 
+  const nextQuestionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (nextQuestionTimeoutRef.current) {
+        clearTimeout(nextQuestionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const startSpeechForNextQuestion = () => {
     setIsRevealed(false);
     resetSpeech();
@@ -178,7 +188,14 @@ export function useBlitzSession({
     setQuestionStartTime(Date.now());
     resetTimer(timerSeconds);
     stopSpeaking();
-    startListening();
+
+    if (nextQuestionTimeoutRef.current) {
+      clearTimeout(nextQuestionTimeoutRef.current);
+    }
+    // Give browser speech recognition engine a brief tick to cleanly initialize new session
+    nextQuestionTimeoutRef.current = setTimeout(() => {
+      startListening();
+    }, 50);
   };
 
   const handleSaveEditedSpeech = (newText?: string) => {

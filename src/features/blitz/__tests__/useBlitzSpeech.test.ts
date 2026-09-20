@@ -80,4 +80,20 @@ describe('useBlitzSpeech', () => {
     expect(result.current.speechError).toBe('お使いのブラウザは音声認識に対応していません。');
     expect(result.current.isListening).toBe(false);
   });
+
+  it('configures SpeechRecognizer with continuous: true by default', () => {
+    vi.spyOn(speechService, 'isSpeechRecognitionSupported').mockReturnValue(true);
+    const recognizerSpy = vi.spyOn(speechService, 'SpeechRecognizer').mockImplementation(() => ({
+      abort: vi.fn()
+    } as unknown as speechService.SpeechRecognizer));
+
+    renderHook(() => useBlitzSpeech());
+
+    expect(recognizerSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        continuous: true,
+        lang: 'en-US'
+      })
+    );
+  });
 });
