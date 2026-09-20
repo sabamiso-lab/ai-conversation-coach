@@ -164,4 +164,16 @@ describe('useSpeechRecognition hook', () => {
     expect(result.current.error).toContain('お使いのブラウザは音声認識に対応していません');
     expect(handleError).toHaveBeenCalled();
   });
+
+  it('stops ongoing speech synthesis when startRecording is called', () => {
+    const stopSpeakingSpy = vi.spyOn(speechService, 'stopSpeaking').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useSpeechRecognition());
+
+    act(() => {
+      result.current.startRecording();
+    });
+
+    expect(stopSpeakingSpy).toHaveBeenCalled();
+  });
 });

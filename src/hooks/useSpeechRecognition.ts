@@ -101,6 +101,7 @@ export function useSpeechRecognition({
   }, [isSupported, lang, continuous, stopSpeakingOnCleanup]);
 
   const startRecording = useCallback(() => {
+    stopSpeaking();
     if (!recognizerRef.current) {
       const unsupportedMsg = 'お使いのブラウザは音声認識に対応していません。';
       setError(unsupportedMsg);

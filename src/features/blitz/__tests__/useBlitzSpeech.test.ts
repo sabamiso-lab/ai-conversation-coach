@@ -96,4 +96,23 @@ describe('useBlitzSpeech', () => {
       })
     );
   });
+
+  it('allows resetting interim transcript via setInterimTranscript', () => {
+    const { result } = renderHook(() => useBlitzSpeech());
+
+    act(() => {
+      result.current.setUserTranscript('Confirmed');
+      result.current.setInterimTranscript('tentative');
+    });
+
+    expect(result.current.interimTranscript).toBe('tentative');
+    expect(result.current.fullUserText).toBe('Confirmed tentative');
+
+    act(() => {
+      result.current.setInterimTranscript('');
+    });
+
+    expect(result.current.interimTranscript).toBe('');
+    expect(result.current.fullUserText).toBe('Confirmed');
+  });
 });

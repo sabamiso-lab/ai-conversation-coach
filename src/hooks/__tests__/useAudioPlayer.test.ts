@@ -51,4 +51,27 @@ describe('useAudioPlayer', () => {
     expect(result.current.isPlaying).toBe(false);
     expect(stopSpy).toHaveBeenCalled();
   });
+
+  it('resets isPlaying to false when speakText encounters an error', () => {
+    let capturedOnError: (() => void) | undefined;
+    vi.spyOn(speechService, 'speakText').mockImplementation((_text, options) => {
+      capturedOnError = options?.onError as (() => void) | undefined;
+    });
+
+    const { result } = renderHook(() => useAudioPlayer());
+
+    act(() => {
+      result.current.playAudio('Error test speech');
+    });
+
+    expect(result.current.isPlaying).toBe(true);
+    expect(capturedOnError).toBeDefined();
+
+    // Trigger synthesis error
+    act(() => {
+      capturedOnError?.();
+    });
+
+    expect(result.current.isPlaying).toBe(false);
+  });
 });

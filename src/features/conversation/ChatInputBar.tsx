@@ -86,7 +86,12 @@ export default function ChatInputBar({
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !isAiThinking && inputText.trim()) {
+            const isComposing =
+              Boolean(e.nativeEvent && 'isComposing' in e.nativeEvent && (e.nativeEvent as unknown as { isComposing: boolean }).isComposing) ||
+              Boolean('isComposing' in e && (e as unknown as { isComposing: boolean }).isComposing) ||
+              (e as unknown as { keyCode?: number }).keyCode === 229;
+
+            if (e.key === 'Enter' && !isComposing && !isAiThinking && inputText.trim()) {
               e.preventDefault();
               onSendMessage();
             }

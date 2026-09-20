@@ -271,7 +271,11 @@ export function findPreferredVoice(voices: SpeechSynthesisVoice[], targetLang: s
   return anyMatching || null;
 }
 
-function setVoiceAndSpeak(utterance: SpeechSynthesisUtterance, onEnd?: () => void): void {
+function setVoiceAndSpeak(
+  utterance: SpeechSynthesisUtterance,
+  onEnd?: () => void,
+  onError?: (event: SpeechSynthesisErrorEvent) => void
+): void {
   activeUtterances.add(utterance);
   startKeepAlive();
 
@@ -300,10 +304,13 @@ function setVoiceAndSpeak(utterance: SpeechSynthesisUtterance, onEnd?: () => voi
   };
 
   utterance.onerror = (event) => {
-    // If canceled or interrupted by stopSpeaking(), do not trigger onEnd
+    // If canceled or interrupted by stopSpeaking(), do not trigger onEnd or onError
     const isCancelled = event.error === 'canceled' || event.error === 'interrupted';
     if (!isCancelled) {
       console.warn('Speech synthesis error:', event);
+      if (onError) {
+        onError(event);
+      }
     }
     cleanup(false);
   };
@@ -316,9 +323,10 @@ export interface SpeakTextOptions {
   rate?: number;
   pitch?: number;
   onEnd?: () => void;
+  onError?: (event: SpeechSynthesisErrorEvent) => void;
 }
 
-export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd }: SpeakTextOptions = {}): void {
+export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1.0, onEnd, onError }: SpeakTextOptions = {}): void {
   if (!isSpeechSynthesisSupported()) return;
 
   // Cancel any ongoing speech & clear pending timers/event listeners
@@ -331,7 +339,7 @@ export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1
 
   const voices = window.speechSynthesis.getVoices();
   if (voices.length > 0) {
-    setVoiceAndSpeak(utterance, onEnd);
+    setVoiceAndSpeak(utterance, onEnd, onError);
   } else {
     let hasSpoken = false;
 
@@ -345,7 +353,7 @@ export function speakText(text: string, { lang = 'en-US', rate = 0.95, pitch = 1
       }
       window.speechSynthesis.onvoiceschanged = null;
 
-      setVoiceAndSpeak(utterance, onEnd);
+      setVoiceAndSpeak(utterance, onEnd, onError);
     };
 
     window.speechSynthesis.onvoiceschanged = () => {

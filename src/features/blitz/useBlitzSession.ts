@@ -45,6 +45,7 @@ export function useBlitzSession({
     userTranscript,
     setUserTranscript,
     interimTranscript,
+    setInterimTranscript,
     fullUserText,
     speechError,
     startListening,
@@ -200,6 +201,7 @@ export function useBlitzSession({
 
   const handleSaveEditedSpeech = (newText?: string) => {
     const textToUse = newText !== undefined ? newText : fullUserText;
+    setInterimTranscript('');
     setUserTranscript(textToUse);
     if (textToUse) {
       requestAiEvaluation(textToUse);

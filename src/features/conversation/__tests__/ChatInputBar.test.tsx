@@ -52,4 +52,28 @@ describe('ChatInputBar', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(onSendMessage).toHaveBeenCalledTimes(1);
   });
+
+  it('does not send message when Enter is pressed during IME composition', () => {
+    const onSendMessage = vi.fn();
+
+    render(
+      <ChatInputBar
+        inputText="テスト"
+        onInputChange={vi.fn()}
+        onSendMessage={onSendMessage}
+        isRecording={false}
+        onToggleRecording={vi.fn()}
+        isAiThinking={false}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('英語でメッセージを入力...');
+    // Simulate Enter while IME composition is active (e.g. converting kanji)
+    fireEvent.keyDown(input, {
+      key: 'Enter',
+      isComposing: true
+    });
+
+    expect(onSendMessage).not.toHaveBeenCalled();
+  });
 });

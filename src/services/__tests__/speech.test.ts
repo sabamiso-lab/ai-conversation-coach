@@ -176,6 +176,23 @@ describe('speech.js TTS module', () => {
 
     expect(onEnd).toHaveBeenCalledTimes(1);
   });
+
+  it('calls onError when utterance encounters non-cancelled error', () => {
+    mockGetVoices.mockReturnValue([{ name: 'Google US English', lang: 'en-US' }]);
+    const onEnd = vi.fn();
+    const onError = vi.fn();
+
+    speakText('Hello error', { onEnd, onError });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    const utterance = mockSpeak.mock.calls[0][0];
+
+    // Simulate speech synthesis error
+    utterance.onerror({ error: 'audio-busy' });
+
+    expect(onEnd).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ error: 'audio-busy' }));
+  });
 });
 
 describe('SpeechRecognizer module', () => {

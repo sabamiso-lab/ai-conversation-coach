@@ -30,6 +30,8 @@ export default function InstantBlitzPage({
 
   const [activeTitle, setActiveTitle] = useState('');
   const [activeQuestions, setActiveQuestions] = useState<BlitzQuestion[]>([]);
+  const [originalTitle, setOriginalTitle] = useState('');
+  const [originalQuestions, setOriginalQuestions] = useState<BlitzQuestion[]>([]);
   const [timerSeconds, setTimerSeconds] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [summaryData, setSummaryData] = useState<BlitzSessionSummaryData | null>(null);
@@ -61,6 +63,8 @@ export default function InstantBlitzPage({
 
   // プリセットトピックでセッション開始
   const handleStartSession = (questions: BlitzQuestion[], title: string, seconds: number) => {
+    setOriginalTitle(title);
+    setOriginalQuestions(questions);
     setActiveTitle(title);
     setActiveQuestions(questions);
     setTimerSeconds(seconds);
@@ -83,7 +87,10 @@ export default function InstantBlitzPage({
         throw new Error('問題データの生成に失敗しました。もう一度お試しください。');
       }
 
-      setActiveTitle(generated.title || 'AIおまかせ英作文セット');
+      const generatedTitle = generated.title || 'AIおまかせ英作文セット';
+      setOriginalTitle(generatedTitle);
+      setOriginalQuestions(generated.questions);
+      setActiveTitle(generatedTitle);
       setActiveQuestions(generated.questions);
       setTimerSeconds(seconds);
       setViewState('session');
@@ -103,13 +110,16 @@ export default function InstantBlitzPage({
 
   // 間違えた問題だけでリトライ
   const handleRetryIncorrect = (incorrectQuestions: BlitzQuestion[]) => {
-    setActiveTitle(`${activeTitle} (言えなかった問題リトライ)`);
+    const baseTitle = originalTitle || activeTitle;
+    setActiveTitle(`${baseTitle} (言えなかった問題リトライ)`);
     setActiveQuestions(incorrectQuestions);
     setViewState('session');
   };
 
-  // 最初からもう一度
+  // 最初からもう一度（元のお題・全問題でやり直す）
   const handleRestartAll = () => {
+    if (originalTitle) setActiveTitle(originalTitle);
+    if (originalQuestions.length > 0) setActiveQuestions(originalQuestions);
     setViewState('session');
   };
 
@@ -118,6 +128,8 @@ export default function InstantBlitzPage({
     setViewState('selector');
     setSummaryData(null);
     setBlitzLiveContext(null);
+    setOriginalTitle('');
+    setOriginalQuestions([]);
   };
 
   return (

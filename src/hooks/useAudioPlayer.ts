@@ -60,6 +60,10 @@ export function useAudioPlayer({
             }
           }, loopDelayMs);
         }
+      },
+      onError: () => {
+        setIsPlaying(false);
+        clearLoopTimer();
       }
     });
   }, [playbackSpeed, lang, loopDelayMs, clearLoopTimer]);
