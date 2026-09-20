@@ -8,6 +8,7 @@ import CategoryFilter from '../../components/common/CategoryFilter';
 import LoadingState from '../../components/common/LoadingState';
 import DifficultyBadge from '../../components/common/DifficultyBadge';
 import NewsCitation from '../../components/common/NewsCitation';
+import PracticeItemCard from '../../components/common/PracticeItemCard';
 import { NewsGeneratorSection } from './NewsGeneratorSection';
 import { fetchSituations } from '../../services/api';
 import { useSettings } from '../../hooks/useSettings';
@@ -112,57 +113,41 @@ export default function SituationSelector({
             const IconComponent = (sit.icon && ICON_MAP[sit.icon]) || MessageSquare;
 
             return (
-              <div 
-                key={sit.id} 
-                className="situation-card"
+              <PracticeItemCard
+                key={sit.id}
+                isSpecial={sit.isNews}
+                icon={<IconComponent size={24} />}
+                iconBg={sit.isNews ? '#EEF2FF' : '#F1F5F9'}
+                iconColor={sit.isNews ? '#4F46E5' : '#475569'}
+                badges={
+                  sit.isNews ? (
+                    <span className="badge" style={{ background: '#EEF2FF', color: '#4F46E5', fontWeight: 700 }}>
+                      📰 News
+                    </span>
+                  ) : undefined
+                }
+                difficulty={sit.difficulty || 'beginner'}
+                title={sit.title}
+                titleJa={sit.titleJa}
+                description={sit.descriptionJa}
+                actionText="会話を開始する"
                 onClick={() => onSelectSituation(sit)}
-                style={{
-                  border: sit.isNews ? '2px solid #6366F1' : '1px solid #E2E8F0',
-                  background: sit.isNews ? 'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)' : '#FFFFFF'
-                }}
               >
-                <div>
-                  <div className="card-top">
-                    <div className="icon-box" style={{ background: sit.isNews ? '#EEF2FF' : '#F1F5F9', color: sit.isNews ? '#4F46E5' : '#475569' }}>
-                      <IconComponent size={24} />
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      {sit.isNews && (
-                        <span className="badge" style={{ background: '#EEF2FF', color: '#4F46E5', fontWeight: 700 }}>
-                          📰 News
-                        </span>
-                      )}
-                      <DifficultyBadge difficulty={sit.difficulty || 'beginner'} />
-                    </div>
+                {/* News Citation Link if available */}
+                <NewsCitation newsSource={sit.newsSource} variant="badge" />
+
+                <div className="goals-list">
+                  <div className="goals-title">
+                    <Target size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                    達成目標 (Goals)
                   </div>
-
-                  <div className="card-title">{sit.title}</div>
-                  <div className="card-title-ja">{sit.titleJa}</div>
-
-                  <p className="card-desc">
-                    {sit.descriptionJa}
-                  </p>
-
-                  {/* News Citation Link if available */}
-                  <NewsCitation newsSource={sit.newsSource} variant="badge" />
-
-                  <div className="goals-list">
-                    <div className="goals-title">
-                      <Target size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                      達成目標 (Goals)
+                  {sit.goals.slice(0, 2).map((goal, i) => (
+                    <div key={i} className="goal-item">
+                      • {goal}
                     </div>
-                    {sit.goals.slice(0, 2).map((goal, i) => (
-                      <div key={i} className="goal-item">
-                        • {goal}
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-
-                <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', color: '#4F46E5', fontWeight: 700, fontSize: '0.9rem' }}>
-                  会話を開始する <ArrowRight size={16} />
-                </div>
-              </div>
+              </PracticeItemCard>
             );
           })}
         </div>

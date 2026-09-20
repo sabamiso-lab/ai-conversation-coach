@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SpeechRecognizer, isSpeechRecognitionSupported } from '../services/speech';
+import { SpeechRecognizer, isSpeechRecognitionSupported, stopSpeaking } from '../services/speech';
 
-interface UseSpeechRecognitionOptions {
-  onFinalResult: (finalText: string) => void;
+export interface UseSpeechRecognitionOptions {
+  onFinalResult?: (finalText: string) => void;
   onInterimResult?: (interimText: string) => void;
   onError?: (errorMessage: string) => void;
   onStart?: () => void;
   onEnd?: () => void;
   lang?: string;
   continuous?: boolean;
+  stopSpeakingOnCleanup?: boolean;
 }
 
 export function useSpeechRecognition({
@@ -18,9 +19,12 @@ export function useSpeechRecognition({
   onStart,
   onEnd,
   lang = 'en-US',
-  continuous = false
-}: UseSpeechRecognitionOptions) {
+  continuous = false,
+  stopSpeakingOnCleanup = false
+}: UseSpeechRecognitionOptions = {}) {
   const [isRecording, setIsRecording] = useState(false);
+  const [userTranscript, setUserTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState('');
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
 
@@ -53,11 +57,17 @@ export function useSpeechRecognition({
         }
       },
       onResult: ({ final, interim }: { final: string; interim: string }) => {
-        if (final && onFinalResultRef.current) {
-          onFinalResultRef.current(final);
-        }
-        if (interim && onInterimResultRef.current) {
-          onInterimResultRef.current(interim);
+        if (final) {
+          setUserTranscript((prev) => (prev ? `${prev} ${final}` : final));
+          setInterimTranscript('');
+          if (onFinalResultRef.current) {
+            onFinalResultRef.current(final);
+          }
+        } else if (interim) {
+          setInterimTranscript(interim);
+          if (onInterimResultRef.current) {
+            onInterimResultRef.current(interim);
+          }
         }
       },
       onError: (userFriendlyError: string) => {
@@ -80,12 +90,15 @@ export function useSpeechRecognition({
       if (recognizerRef.current) {
         recognizerRef.current.abort();
       }
+      if (stopSpeakingOnCleanup) {
+        stopSpeaking();
+      }
     };
-  }, [isSupported, lang, continuous]);
+  }, [isSupported, lang, continuous, stopSpeakingOnCleanup]);
 
   const startRecording = useCallback(() => {
     if (!recognizerRef.current) {
-      const unsupportedMsg = 'お使いのブラウザは音声認識(Web Speech API)に対応していません。テキスト入力をご利用ください。';
+      const unsupportedMsg = 'お使いのブラウザは音声認識に対応していません。';
       setError(unsupportedMsg);
       if (onErrorRef.current) {
         onErrorRef.current(unsupportedMsg);
@@ -93,7 +106,12 @@ export function useSpeechRecognition({
       return;
     }
     setError('');
-    recognizerRef.current.start();
+    try {
+      recognizerRef.current.start();
+      setIsRecording(true);
+    } catch {
+      // already active
+    }
   }, []);
 
   const stopRecording = useCallback(() => {
@@ -118,14 +136,37 @@ export function useSpeechRecognition({
     }
   }, [isRecording, startRecording, stopRecording]);
 
+  const resetSpeech = useCallback(() => {
+    stopRecording();
+    setUserTranscript('');
+    setInterimTranscript('');
+    setError('');
+  }, [stopRecording]);
+
+  const fullTranscript = `${userTranscript} ${interimTranscript}`.trim();
+
   return {
     isSupported,
     isRecording,
+    isListening: isRecording,
+    userTranscript,
+    setUserTranscript,
+    interimTranscript,
+    setInterimTranscript,
+    fullTranscript,
+    fullUserText: fullTranscript,
     error,
     setError,
+    speechError: error,
+    setSpeechError: setError,
     startRecording,
+    startListening: startRecording,
     stopRecording,
+    stopListening: stopRecording,
     abortRecording,
-    toggleRecording
+    toggleRecording,
+    toggleListening: toggleRecording,
+    resetSpeech,
+    clearTranscript: resetSpeech
   };
 }

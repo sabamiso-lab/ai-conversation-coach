@@ -242,3 +242,16 @@ export interface GeminiApiOptions {
   history?: ChatMessage[];
   userText?: string;
 }
+
+export interface BaseEvaluationResult {
+  score: number;
+  feedbackJa: string;
+  strengthsJa?: string[];
+  improvementsJa?: string[];
+  improvedSpeech?: string;
+  status?: string;
+  statusLabelJa?: string;
+}
+
+export * from '../constants/difficulty';
+
