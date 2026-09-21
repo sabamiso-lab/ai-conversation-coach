@@ -1,7 +1,8 @@
 /**
- * Type definitions for Web Speech API (SpeechRecognition)
+ * Web Speech API type definitions and Speech Module Interfaces
  */
 
+// Web Speech API type definitions
 export interface SpeechRecognitionAlternative {
   readonly transcript: string;
   readonly confidence: number;
@@ -43,3 +44,33 @@ export interface ISpeechRecognition extends EventTarget {
 }
 
 export type SpeechRecognitionConstructor = new () => ISpeechRecognition;
+
+// Global Web Speech API type declarations
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
+// Options & Callback types for STT
+export interface SpeechRecognizerOptions {
+  onResult?: (result: { final: string; interim: string }) => void;
+  onError?: (userFriendlyError: string, rawError?: string) => void;
+  onStart?: () => void;
+  onEnd?: () => void;
+  lang?: string;
+  continuous?: boolean;
+}
+
+// Options & Callback types for TTS
+export interface SpeakTextOptions {
+  lang?: string;
+  rate?: number;
+  pitch?: number;
+  onEnd?: () => void;
+  onError?: (event: SpeechSynthesisErrorEvent) => void;
+}
+
+// Audio state for central management
+export type AudioState = 'idle' | 'speaking' | 'listening';

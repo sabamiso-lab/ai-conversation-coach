@@ -108,22 +108,21 @@ src/
 │   │   └── NewsGeneratorSection.tsx (動的ニュース対話生成)
 │   └── shadowing/        # シャドーイング特訓機能
 │       ├── ShadowingPlayer.tsx, ShadowingSelector.tsx, ShadowingAudioControls.tsx, ShadowingEvaluationCard.tsx, ShadowingScriptViewer.tsx
-│       ├── useShadowingSession.ts (シャドーイングセッション制御フック)
-│       └── useShadowingAudio.ts (音声再生・ループ・速度制御フック)
-├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition, useSettings, useCoach 等)
+│       └── useShadowingSession.ts (シャドーイングセッション制御フック)
+├── hooks/                # 再利用可能カスタムフック (useChatSession, useSpeechRecognition, useAudioPlayer, useSettings, useCoach 等)
 ├── pages/                # トップレベル画面ページ (ConversationPage, InstantBlitzPage, ShadowingPage)
 ├── services/             # 外部通信・AI・API クライアント層 (純粋 TypeScript)
 │   ├── ai/               # Gemini API モジュール (client.ts, chat.ts, blitz.ts, coach.ts, shadowing.ts, news.ts)
 │   ├── api.ts            # DynamoDB API クライアント (ローカルフォールバック内蔵)
 │   ├── gemini.ts         # Gemini サービス統括エントリポイント
-│   └── speech.ts         # Web Speech API (音声認識 & 音声合成) ラッパー
+│   └── speech/           # Web Speech API 統括モジュール (stt.ts, tts.ts, audioManager.ts, index.ts, types.ts)
 ├── styles/               # モジュラー CSS アーキテクチャ
 │   ├── tokens.css        # デザイントークン (色、フォント、シャドウ、余白)
 │   ├── base.css          # リセット、レイアウト、ユーティリティ
 │   ├── components.css    # 共通コンポーネント用スタイル
 │   ├── responsive.css    # モバイル固定ボトムナビ・メディアクエリ
 │   └── features/         # 機能別固有 CSS (conversation, blitz, shadowing, coach)
-├── types/                # 厳格な TypeScript ドメイン型定義 (index.ts, speech.ts)
+├── types/                # 厳格な TypeScript ドメイン型定義 (index.ts)
 └── utils/                # 共通ヘルパー (jsonRepair.ts, textMatcher.ts 等)
 ```
 

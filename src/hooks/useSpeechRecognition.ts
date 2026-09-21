@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SpeechRecognizer, isSpeechRecognitionSupported, stopSpeaking } from '../services/speech';
+import { audioManager } from '../services/speech/audioManager';
 
 export interface UseSpeechRecognitionOptions {
   onFinalResult?: (finalText: string) => void;
@@ -51,7 +52,7 @@ export function useSpeechRecognition({
   useEffect(() => {
     if (!isSupported) return;
 
-    recognizerRef.current = new SpeechRecognizer({
+    const recognizer = new SpeechRecognizer({
       lang,
       continuous,
       onStart: () => {
@@ -90,18 +91,22 @@ export function useSpeechRecognition({
       }
     });
 
+    recognizerRef.current = recognizer;
+    audioManager?.registerRecognizer?.(recognizer);
+
     return () => {
-      if (recognizerRef.current) {
-        recognizerRef.current.abort();
-      }
+      audioManager?.unregisterRecognizer?.(recognizer);
+      recognizer.abort();
       if (stopSpeakingOnCleanup) {
-        stopSpeaking();
+        audioManager?.stopPlayback?.();
       }
     };
   }, [isSupported, lang, continuous, stopSpeakingOnCleanup]);
 
   const startRecording = useCallback(() => {
     stopSpeaking();
+    // Automatically stop ongoing TTS and register this recognizer
+    audioManager?.onRecognitionStart?.(recognizerRef.current);
     if (!recognizerRef.current) {
       const unsupportedMsg = 'お使いのブラウザは音声認識に対応していません。';
       setError(unsupportedMsg);
@@ -187,7 +192,6 @@ export function useSpeechRecognition({
     toggleRecording,
     toggleListening: toggleRecording,
     resetSpeech,
-    clearSpeech,
-    clearTranscript: clearSpeech
+    clearSpeech
   };
 }

@@ -68,18 +68,21 @@
 │   │   ├── blitz/          # 瞬間英作文 (Session, SpeechBox, AnswerPanel, Summary, TopicSelector, useBlitzSession, useBlitzTimer, data/blitzTopics)
 │   │   ├── coach/          # 全画面常駐 AI コーチ (FloatingCoachWidget, CoachMessageItem, CoachContextBanner, coachPrompts)
 │   │   ├── conversation/   # 会話ロールプレイ (ChatRoom, Sidebar, InputBar, MessageItem, HintPanel, ReportModal, SituationSelector, NewsGeneratorSection)
-│   │   └── shadowing/      # シャドーイング (Player, Selector, AudioControls, EvalCard, ScriptViewer, useShadowingSession, useShadowingAudio)
-│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useCoach, useSpeechRecognition, useChatSession 等)
+│   │   └── shadowing/      # シャドーイング (Player, Selector, AudioControls, EvalCard, ScriptViewer, useShadowingSession)
+│   ├── hooks/              # 再利用可能なカスタムフック (useSettings, useCoach, useSpeechRecognition, useAudioPlayer, useChatSession 等)
 │   ├── pages/              # 画面ルーティング単位のトップレベルページ (TSX)
 │   ├── services/           # 外部通信・AI・API クライアント (完全 TypeScript 化)
-│   │   └── ai/             # Gemini API 呼び出しモジュール (client, chat, coach, blitz, shadowing, news)
+│   │   ├── ai/             # Gemini API 呼び出しモジュール (client, chat, coach, blitz, shadowing, news)
+│   │   ├── api.ts          # バックエンド DynamoDB API クライアント (フォールバック内蔵)
+│   │   ├── gemini.ts       # Gemini API 統括エントリポイント
+│   │   └── speech/         # Web Speech API 統括 (stt, tts, audioManager, index, types)
 │   ├── styles/             # モジュラー CSS アーキテクチャ
 │   │   ├── tokens.css      # デザイントークン (色、余白、タイポグラフィ、シャドウ)
 │   │   ├── base.css        # リセット・レイアウト・共通アニメーション・ユーティリティ
 │   │   ├── components.css  # 共通 UI コンポーネントスタイル
 │   │   ├── responsive.css  # モバイル固定ボトムナビ・メディアクエリ
 │   │   └── features/       # 各機能ドメイン固有スタイル (*.css)
-│   ├── types/              # TypeScript 型定義 (ドメインモデル等 index.ts, speech.ts)
+│   ├── types/              # TypeScript 型定義 (ドメインモデル等 index.ts)
 │   ├── utils/              # 汎用ヘルパー・修復関数 (TypeScript)
 │   ├── index.css           # スタイル統合エントリポイント (@import 集約)
 │   ├── main.tsx            # アプリケーションエントリポイント
@@ -107,7 +110,7 @@
 | React コンポーネント | **PascalCase** | `ChatRoom.tsx`, `MicButton.tsx` |
 | カスタムフック | **camelCase** (`use` プレフィックス) | `useChatSession.ts`, `useSettings.ts`, `useCoach.ts` |
 | ユーティリティ・サービス | **camelCase** | `jsonRepair.ts`, `api.ts`, `gemini.ts` |
-| 型定義ファイル | **camelCase** または `index.ts` | `index.ts`, `speech.ts` |
+| 型定義ファイル | **camelCase** または `index.ts` | `index.ts` |
 | テストファイル | `*.test.ts`, `*.test.tsx` | `api.test.ts`, `getSituations.test.ts`, `ChatRoom.test.tsx` |
 | ディレクトリ名 | **camelCase** または **kebab-case** | `common`, `conversation`, `coach`, `services` |
 
