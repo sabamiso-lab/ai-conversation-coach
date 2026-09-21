@@ -9,6 +9,7 @@ import {
   SpeechRecognitionErrorEvent,
   SpeechRecognizerOptions
 } from './types';
+import { mergeTranscripts } from './transcriptUtils';
 
 export const isSpeechRecognitionSupported = (): boolean => {
   return typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -93,15 +94,9 @@ export class SpeechRecognizer {
         if (!piece) continue;
 
         if (event.results[i].isFinal) {
-          if (finalTranscript && !finalTranscript.endsWith(' ') && !piece.startsWith(' ')) {
-            finalTranscript += ' ';
-          }
-          finalTranscript += piece;
+          finalTranscript = mergeTranscripts(finalTranscript, piece);
         } else {
-          if (interimTranscript && !interimTranscript.endsWith(' ') && !piece.startsWith(' ')) {
-            interimTranscript += ' ';
-          }
-          interimTranscript += piece;
+          interimTranscript = mergeTranscripts(interimTranscript, piece);
         }
       }
 

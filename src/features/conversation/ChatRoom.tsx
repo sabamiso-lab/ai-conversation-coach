@@ -7,7 +7,7 @@ import HintPanel from './HintPanel';
 import ReportModal from './ReportModal';
 import ChatSidebar from './ChatSidebar';
 import ChatInputBar from './ChatInputBar';
-import { speakText, stopSpeaking } from '../../services/speech';
+import { speakText, stopSpeaking, mergeTranscripts } from '../../services/speech';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { useChatSession } from '../../hooks/useChatSession';
 import { useCoach } from '../../hooks/useCoach';
@@ -83,15 +83,7 @@ export default function ChatRoom({
   }, []);
 
   const handleSpeechResult = useCallback(({ full }: { full: string }) => {
-    const trimmedBase = baseInputTextRef.current.trim();
-    const trimmedSpeech = full.trim();
-    if (!trimmedBase) {
-      setInputText(trimmedSpeech);
-    } else if (!trimmedSpeech) {
-      setInputText(baseInputTextRef.current);
-    } else {
-      setInputText(`${trimmedBase} ${trimmedSpeech}`);
-    }
+    setInputText(mergeTranscripts(baseInputTextRef.current, full));
   }, [setInputText]);
 
   const handleSpeechError = useCallback((speechErr: string) => {

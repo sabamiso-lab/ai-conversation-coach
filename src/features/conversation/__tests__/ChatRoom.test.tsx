@@ -10,25 +10,29 @@ let mockRecognizerCallbacks: {
 } = {};
 
 // Mock speech service
-vi.mock('../../../services/speech', () => ({
-  speakText: vi.fn(),
-  stopSpeaking: vi.fn(),
-  isSpeechRecognitionSupported: () => true,
-  SpeechRecognizer: vi.fn().mockImplementation((options) => {
-    mockRecognizerCallbacks = options;
-    return {
-      start: vi.fn(() => {
-        options.onStart?.();
-      }),
-      stop: vi.fn(() => {
-        options.onEnd?.();
-      }),
-      abort: vi.fn(() => {
-        options.onEnd?.();
-      })
-    };
-  }),
-}));
+vi.mock('../../../services/speech', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../services/speech')>();
+  return {
+    ...actual,
+    speakText: vi.fn(),
+    stopSpeaking: vi.fn(),
+    isSpeechRecognitionSupported: () => true,
+    SpeechRecognizer: vi.fn().mockImplementation((options) => {
+      mockRecognizerCallbacks = options;
+      return {
+        start: vi.fn(() => {
+          options.onStart?.();
+        }),
+        stop: vi.fn(() => {
+          options.onEnd?.();
+        }),
+        abort: vi.fn(() => {
+          options.onEnd?.();
+        })
+      };
+    })
+  };
+});
 
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
@@ -168,5 +172,34 @@ describe('ChatRoom component', () => {
 
     // Previous text must NOT be erased; new speech is appended
     expect(inputField.value).toBe('I would like a hot coffee please');
+  });
+
+  it('prevents duplicate word input when speech repeats existing word or overlaps', () => {
+    render(
+      <CoachProvider>
+        <TestChatRoomWithCoach />
+      </CoachProvider>
+    );
+
+    const inputField = screen.getByPlaceholderText(/英語でメッセージを入力/i) as HTMLInputElement;
+    const micButton = screen.getByRole('button', { name: /マイクで英語を話す/i });
+
+    // Step 1: User types manual text "Hello"
+    fireEvent.change(inputField, { target: { value: 'Hello' } });
+    expect(inputField.value).toBe('Hello');
+
+    // Step 2: Start recording
+    fireEvent.click(micButton);
+
+    // Simulate speech echoing or repeating "Hello"
+    act(() => {
+      mockRecognizerCallbacks.onResult?.({
+        final: 'Hello, nice to meet you',
+        interim: ''
+      });
+    });
+
+    // Should NOT become "Hello Hello, nice to meet you"
+    expect(inputField.value).toBe('Hello, nice to meet you');
   });
 });

@@ -108,6 +108,51 @@ describe('STT Module (SpeechRecognizer)', () => {
     });
   });
 
+  it('deduplicates identical consecutive final results (Android Chrome quirk)', () => {
+    const onResult = vi.fn();
+    const recognizer = new SpeechRecognizer({ onResult });
+    recognizer.start();
+
+    // Android Chrome bug: duplicate identical final results
+    const mockEvent = {
+      results: [
+        Object.assign([{ transcript: 'Hello' }], { isFinal: true }),
+        Object.assign([{ transcript: 'Hello' }], { isFinal: true })
+      ]
+    } as unknown as SpeechRecognitionEvent;
+
+    if (latestInstance?.onresult) {
+      latestInstance.onresult(mockEvent);
+    }
+
+    expect(onResult).toHaveBeenCalledWith({
+      final: 'Hello',
+      interim: ''
+    });
+  });
+
+  it('eliminates word overlap at chunk boundaries', () => {
+    const onResult = vi.fn();
+    const recognizer = new SpeechRecognizer({ onResult });
+    recognizer.start();
+
+    const mockEvent = {
+      results: [
+        Object.assign([{ transcript: 'I want to' }], { isFinal: true }),
+        Object.assign([{ transcript: 'to go home' }], { isFinal: true })
+      ]
+    } as unknown as SpeechRecognitionEvent;
+
+    if (latestInstance?.onresult) {
+      latestInstance.onresult(mockEvent);
+    }
+
+    expect(onResult).toHaveBeenCalledWith({
+      final: 'I want to go home',
+      interim: ''
+    });
+  });
+
   it('fires onStart and onEnd callbacks properly', () => {
     const onStart = vi.fn();
     const onEnd = vi.fn();

@@ -12,6 +12,9 @@ export * from './types';
 // Export STT module
 export * from './stt';
 
+// Export Transcript Utilities
+export * from './transcriptUtils';
+
 // Export TTS module utilities
 export {
   isSpeechSynthesisSupported,

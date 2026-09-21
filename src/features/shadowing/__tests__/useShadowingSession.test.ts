@@ -5,12 +5,16 @@ import * as geminiService from '../../../services/gemini';
 import { ShadowingScript } from '../../../types';
 
 // Mock speech service
-vi.mock('../../../services/speech', () => ({
-  speakText: vi.fn(),
-  stopSpeaking: vi.fn(),
-  isSpeechRecognitionSupported: () => false,
-  SpeechRecognizer: vi.fn(),
-}));
+vi.mock('../../../services/speech', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../services/speech')>();
+  return {
+    ...actual,
+    speakText: vi.fn(),
+    stopSpeaking: vi.fn(),
+    isSpeechRecognitionSupported: () => false,
+    SpeechRecognizer: vi.fn(),
+  };
+});
 
 // Mock gemini service
 vi.mock('../../../services/gemini', () => ({

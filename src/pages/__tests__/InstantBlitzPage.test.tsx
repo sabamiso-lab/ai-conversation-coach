@@ -7,12 +7,16 @@ import { SettingsProvider } from '../../contexts/SettingsContext';
 import { PRESET_BLITZ_TOPICS } from '../../features/blitz/data/blitzTopics';
 
 // Mock speech service
-vi.mock('../../services/speech', () => ({
-  speakText: vi.fn(),
-  stopSpeaking: vi.fn(),
-  isSpeechRecognitionSupported: () => false,
-  SpeechRecognizer: vi.fn(),
-}));
+vi.mock('../../services/speech', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../services/speech')>();
+  return {
+    ...actual,
+    speakText: vi.fn(),
+    stopSpeaking: vi.fn(),
+    isSpeechRecognitionSupported: () => false,
+    SpeechRecognizer: vi.fn(),
+  };
+});
 
 // Mock ai services
 vi.mock('../../services/ai/blitz', () => ({

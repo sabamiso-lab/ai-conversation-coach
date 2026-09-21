@@ -98,6 +98,46 @@ describe('useSpeechRecognition hook', () => {
     });
   });
 
+  it('deduplicates when final and interim contain identical words or overlaps', () => {
+    const handleResult = vi.fn();
+    const { result } = renderHook(() =>
+      useSpeechRecognition({ onResult: handleResult })
+    );
+
+    // Browser emits final and interim with identical word
+    act(() => {
+      mockRecognizerInstance.options.onResult?.({
+        final: 'apple',
+        interim: 'apple'
+      });
+    });
+
+    expect(result.current.userTranscript).toBe('apple');
+    expect(result.current.interimTranscript).toBe('apple');
+    // fullTranscript must NOT be 'apple apple'
+    expect(result.current.fullTranscript).toBe('apple');
+    expect(handleResult).toHaveBeenCalledWith({
+      final: 'apple',
+      interim: 'apple',
+      full: 'apple'
+    });
+
+    // Browser emits final and interim with overlap (e.g. final="good morning", interim="morning everyone")
+    act(() => {
+      mockRecognizerInstance.options.onResult?.({
+        final: 'good morning',
+        interim: 'morning everyone'
+      });
+    });
+
+    expect(result.current.fullTranscript).toBe('good morning everyone');
+    expect(handleResult).toHaveBeenLastCalledWith({
+      final: 'good morning',
+      interim: 'morning everyone',
+      full: 'good morning everyone'
+    });
+  });
+
   it('resets transcripts when startRecording is called', () => {
     const { result } = renderHook(() => useSpeechRecognition());
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SpeechRecognizer, isSpeechRecognitionSupported, stopSpeaking } from '../services/speech';
+import { SpeechRecognizer, isSpeechRecognitionSupported, stopSpeaking, mergeTranscripts } from '../services/speech';
 import { audioManager } from '../services/speech/audioManager';
 
 export interface UseSpeechRecognitionOptions {
@@ -64,7 +64,7 @@ export function useSpeechRecognition({
       onResult: ({ final, interim }: { final: string; interim: string }) => {
         setUserTranscript(final);
         setInterimTranscript(interim);
-        const full = [final, interim].filter(Boolean).join(' ').trim();
+        const full = mergeTranscripts(final, interim);
         if (onResultRef.current) {
           onResultRef.current({ final, interim, full });
         }
@@ -167,7 +167,7 @@ export function useSpeechRecognition({
     }
   }, []);
 
-  const fullTranscript = `${userTranscript} ${interimTranscript}`.trim();
+  const fullTranscript = mergeTranscripts(userTranscript, interimTranscript);
 
   return {
     isSupported,
